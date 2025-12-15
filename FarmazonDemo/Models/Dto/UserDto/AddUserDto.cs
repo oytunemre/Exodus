@@ -1,4 +1,4 @@
-﻿namespace FarmazonDemo.Models.Dto
+﻿namespace FarmazonDemo.Models.Dto.UserDto
 {
     public class adduserDto
     {

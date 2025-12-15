@@ -29,17 +29,21 @@ public class CartController : ControllerBase
         return Ok(cart);
     }
 
-    [HttpPut("item/{cartItemId:int}")]
-    public async Task<IActionResult> UpdateQuantity(int cartItemId, [FromBody] UpdateCartItemDto dto)
+    [HttpPut("{userId:int}/item/{cartItemId:int}")]
+    public async Task<IActionResult> UpdateQuantity(
+    int userId,
+    int cartItemId,
+    [FromBody] UpdateCartItemDto dto)
     {
-        var cart = await _cartService.UpdateCartItemQuantityAsync(cartItemId, dto.Quantity);
+        var cart = await _cartService.UpdateCartItemQuantityAsync(userId, cartItemId, dto.Quantity);
         return Ok(cart);
     }
 
-    [HttpDelete("item/{cartItemId:int}")]
-    public async Task<IActionResult> RemoveItem(int cartItemId)
+    [HttpDelete("{userId:int}/item/{cartItemId:int}")]
+    public async Task<IActionResult> RemoveItem(int userId, int cartItemId)
     {
-        var cart = await _cartService.RemoveItemAsync(cartItemId);
+        var cart = await _cartService.RemoveItemAsync(userId, cartItemId);
         return Ok(cart);
     }
+
 }

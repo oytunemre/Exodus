@@ -1,9 +1,9 @@
 ﻿using FarmazonDemo.Data;
 using FarmazonDemo.Models.Entities;
-using FarmazonDemo.Models.Dto;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using FarmazonDemo.Models.Dto.UserDto;
 
 namespace FarmazonDemo.Controllers
 {
