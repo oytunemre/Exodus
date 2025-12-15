@@ -16,70 +16,118 @@ public class CartService : ICartService
 
     public async Task<CartResponseDto> GetCartAsync(int userId)
     {
-        var cart = await GetOrCreateCartEntityAsync(userId);
+        var cart = await _db.Carts
+            .Include(c => c.Items)
+                .ThenInclude(i => i.Listing)
+                    .ThenInclude(l => l.Product)
+            .FirstOrDefaultAsync(c => c.UserId == userId);
+
+        if (cart is null)
+            return new CartResponseDto
+            {
+                UserId = userId,
+                CartId = 0,
+                Items = new(),
+                CartTotal = 0
+            };
+
         return MapCart(cart);
     }
+
 
     public async Task<CartResponseDto> AddToCartAsync(AddToCartDto dto)
     {
         if (dto.Quantity <= 0)
             throw new InvalidOperationException("Quantity 0 veya negatif olamaz.");
 
-        var listing = await _db.Listings
-            .Include(l => l.Product)
-            .FirstOrDefaultAsync(l => l.ListingId == dto.ListingId);
+        // SQL Server execution strategy (transient retry) + bizim unique retry'miz birlikte çalışsın
+        var strategy = _db.Database.CreateExecutionStrategy();
 
-        if (listing is null)
-            throw new KeyNotFoundException("Listing bulunamadı.");
-
-        if (!listing.IsActive)
-            throw new InvalidOperationException("Listing aktif değil.");
-
-        if (listing.Stock < dto.Quantity)
-            throw new InvalidOperationException("Yetersiz stok.");
-
-        var cart = await GetOrCreateCartEntityAsync(dto.UserId);
-
-        // Aynı listing sepette var mı?
-        var existingItem = cart.Items.FirstOrDefault(i => i.ListingId == dto.ListingId);
-
-        if (existingItem is not null)
+        return await strategy.ExecuteAsync(async () =>
         {
-            var newQty = existingItem.Quantity + dto.Quantity;
+            await using var tx = await _db.Database.BeginTransactionAsync();
 
-            if (listing.Stock < newQty)
-                throw new InvalidOperationException("Sepetteki toplam adet stoğu aşıyor.");
-
-            existingItem.Quantity = newQty;
-            // fiyatı değiştirmiyoruz -> UnitPrice snapshot
-            existingItem.UpdatedAt = DateTime.UtcNow;
-        }
-        else
-        {
-            cart.Items.Add(new CartItem
+            try
             {
-                ListingId = listing.ListingId,
-                Quantity = dto.Quantity,
-                UnitPrice = listing.Price, // snapshot
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            });
-        }
+                var listing = await _db.Listings
+                    .Include(l => l.Product)
+                    .FirstOrDefaultAsync(l => l.ListingId == dto.ListingId);
 
-        cart.UpdatedAt = DateTime.UtcNow;
-        await _db.SaveChangesAsync();
+                if (listing is null)
+                    throw new KeyNotFoundException("Listing bulunamadı.");
 
-        // tekrar include’lu çekip döndürelim
-        cart = await LoadCartAsync(cart.CartId);
-        return MapCart(cart!);
+                if (!listing.IsActive)
+                    throw new InvalidOperationException("Listing aktif değil.");
+
+                if (listing.Stock < dto.Quantity)
+                    throw new InvalidOperationException("Yetersiz stok.");
+
+                // Cart (varsa getir, yoksa oluştur)
+                var cart = await GetOrCreateCartEntityAsync(dto.UserId);
+
+                // Önce DB'den aynı cart+listing item'ını kesin çek (race'de in-memory Items yetmeyebilir)
+                var existingItem = await _db.CartItems
+                    .FirstOrDefaultAsync(i => i.CartId == cart.CartId && i.ListingId == dto.ListingId);
+
+                if (existingItem is not null)
+                {
+                    var newQty = existingItem.Quantity + dto.Quantity;
+                    if (listing.Stock < newQty)
+                        throw new InvalidOperationException("Sepetteki toplam adet stoğu aşıyor.");
+
+                    existingItem.Quantity = newQty;
+                }
+                else
+                {
+                    _db.CartItems.Add(new CartItem
+                    {
+                        CartId = cart.CartId,
+                        ListingId = listing.ListingId,
+                        Quantity = dto.Quantity,
+                        UnitPrice = listing.Price // snapshot
+                    });
+                }
+
+                // 1. deneme
+                try
+                {
+                    await _db.SaveChangesAsync();
+                }
+                catch (DbUpdateException ex) when (IsUniqueCartItemViolation(ex))
+                {
+                    // Unique index çakıştı demek: aynı anda başka request bu item'ı oluşturdu.
+                    // Çözüm: item'ı tekrar çek, quantity artır, tekrar kaydet.
+                    var item = await _db.CartItems
+                        .FirstAsync(i => i.CartId == cart.CartId && i.ListingId == dto.ListingId);
+
+                    var newQty = item.Quantity + dto.Quantity;
+                    if (listing.Stock < newQty)
+                        throw new InvalidOperationException("Sepetteki toplam adet stoğu aşıyor.");
+
+                    item.Quantity = newQty;
+
+                    await _db.SaveChangesAsync();
+                }
+
+                await tx.CommitAsync();
+
+                var cartLoaded = await LoadCartAsync(cart.CartId);
+                return MapCart(cartLoaded!);
+            }
+            catch
+            {
+                await tx.RollbackAsync();
+                throw;
+            }
+        });
     }
 
-    public async Task<CartResponseDto> UpdateCartItemQuantityAsync(int cartItemId, int quantity)
+
+    public async Task<CartResponseDto> UpdateCartItemQuantityAsync(int userId, int cartItemId, int quantity)
     {
         var item = await _db.CartItems
             .Include(i => i.Cart)
-                .ThenInclude(c => c.Items)
-            .FirstOrDefaultAsync(i => i.CartItemId == cartItemId);
+            .FirstOrDefaultAsync(i => i.CartItemId == cartItemId && i.Cart.UserId == userId);
 
         if (item is null)
             throw new KeyNotFoundException("CartItem bulunamadı.");
@@ -114,9 +162,12 @@ public class CartService : ICartService
         return MapCart(cart!);
     }
 
-    public async Task<CartResponseDto> RemoveItemAsync(int cartItemId)
+    public async Task<CartResponseDto> RemoveItemAsync(int userId, int cartItemId)
     {
-        var item = await _db.CartItems.FirstOrDefaultAsync(i => i.CartItemId == cartItemId);
+        var item = await _db.CartItems
+            .Include(i => i.Cart)
+            .FirstOrDefaultAsync(i => i.CartItemId == cartItemId && i.Cart.UserId == userId);
+
         if (item is null)
             throw new KeyNotFoundException("CartItem bulunamadı.");
 
@@ -189,4 +240,14 @@ public class CartService : ICartService
             CartTotal = items.Sum(x => x.LineTotal)
         };
     }
+
+    private static bool IsUniqueCartItemViolation(DbUpdateException ex)
+    {
+        // SQL Server: 2601 (dup index), 2627 (dup constraint)
+        if (ex.InnerException is Microsoft.Data.SqlClient.SqlException sqlEx)
+            return sqlEx.Number is 2601 or 2627;
+
+        return false;
+    }
+
 }
