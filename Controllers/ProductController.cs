@@ -1,129 +1,43 @@
-﻿using FarmazonDemo.Data;
-using FarmazonDemo.Models.Dto;
-using FarmazonDemo.Models.Dto.ProductDto;
-using FarmazonDemo.Models.Entities;
+﻿using FarmazonDemo.Models.Dto.ProductDto;
+using FarmazonDemo.Services.Products;
 using Microsoft.AspNetCore.Mvc;
 
-namespace FarmazonDemo.Controllers
+namespace FarmazonDemo.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+public class ProductController : ControllerBase
 {
+    private readonly IProductService _service;
 
-
-    //localhost:xxxxx/api/products
-    [Route("api/[controller]")]
-    [ApiController]
-    public class ProductController :ControllerBase
+    public ProductController(IProductService service)
     {
-        private readonly ApplicationDbContext dbContext;
-        public ProductController(ApplicationDbContext dbContext)
-        {
-            this.dbContext = dbContext;
-        }
+        _service = service;
+    }
 
-        // Get All Product 
+    [HttpGet]
+    public async Task<IActionResult> GetAllProducts()
+        => Ok(await _service.GetAllAsync());
 
-        [HttpGet]
-        public IActionResult getAllProducts()
-        {
-            var allProducts = dbContext.Products;
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> GetProductById(int id)
+        => Ok(await _service.GetByIdAsync(id));
 
-            return Ok(allProducts);
+    [HttpPost]
+    public async Task<IActionResult> AddProduct([FromBody] AddProductDto dto)
+    {
+        var created = await _service.CreateAsync(dto);
+        return CreatedAtAction(nameof(GetProductById), new { id = created.Id }, created);
+    }
 
-        }
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> UpdateProduct(int id, [FromBody] ProductUpdateDto dto)
+        => Ok(await _service.UpdateAsync(id, dto));
 
-        // Get Product By ID
-
-           [HttpGet("{ProductId:int}")]
-             public IActionResult getProductById(int ProductId)
-           {
-
-               var Product = dbContext.Products.Find(ProductId);
-
-               if (Product is null)
-               {
-                   return NotFound();
-
-               }
-               else
-               {
-                   return Ok(Product);
-               }
-
-           }
-
-   
-
-       /* [HttpGet("{ProductId:int}")]
-        public IActionResult getProductById(int ProductId)
-        {
-            return Ok(new { hit = true, ProductId });
-        }
-
-        */
-
-        // Add Product 
-        [HttpPost]
-        public IActionResult AddProduct(AddProductDto AddProductDto)
-        {
-
-            var productEntity = new Product()
-            {
-                ProductName = AddProductDto.ProductName,
-                ProductDescription = AddProductDto.ProductDescription,
-                ProductBarcode = AddProductDto.ProductBarcode
-            };
-
-            dbContext.Products.Add(productEntity);
-            dbContext.SaveChanges();
-            return Ok(productEntity);
-
-        }
-
-        // Update Product 
-
-        [HttpPut("{ProductId:int}")]
-
-        public IActionResult updateProduct(int ProductId, [FromBody] ProductUpdateDto productUpdateDto)
-        {
-
-            var product = dbContext.Products.Find(ProductId);
-            if (product is null)
-            {
-                return NotFound();
-            }
-            product.ProductName = productUpdateDto.ProductName;
-            product.ProductBarcode = productUpdateDto.ProductBarcode;
-            product.ProductDescription = productUpdateDto.ProductDescription;
-            dbContext.SaveChanges();
-
-            return Ok(product);
-
-
-        }
-
-        // Delete Product 
-
-
-        [HttpDelete]
-        [Route("{ProductId:int}")]
-
-        public IActionResult DeleteProduct(int ProductId)
-        {
-
-            var product = dbContext.Products.Find(ProductId);
-
-            if (product is null)
-            {
-
-                return NotFound();
-            }
-
-            dbContext.Products.Remove(product);
-            dbContext.SaveChanges();
-            return Ok();
-
-        }
-
-
-
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> DeleteProduct(int id)
+    {
+        await _service.SoftDeleteAsync(id);
+        return NoContent();
     }
 }

@@ -2,15 +2,9 @@
 {
     public class ProductUpdateDto
     {
-
         public required string ProductName { get; set; }
-
         public required string ProductDescription { get; set; }
 
-        public required string ProductBarcode { get; set; }
-
-
-
-
+        public List<string> Barcodes { get; set; } = new();
     }
 }

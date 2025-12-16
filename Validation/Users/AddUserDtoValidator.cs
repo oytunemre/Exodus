@@ -3,7 +3,7 @@ using FarmazonDemo.Models.Dto.UserDto;
 
 namespace FarmazonDemo.Validation.Users;
 
-public class AddUserDtoValidator : AbstractValidator<adduserDto>
+public class AddUserDtoValidator : AbstractValidator<AdduserDto>
 {
     public AddUserDtoValidator()
     {

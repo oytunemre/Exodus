@@ -1,6 +1,6 @@
 ﻿namespace FarmazonDemo.Models.Dto.UserDto
 {
-    public class adduserDto
+    public class AdduserDto
     {
         public required string Name { get; set; } = string.Empty;
         public required string Email { get; set; } = string.Empty;

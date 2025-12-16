@@ -1,7 +1,17 @@
-﻿namespace FarmazonDemo.Models.Entities
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace FarmazonDemo.Models.Entities
 {
     public abstract class BaseEntity
     {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id { get; set; }
+
+        public bool IsDeleted { get; set; } = false;
+        public DateTime? DeletedDate { get; set; }
+
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

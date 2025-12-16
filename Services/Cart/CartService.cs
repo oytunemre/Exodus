@@ -34,13 +34,11 @@ public class CartService : ICartService
         return MapCart(cart);
     }
 
-
     public async Task<CartResponseDto> AddToCartAsync(AddToCartDto dto)
     {
         if (dto.Quantity <= 0)
             throw new InvalidOperationException("Quantity 0 veya negatif olamaz.");
 
-        // SQL Server execution strategy (transient retry) + bizim unique retry'miz birlikte çalışsın
         var strategy = _db.Database.CreateExecutionStrategy();
 
         return await strategy.ExecuteAsync(async () =>
@@ -51,23 +49,16 @@ public class CartService : ICartService
             {
                 var listing = await _db.Listings
                     .Include(l => l.Product)
-                    .FirstOrDefaultAsync(l => l.ListingId == dto.ListingId);
+                    .FirstOrDefaultAsync(l => l.Id == dto.ListingId);
 
-                if (listing is null)
-                    throw new KeyNotFoundException("Listing bulunamadı.");
+                if (listing is null) throw new KeyNotFoundException("Listing bulunamadı.");
+                if (!listing.IsActive) throw new InvalidOperationException("Listing aktif değil.");
+                if (listing.Stock < dto.Quantity) throw new InvalidOperationException("Yetersiz stok.");
 
-                if (!listing.IsActive)
-                    throw new InvalidOperationException("Listing aktif değil.");
-
-                if (listing.Stock < dto.Quantity)
-                    throw new InvalidOperationException("Yetersiz stok.");
-
-                // Cart (varsa getir, yoksa oluştur)
                 var cart = await GetOrCreateCartEntityAsync(dto.UserId);
 
-                // Önce DB'den aynı cart+listing item'ını kesin çek (race'de in-memory Items yetmeyebilir)
                 var existingItem = await _db.CartItems
-                    .FirstOrDefaultAsync(i => i.CartId == cart.CartId && i.ListingId == dto.ListingId);
+                    .FirstOrDefaultAsync(i => i.CartId == cart.Id && i.ListingId == dto.ListingId);
 
                 if (existingItem is not null)
                 {
@@ -81,37 +72,33 @@ public class CartService : ICartService
                 {
                     _db.CartItems.Add(new CartItem
                     {
-                        CartId = cart.CartId,
-                        ListingId = listing.ListingId,
+                        CartId = cart.Id,
+                        ListingId = listing.Id,
                         Quantity = dto.Quantity,
-                        UnitPrice = listing.Price // snapshot
+                        UnitPrice = listing.Price
                     });
                 }
 
-                // 1. deneme
                 try
                 {
                     await _db.SaveChangesAsync();
                 }
                 catch (DbUpdateException ex) when (IsUniqueCartItemViolation(ex))
                 {
-                    // Unique index çakıştı demek: aynı anda başka request bu item'ı oluşturdu.
-                    // Çözüm: item'ı tekrar çek, quantity artır, tekrar kaydet.
                     var item = await _db.CartItems
-                        .FirstAsync(i => i.CartId == cart.CartId && i.ListingId == dto.ListingId);
+                        .FirstAsync(i => i.CartId == cart.Id && i.ListingId == dto.ListingId);
 
                     var newQty = item.Quantity + dto.Quantity;
                     if (listing.Stock < newQty)
                         throw new InvalidOperationException("Sepetteki toplam adet stoğu aşıyor.");
 
                     item.Quantity = newQty;
-
                     await _db.SaveChangesAsync();
                 }
 
                 await tx.CommitAsync();
 
-                var cartLoaded = await LoadCartAsync(cart.CartId);
+                var cartLoaded = await LoadCartAsync(cart.Id);
                 return MapCart(cartLoaded!);
             }
             catch
@@ -122,12 +109,11 @@ public class CartService : ICartService
         });
     }
 
-
     public async Task<CartResponseDto> UpdateCartItemQuantityAsync(int userId, int cartItemId, int quantity)
     {
         var item = await _db.CartItems
             .Include(i => i.Cart)
-            .FirstOrDefaultAsync(i => i.CartItemId == cartItemId && i.Cart.UserId == userId);
+            .FirstOrDefaultAsync(i => i.Id == cartItemId && i.Cart.UserId == userId);
 
         if (item is null)
             throw new KeyNotFoundException("CartItem bulunamadı.");
@@ -141,20 +127,12 @@ public class CartService : ICartService
             return MapCart(cartAfterRemove!);
         }
 
-        var listing = await _db.Listings.FirstOrDefaultAsync(l => l.ListingId == item.ListingId);
-        if (listing is null)
-            throw new KeyNotFoundException("Listing bulunamadı.");
-
-        if (!listing.IsActive)
-            throw new InvalidOperationException("Listing aktif değil.");
-
-        if (listing.Stock < quantity)
-            throw new InvalidOperationException("Yetersiz stok.");
+        var listing = await _db.Listings.FirstOrDefaultAsync(l => l.Id == item.ListingId);
+        if (listing is null) throw new KeyNotFoundException("Listing bulunamadı.");
+        if (!listing.IsActive) throw new InvalidOperationException("Listing aktif değil.");
+        if (listing.Stock < quantity) throw new InvalidOperationException("Yetersiz stok.");
 
         item.Quantity = quantity;
-        item.UpdatedAt = DateTime.UtcNow;
-
-        item.Cart.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
 
@@ -166,7 +144,7 @@ public class CartService : ICartService
     {
         var item = await _db.CartItems
             .Include(i => i.Cart)
-            .FirstOrDefaultAsync(i => i.CartItemId == cartItemId && i.Cart.UserId == userId);
+            .FirstOrDefaultAsync(i => i.Id == cartItemId && i.Cart.UserId == userId);
 
         if (item is null)
             throw new KeyNotFoundException("CartItem bulunamadı.");
@@ -180,8 +158,6 @@ public class CartService : ICartService
         return MapCart(cart!);
     }
 
-    // ---------- helpers ----------
-
     private async Task<Cart> GetOrCreateCartEntityAsync(int userId)
     {
         var cart = await _db.Carts
@@ -190,23 +166,16 @@ public class CartService : ICartService
 
         if (cart is not null) return cart;
 
-        // user var mı kontrol et (istersen kaldırırsın)
-        var userExists = await _db.Users.AnyAsync(u => u.UserId == userId);
+        var userExists = await _db.Users.AnyAsync(u => u.Id == userId);
         if (!userExists)
             throw new KeyNotFoundException("User bulunamadı.");
 
-        cart = new Cart
-        {
-            UserId = userId,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
+        cart = new Cart { UserId = userId };
 
         _db.Carts.Add(cart);
         await _db.SaveChangesAsync();
 
-        // items include ile dön
-        return await _db.Carts.Include(c => c.Items).FirstAsync(c => c.CartId == cart.CartId);
+        return await _db.Carts.Include(c => c.Items).FirstAsync(c => c.Id == cart.Id);
     }
 
     private Task<Cart?> LoadCartAsync(int cartId)
@@ -215,15 +184,14 @@ public class CartService : ICartService
             .Include(c => c.Items)
                 .ThenInclude(i => i.Listing)
                     .ThenInclude(l => l.Product)
-            .FirstOrDefaultAsync(c => c.CartId == cartId);
+            .FirstOrDefaultAsync(c => c.Id == cartId);
     }
 
     private CartResponseDto MapCart(Cart cart)
     {
-        // Listing/Product include değilse ürün adını boş dönebilir; LoadCart ile çağırınca dolu olur.
         var items = cart.Items.Select(i => new CartItemResponseDto
         {
-            CartItemId = i.CartItemId,
+            CartItemId = i.Id,
             ListingId = i.ListingId,
             ProductId = i.Listing?.ProductId ?? 0,
             ProductName = i.Listing?.Product?.ProductName ?? "",
@@ -234,7 +202,7 @@ public class CartService : ICartService
 
         return new CartResponseDto
         {
-            CartId = cart.CartId,
+            CartId = cart.Id,
             UserId = cart.UserId,
             Items = items,
             CartTotal = items.Sum(x => x.LineTotal)
@@ -243,11 +211,9 @@ public class CartService : ICartService
 
     private static bool IsUniqueCartItemViolation(DbUpdateException ex)
     {
-        // SQL Server: 2601 (dup index), 2627 (dup constraint)
         if (ex.InnerException is Microsoft.Data.SqlClient.SqlException sqlEx)
             return sqlEx.Number is 2601 or 2627;
 
         return false;
     }
-
 }
