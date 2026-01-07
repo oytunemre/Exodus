@@ -8,6 +8,9 @@ C:\Users\nilgo\source\repos\FarmazonDemo\FarmazonDemo\bin\Debug\net10.0\Farmazon
 C:\Users\nilgo\source\repos\FarmazonDemo\FarmazonDemo\bin\Debug\net10.0\FarmazonDemo.pdb
 C:\Users\nilgo\source\repos\FarmazonDemo\FarmazonDemo\bin\Debug\net10.0\Azure.Core.dll
 C:\Users\nilgo\source\repos\FarmazonDemo\FarmazonDemo\bin\Debug\net10.0\Azure.Identity.dll
+C:\Users\nilgo\source\repos\FarmazonDemo\FarmazonDemo\bin\Debug\net10.0\FluentValidation.dll
+C:\Users\nilgo\source\repos\FarmazonDemo\FarmazonDemo\bin\Debug\net10.0\FluentValidation.AspNetCore.dll
+C:\Users\nilgo\source\repos\FarmazonDemo\FarmazonDemo\bin\Debug\net10.0\FluentValidation.DependencyInjectionExtensions.dll
 C:\Users\nilgo\source\repos\FarmazonDemo\FarmazonDemo\bin\Debug\net10.0\Humanizer.dll
 C:\Users\nilgo\source\repos\FarmazonDemo\FarmazonDemo\bin\Debug\net10.0\Microsoft.AspNetCore.OpenApi.dll
 C:\Users\nilgo\source\repos\FarmazonDemo\FarmazonDemo\bin\Debug\net10.0\Microsoft.Bcl.AsyncInterfaces.dll
@@ -169,6 +172,3 @@ C:\Users\nilgo\source\repos\FarmazonDemo\FarmazonDemo\obj\Debug\net10.0\refint\F
 C:\Users\nilgo\source\repos\FarmazonDemo\FarmazonDemo\obj\Debug\net10.0\FarmazonDemo.pdb
 C:\Users\nilgo\source\repos\FarmazonDemo\FarmazonDemo\obj\Debug\net10.0\FarmazonDemo.genruntimeconfig.cache
 C:\Users\nilgo\source\repos\FarmazonDemo\FarmazonDemo\obj\Debug\net10.0\ref\FarmazonDemo.dll
-C:\Users\nilgo\source\repos\FarmazonDemo\FarmazonDemo\bin\Debug\net10.0\FluentValidation.dll
-C:\Users\nilgo\source\repos\FarmazonDemo\FarmazonDemo\bin\Debug\net10.0\FluentValidation.AspNetCore.dll
-C:\Users\nilgo\source\repos\FarmazonDemo\FarmazonDemo\bin\Debug\net10.0\FluentValidation.DependencyInjectionExtensions.dll

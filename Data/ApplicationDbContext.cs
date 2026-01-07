@@ -14,6 +14,17 @@ namespace FarmazonDemo.Data
         public DbSet<Listing> Listings { get; set; }
         public DbSet<Cart> Carts { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<SellerOrder> SellerOrders { get; set; }
+        public DbSet<SellerOrderItem> SellerOrderItems { get; set; }
+        public DbSet<PaymentIntent> PaymentIntents => Set<PaymentIntent>();
+        public DbSet<PaymentEvent> PaymentEvents => Set<PaymentEvent>();
+        public DbSet<Shipment> Shipments => Set<Shipment>();
+        public DbSet<ShipmentEvent> ShipmentEvents => Set<ShipmentEvent>();
+
+
+
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -66,6 +77,114 @@ namespace FarmazonDemo.Data
                .Property(l => l.Condition)
                .HasConversion<string>()
                   .HasMaxLength(30);
+
+            // Order -> Buyer
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.Buyer)
+                .WithMany()
+                .HasForeignKey(o => o.BuyerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Order>()
+                .Property(o => o.Status)
+                .HasConversion<string>()
+                .HasMaxLength(30);
+
+            // Order -> SellerOrders
+            modelBuilder.Entity<SellerOrder>()
+                .HasOne(so => so.Order)
+                .WithMany(o => o.SellerOrders)
+                .HasForeignKey(so => so.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<SellerOrder>()
+                .HasOne(so => so.Seller)
+                .WithMany()
+                .HasForeignKey(so => so.SellerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<SellerOrder>()
+                .Property(so => so.Status)
+                .HasConversion<string>()
+                .HasMaxLength(30);
+
+            // SellerOrderItem -> SellerOrder
+            modelBuilder.Entity<SellerOrderItem>()
+                .HasOne(i => i.SellerOrder)
+                .WithMany(so => so.Items)
+                .HasForeignKey(i => i.SellerOrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // SellerOrderItem -> Listing
+            modelBuilder.Entity<SellerOrderItem>()
+                .HasOne(i => i.Listing)
+                .WithMany()
+                .HasForeignKey(i => i.ListingId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // PAYMENT
+            modelBuilder.Entity<PaymentIntent>(b =>
+            {
+                b.HasKey(x => x.Id);
+
+                b.Property(x => x.Amount).HasColumnType("decimal(18,2)");
+                b.Property(x => x.Currency).HasMaxLength(3);
+
+                b.Property(x => x.Provider).HasMaxLength(50);
+                b.Property(x => x.ExternalReference).HasMaxLength(100);
+                b.Property(x => x.FailureReason).HasMaxLength(500);
+
+                b.HasOne(x => x.Order)
+                    .WithMany()
+                    .HasForeignKey(x => x.OrderId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // 1 order = 1 intent (MVP)
+                b.HasIndex(x => x.OrderId).IsUnique();
+            });
+
+            modelBuilder.Entity<PaymentEvent>(b =>
+            {
+                b.HasKey(x => x.Id);
+
+                b.HasOne(x => x.PaymentIntent)
+                    .WithMany()
+                    .HasForeignKey(x => x.PaymentIntentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+
+            // SHIPMENT
+            modelBuilder.Entity<Shipment>(b =>
+            {
+                b.HasKey(x => x.Id);
+
+                b.Property(x => x.Carrier).HasMaxLength(50);
+                b.Property(x => x.TrackingNumber).HasMaxLength(80);
+
+                b.HasOne(x => x.SellerOrder)
+                    .WithOne(x => x.Shipment)
+                    .HasForeignKey<Shipment>(x => x.SellerOrderId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasIndex(x => x.SellerOrderId).IsUnique();
+                b.HasIndex(x => x.TrackingNumber);
+
+                b.HasQueryFilter(x => !x.IsDeleted);
+            });
+
+            modelBuilder.Entity<ShipmentEvent>(b =>
+            {
+                b.HasKey(x => x.ShipmentEventId);
+
+                b.HasOne(x => x.Shipment)
+                    .WithMany()
+                    .HasForeignKey(x => x.ShipmentId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // ✅ Matching filter: Shipment gizlenirse event de gizlensin
+                b.HasQueryFilter(e => !e.Shipment.IsDeleted);
+            });
 
         }
 
@@ -160,5 +279,5 @@ namespace FarmazonDemo.Data
             }
         }
 
-    }
+    } 
 }

@@ -49,7 +49,7 @@ namespace FarmazonDemo.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Carts");
+                    b.ToTable("Carts", (string)null);
                 });
 
             modelBuilder.Entity("FarmazonDemo.Models.Entities.CartItem", b =>
@@ -92,7 +92,7 @@ namespace FarmazonDemo.Migrations
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
-                    b.ToTable("CartItems");
+                    b.ToTable("CartItems", (string)null);
                 });
 
             modelBuilder.Entity("FarmazonDemo.Models.Entities.Listing", b =>
@@ -141,7 +141,139 @@ namespace FarmazonDemo.Migrations
 
                     b.HasIndex("SellerId");
 
-                    b.ToTable("Listings");
+                    b.ToTable("Listings", (string)null);
+                });
+
+            modelBuilder.Entity("FarmazonDemo.Models.Entities.Order", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BuyerId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<decimal>("Total")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BuyerId");
+
+                    b.ToTable("Orders", (string)null);
+                });
+
+            modelBuilder.Entity("FarmazonDemo.Models.Entities.PaymentEvent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PayloadJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PaymentIntentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PaymentIntentId");
+
+                    b.ToTable("PaymentEvents", (string)null);
+                });
+
+            modelBuilder.Entity("FarmazonDemo.Models.Entities.PaymentIntent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ExternalReference")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("int");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique();
+
+                    b.ToTable("PaymentIntents", (string)null);
                 });
 
             modelBuilder.Entity("FarmazonDemo.Models.Entities.Product", b =>
@@ -174,7 +306,7 @@ namespace FarmazonDemo.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("FarmazonDemo.Models.Entities.ProductBarcode", b =>
@@ -213,7 +345,179 @@ namespace FarmazonDemo.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductBarcodes");
+                    b.ToTable("ProductBarcodes", (string)null);
+                });
+
+            modelBuilder.Entity("FarmazonDemo.Models.Entities.SellerOrder", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SellerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<decimal>("SubTotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("SellerId");
+
+                    b.ToTable("SellerOrders", (string)null);
+                });
+
+            modelBuilder.Entity("FarmazonDemo.Models.Entities.SellerOrderItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("LineTotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("ListingId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SellerOrderId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ListingId");
+
+                    b.HasIndex("SellerOrderId");
+
+                    b.ToTable("SellerOrderItems", (string)null);
+                });
+
+            modelBuilder.Entity("FarmazonDemo.Models.Entities.Shipment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Carrier")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeliveredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("SellerOrderId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ShippedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TrackingNumber")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SellerOrderId")
+                        .IsUnique();
+
+                    b.HasIndex("TrackingNumber");
+
+                    b.ToTable("Shipments", (string)null);
+                });
+
+            modelBuilder.Entity("FarmazonDemo.Models.Entities.ShipmentEvent", b =>
+                {
+                    b.Property<int>("ShipmentEventId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ShipmentEventId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PayloadJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ShipmentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("ShipmentEventId");
+
+                    b.HasIndex("ShipmentId");
+
+                    b.ToTable("ShipmentEvents", (string)null);
                 });
 
             modelBuilder.Entity("FarmazonDemo.Models.Entities.Users", b =>
@@ -254,7 +558,7 @@ namespace FarmazonDemo.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("FarmazonDemo.Models.Entities.Cart", b =>
@@ -306,6 +610,39 @@ namespace FarmazonDemo.Migrations
                     b.Navigation("Seller");
                 });
 
+            modelBuilder.Entity("FarmazonDemo.Models.Entities.Order", b =>
+                {
+                    b.HasOne("FarmazonDemo.Models.Entities.Users", "Buyer")
+                        .WithMany()
+                        .HasForeignKey("BuyerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Buyer");
+                });
+
+            modelBuilder.Entity("FarmazonDemo.Models.Entities.PaymentEvent", b =>
+                {
+                    b.HasOne("FarmazonDemo.Models.Entities.PaymentIntent", "PaymentIntent")
+                        .WithMany()
+                        .HasForeignKey("PaymentIntentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PaymentIntent");
+                });
+
+            modelBuilder.Entity("FarmazonDemo.Models.Entities.PaymentIntent", b =>
+                {
+                    b.HasOne("FarmazonDemo.Models.Entities.Order", "Order")
+                        .WithMany()
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+                });
+
             modelBuilder.Entity("FarmazonDemo.Models.Entities.ProductBarcode", b =>
                 {
                     b.HasOne("FarmazonDemo.Models.Entities.Product", "Product")
@@ -317,14 +654,86 @@ namespace FarmazonDemo.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("FarmazonDemo.Models.Entities.SellerOrder", b =>
+                {
+                    b.HasOne("FarmazonDemo.Models.Entities.Order", "Order")
+                        .WithMany("SellerOrders")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FarmazonDemo.Models.Entities.Users", "Seller")
+                        .WithMany()
+                        .HasForeignKey("SellerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Seller");
+                });
+
+            modelBuilder.Entity("FarmazonDemo.Models.Entities.SellerOrderItem", b =>
+                {
+                    b.HasOne("FarmazonDemo.Models.Entities.Listing", "Listing")
+                        .WithMany()
+                        .HasForeignKey("ListingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FarmazonDemo.Models.Entities.SellerOrder", "SellerOrder")
+                        .WithMany("Items")
+                        .HasForeignKey("SellerOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Listing");
+
+                    b.Navigation("SellerOrder");
+                });
+
+            modelBuilder.Entity("FarmazonDemo.Models.Entities.Shipment", b =>
+                {
+                    b.HasOne("FarmazonDemo.Models.Entities.SellerOrder", "SellerOrder")
+                        .WithOne("Shipment")
+                        .HasForeignKey("FarmazonDemo.Models.Entities.Shipment", "SellerOrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("SellerOrder");
+                });
+
+            modelBuilder.Entity("FarmazonDemo.Models.Entities.ShipmentEvent", b =>
+                {
+                    b.HasOne("FarmazonDemo.Models.Entities.Shipment", "Shipment")
+                        .WithMany()
+                        .HasForeignKey("ShipmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Shipment");
+                });
+
             modelBuilder.Entity("FarmazonDemo.Models.Entities.Cart", b =>
                 {
                     b.Navigation("Items");
                 });
 
+            modelBuilder.Entity("FarmazonDemo.Models.Entities.Order", b =>
+                {
+                    b.Navigation("SellerOrders");
+                });
+
             modelBuilder.Entity("FarmazonDemo.Models.Entities.Product", b =>
                 {
                     b.Navigation("Barcodes");
+                });
+
+            modelBuilder.Entity("FarmazonDemo.Models.Entities.SellerOrder", b =>
+                {
+                    b.Navigation("Items");
+
+                    b.Navigation("Shipment");
                 });
 #pragma warning restore 612, 618
         }

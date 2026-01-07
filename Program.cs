@@ -8,6 +8,11 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
+using FarmazonDemo.Services.Orders;
+using FarmazonDemo.Services.Payments;
+using FarmazonDemo.Services.Shipments;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,6 +41,11 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IListingService, ListingService>();
 builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IShipmentService, ShipmentService>();
+
+
 
 // --------------------
 // BUILD
@@ -61,7 +71,7 @@ app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await DbSeeder.SeedAsync(db);
+    // await DbSeeder.SeedAsync(db);
 }
 
 app.Run();
