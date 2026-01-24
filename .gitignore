@@ -41,8 +41,8 @@ artifacts/
 .idea/
 *.sln.iml
 
-# VS Code
-.vscode/
+# VS Code (keep configuration files)
+# .vscode/
 
 # macOS
 .DS_Store
