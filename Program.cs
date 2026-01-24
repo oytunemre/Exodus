@@ -31,7 +31,20 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // OpenAPI/Swagger (senin AddOpenApi kullan�m�)
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "FarmazonDemo API",
+        Version = "v1"
+    });
+    c.CustomOperationIds(apiDesc =>
+    {
+        return apiDesc.TryGetMethodInfo(out var methodInfo)
+            ? $"{apiDesc.ActionDescriptor.RouteValues["controller"]}_{methodInfo.Name}"
+            : null;
+    });
+});
 
 // DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
