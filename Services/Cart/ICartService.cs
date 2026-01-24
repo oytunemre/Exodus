@@ -1,6 +1,6 @@
 ﻿using FarmazonDemo.Models.Dto.CartDto;
 
-namespace FarmazonDemo.Services.Carts;
+namespace FarmazonDemo.Services.Cart;
 
 public interface ICartService
 {

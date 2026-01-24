@@ -1,5 +1,5 @@
 using FarmazonDemo.Data;
-using FarmazonDemo.Services.Carts;
+using FarmazonDemo.Services.Cart;
 using FarmazonDemo.Services.Common;
 using FarmazonDemo.Services.Listings;
 using FarmazonDemo.Services.Products;
@@ -10,14 +10,14 @@ using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using FarmazonDemo.Services.Orders;
 using FarmazonDemo.Services.Payments;
-using FarmazonDemo.Services.Shipments;
+using FarmazonDemo.Services.Shipment;
 
 
 
 var builder = WebApplication.CreateBuilder(args);
 
 // --------------------
-// SERVICES (Build'den ÖNCE)
+// SERVICES (Build'den ï¿½NCE)
 // --------------------
 
 // Controllers + Enum String Converter
@@ -29,7 +29,7 @@ builder.Services.AddControllers()
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-// OpenAPI/Swagger (senin AddOpenApi kullanýmý)
+// OpenAPI/Swagger (senin AddOpenApi kullanï¿½mï¿½)
 builder.Services.AddOpenApi();
 
 // DbContext
@@ -66,7 +66,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 // --------------------
-// SEED (Build'den sonra, Run'dan önce)
+// SEED (Build'den sonra, Run'dan ï¿½nce)
 // --------------------
 using (var scope = app.Services.CreateScope())
 {
