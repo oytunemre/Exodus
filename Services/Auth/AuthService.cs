@@ -43,7 +43,7 @@ namespace FarmazonDemo.Services.Auth
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.Password);
 
             // Create user
-            var user = new Users
+            var user = new Models.Entities.Users
             {
                 Name = dto.Name,
                 Email = dto.Email,
