@@ -30,7 +30,8 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // OpenAPI/Swagger (senin AddOpenApi kullan�m�)
-builder.Services.AddOpenApi();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 // DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -57,7 +58,8 @@ var app = builder.Build();
 // --------------------
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
