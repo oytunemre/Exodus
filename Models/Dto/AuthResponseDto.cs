@@ -9,9 +9,10 @@ namespace FarmazonDemo.Models.Dto
         public required string Email { get; set; } = string.Empty;
         public required string Username { get; set; } = string.Empty;
         public UserRole Role { get; set; }
-        public required string Token { get; set; } = string.Empty;
-        public DateTime ExpiresAt { get; set; }
-        public required string RefreshToken { get; set; } = string.Empty;
-        public DateTime RefreshTokenExpiresAt { get; set; }
+        public string? Token { get; set; }
+        public DateTime? ExpiresAt { get; set; }
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiresAt { get; set; }
+        public bool TwoFactorRequired { get; set; } = false;
     }
 }

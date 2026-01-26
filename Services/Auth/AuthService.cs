@@ -4,6 +4,7 @@ using FarmazonDemo.Models.Dto;
 using FarmazonDemo.Models.Entities;
 using FarmazonDemo.Services.Common;
 using FarmazonDemo.Services.Email;
+using FarmazonDemo.Services.TwoFactor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -19,6 +20,7 @@ namespace FarmazonDemo.Services.Auth
         private readonly ApplicationDbContext _context;
         private readonly JwtSettings _jwtSettings;
         private readonly IEmailService _emailService;
+        private readonly ITwoFactorService _twoFactorService;
 
         private const int MaxFailedLoginAttempts = 5;
         private const int LockoutDurationMinutes = 15;
@@ -26,11 +28,13 @@ namespace FarmazonDemo.Services.Auth
         public AuthService(
             ApplicationDbContext context,
             IOptions<JwtSettings> jwtSettings,
-            IEmailService emailService)
+            IEmailService emailService,
+            ITwoFactorService twoFactorService)
         {
             _context = context;
             _jwtSettings = jwtSettings.Value;
             _emailService = emailService;
+            _twoFactorService = twoFactorService;
         }
 
         public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
@@ -142,6 +146,113 @@ namespace FarmazonDemo.Services.Auth
                 throw new UnauthorizedException("Please verify your email before logging in.");
 
             // Reset failed login attempts on successful login
+            user.FailedLoginAttempts = 0;
+            user.LockoutEndTime = null;
+            await _context.SaveChangesAsync();
+
+            // Check if 2FA is enabled
+            if (user.TwoFactorEnabled)
+            {
+                return new AuthResponseDto
+                {
+                    UserId = user.Id,
+                    Name = user.Name,
+                    Email = user.Email,
+                    Username = user.Username,
+                    Role = user.Role,
+                    TwoFactorRequired = true,
+                    Token = null!,
+                    ExpiresAt = DateTime.MinValue
+                };
+            }
+
+            // Generate JWT token
+            var token = GenerateJwtToken(user.Id, user.Username, user.Email, user.Role.ToString());
+            var expiresAt = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiryMinutes);
+
+            // Generate refresh token
+            var refreshToken = await CreateRefreshTokenAsync(user.Id);
+            await _context.SaveChangesAsync();
+
+            return new AuthResponseDto
+            {
+                UserId = user.Id,
+                Name = user.Name,
+                Email = user.Email,
+                Username = user.Username,
+                Role = user.Role,
+                Token = token,
+                ExpiresAt = expiresAt,
+                RefreshToken = refreshToken.Token,
+                RefreshTokenExpiresAt = refreshToken.ExpiresAt
+            };
+        }
+
+        public async Task<AuthResponseDto> LoginWith2FAAsync(TwoFactorLoginDto dto)
+        {
+            // Find user by email or username
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u =>
+                    u.Email.ToLower() == dto.EmailOrUsername.ToLower() ||
+                    u.Username.ToLower() == dto.EmailOrUsername.ToLower());
+
+            if (user == null)
+                throw new NotFoundException("Invalid credentials");
+
+            // Check if account is locked
+            if (user.LockoutEndTime.HasValue && user.LockoutEndTime > DateTime.UtcNow)
+            {
+                var remainingMinutes = (int)(user.LockoutEndTime.Value - DateTime.UtcNow).TotalMinutes + 1;
+                throw new UnauthorizedException($"Account is locked. Try again in {remainingMinutes} minutes.");
+            }
+
+            // Verify password
+            var isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.Password);
+
+            if (!isPasswordValid)
+            {
+                user.FailedLoginAttempts++;
+
+                if (user.FailedLoginAttempts >= MaxFailedLoginAttempts)
+                {
+                    user.LockoutEndTime = DateTime.UtcNow.AddMinutes(LockoutDurationMinutes);
+                    await _context.SaveChangesAsync();
+                    await _emailService.SendAccountLockedAsync(user.Email, user.LockoutEndTime.Value);
+                    throw new UnauthorizedException($"Account locked due to {MaxFailedLoginAttempts} failed attempts.");
+                }
+
+                await _context.SaveChangesAsync();
+                throw new NotFoundException("Invalid credentials");
+            }
+
+            // Check if email is verified
+            if (!user.EmailVerified)
+                throw new UnauthorizedException("Please verify your email before logging in.");
+
+            // Verify 2FA is enabled
+            if (!user.TwoFactorEnabled || string.IsNullOrEmpty(user.TwoFactorSecretKey))
+                throw new BadRequestException("2FA is not enabled for this account. Use regular login.");
+
+            // Verify 2FA code
+            var isValidCode = _twoFactorService.ValidateCode(user.TwoFactorSecretKey, dto.TwoFactorCode);
+
+            if (!isValidCode)
+            {
+                // Check backup codes
+                var backupCodes = user.TwoFactorBackupCodes?.Split(',').ToList() ?? new List<string>();
+                if (backupCodes.Contains(dto.TwoFactorCode))
+                {
+                    // Remove used backup code
+                    backupCodes.Remove(dto.TwoFactorCode);
+                    user.TwoFactorBackupCodes = string.Join(",", backupCodes);
+                }
+                else
+                {
+                    throw new UnauthorizedException("Invalid 2FA code");
+                }
+            }
+
+            // Reset failed login attempts
             user.FailedLoginAttempts = 0;
             user.LockoutEndTime = null;
 

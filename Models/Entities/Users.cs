@@ -22,5 +22,11 @@ namespace FarmazonDemo.Models.Entities
         // Account Lockout
         public int FailedLoginAttempts { get; set; } = 0;
         public DateTime? LockoutEndTime { get; set; }
+
+        // Two-Factor Authentication
+        public bool TwoFactorEnabled { get; set; } = false;
+        public string? TwoFactorSecretKey { get; set; }
+        public string? TwoFactorBackupCodes { get; set; }
+        public DateTime? TwoFactorEnabledAt { get; set; }
     }
 }

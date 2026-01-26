@@ -17,8 +17,10 @@ using System.Text.Json.Serialization;
 using FarmazonDemo.Services.Orders;
 using FarmazonDemo.Services.Payments;
 using FarmazonDemo.Services.Shipments;
-
-
+using FarmazonDemo.Services.Audit;
+using FarmazonDemo.Services.Security;
+using FarmazonDemo.Services.TwoFactor;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -98,6 +100,48 @@ builder.Services.AddCors(options =>
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<ApplicationDbContext>("database");
 
+// Rate Limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    // Global rate limit: 100 requests per minute per IP
+    options.AddPolicy("fixed", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 100,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+
+    // Auth endpoints: 10 requests per minute per IP (brute force protection)
+    options.AddPolicy("auth", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+
+    // Sensitive operations: 5 requests per minute
+    options.AddPolicy("sensitive", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+});
+
+// HttpContextAccessor for AuditService
+builder.Services.AddHttpContextAccessor();
+
 // DI - Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProductService, ProductService>();
@@ -108,7 +152,10 @@ builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IShipmentService, ShipmentService>();
 
-
+// Security Services
+builder.Services.AddScoped<IAuditService, AuditService>();
+builder.Services.AddScoped<IInputSanitizerService, InputSanitizerService>();
+builder.Services.AddScoped<ITwoFactorService, TwoFactorService>();
 
 // --------------------
 // BUILD
@@ -124,6 +171,9 @@ app.UseHttpsRedirection();
 
 // CORS must be before Authentication/Authorization
 app.UseCors("AllowFrontend");
+
+// Rate Limiting
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

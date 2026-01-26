@@ -1,19 +1,32 @@
 using FarmazonDemo.Models.Dto;
 using FarmazonDemo.Services.Auth;
+using FarmazonDemo.Services.TwoFactor;
+using FarmazonDemo.Services.Common;
+using FarmazonDemo.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 
 namespace FarmazonDemo.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [EnableRateLimiting("auth")]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly ITwoFactorService _twoFactorService;
+        private readonly ApplicationDbContext _context;
 
-        public AuthController(IAuthService authService)
+        public AuthController(
+            IAuthService authService,
+            ITwoFactorService twoFactorService,
+            ApplicationDbContext context)
         {
             _authService = authService;
+            _twoFactorService = twoFactorService;
+            _context = context;
         }
 
         /// <summary>
@@ -29,12 +42,24 @@ namespace FarmazonDemo.Controllers
 
         /// <summary>
         /// Login with email/username and password
+        /// Returns TwoFactorRequired: true if 2FA is enabled
         /// </summary>
         [HttpPost("login")]
         [AllowAnonymous]
         public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginDto dto)
         {
             var result = await _authService.LoginAsync(dto);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Login with 2FA code (when 2FA is enabled)
+        /// </summary>
+        [HttpPost("login/2fa")]
+        [AllowAnonymous]
+        public async Task<ActionResult<AuthResponseDto>> LoginWith2FA([FromBody] TwoFactorLoginDto dto)
+        {
+            var result = await _authService.LoginWith2FAAsync(dto);
             return Ok(result);
         }
 

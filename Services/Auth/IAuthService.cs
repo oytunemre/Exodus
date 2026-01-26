@@ -6,6 +6,7 @@ namespace FarmazonDemo.Services.Auth
     {
         Task<AuthResponseDto> RegisterAsync(RegisterDto dto);
         Task<AuthResponseDto> LoginAsync(LoginDto dto);
+        Task<AuthResponseDto> LoginWith2FAAsync(TwoFactorLoginDto dto);
         string GenerateJwtToken(int userId, string username, string email, string role);
         Task<object> GetUserStatsAsync();
         Task<TokenResponseDto> RefreshTokenAsync(string refreshToken);

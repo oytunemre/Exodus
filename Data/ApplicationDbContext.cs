@@ -22,6 +22,7 @@ namespace FarmazonDemo.Data
         public DbSet<Shipment> Shipments => Set<Shipment>();
         public DbSet<ShipmentEvent> ShipmentEvents => Set<ShipmentEvent>();
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
 
 
 
