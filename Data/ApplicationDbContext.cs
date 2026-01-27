@@ -28,6 +28,9 @@ namespace FarmazonDemo.Data
         public DbSet<Address> Addresses { get; set; }
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<NotificationPreferences> NotificationPreferences { get; set; }
+        public DbSet<OrderEvent> OrderEvents { get; set; }
+        public DbSet<Invoice> Invoices { get; set; }
+        public DbSet<Refund> Refunds { get; set; }
 
 
 
@@ -265,6 +268,79 @@ namespace FarmazonDemo.Data
             modelBuilder.Entity<NotificationPreferences>()
                 .HasIndex(np => np.UserId)
                 .IsUnique();
+
+            // OrderEvent -> Order
+            modelBuilder.Entity<OrderEvent>()
+                .HasOne(oe => oe.Order)
+                .WithMany(o => o.OrderEvents)
+                .HasForeignKey(oe => oe.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<OrderEvent>()
+                .Property(oe => oe.Status)
+                .HasConversion<string>()
+                .HasMaxLength(30);
+
+            // Invoice -> Order
+            modelBuilder.Entity<Invoice>()
+                .HasOne(i => i.Order)
+                .WithMany()
+                .HasForeignKey(i => i.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Invoice>()
+                .HasOne(i => i.SellerOrder)
+                .WithMany()
+                .HasForeignKey(i => i.SellerOrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Invoice>()
+                .HasIndex(i => i.InvoiceNumber)
+                .IsUnique()
+                .HasFilter("[IsDeleted] = 0");
+
+            modelBuilder.Entity<Invoice>()
+                .Property(i => i.Type)
+                .HasConversion<string>()
+                .HasMaxLength(20);
+
+            modelBuilder.Entity<Invoice>()
+                .Property(i => i.Status)
+                .HasConversion<string>()
+                .HasMaxLength(20);
+
+            // Refund -> Order
+            modelBuilder.Entity<Refund>()
+                .HasOne(r => r.Order)
+                .WithMany()
+                .HasForeignKey(r => r.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Refund>()
+                .HasOne(r => r.SellerOrder)
+                .WithMany()
+                .HasForeignKey(r => r.SellerOrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Refund>()
+                .HasIndex(r => r.RefundNumber)
+                .IsUnique()
+                .HasFilter("[IsDeleted] = 0");
+
+            modelBuilder.Entity<Refund>()
+                .Property(r => r.Status)
+                .HasConversion<string>()
+                .HasMaxLength(20);
+
+            modelBuilder.Entity<Refund>()
+                .Property(r => r.Type)
+                .HasConversion<string>()
+                .HasMaxLength(20);
+
+            modelBuilder.Entity<Refund>()
+                .Property(r => r.Method)
+                .HasConversion<string>()
+                .HasMaxLength(30);
 
         }
 
