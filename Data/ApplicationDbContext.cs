@@ -23,6 +23,8 @@ namespace FarmazonDemo.Data
         public DbSet<ShipmentEvent> ShipmentEvents => Set<ShipmentEvent>();
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<Category> Categories { get; set; }
+        public DbSet<ProductImage> ProductImages { get; set; }
 
 
 
@@ -194,6 +196,37 @@ namespace FarmazonDemo.Data
                 .WithMany()
                 .HasForeignKey(rt => rt.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // CATEGORY
+            modelBuilder.Entity<Category>(b =>
+            {
+                b.HasIndex(c => c.Slug).IsUnique().HasFilter("[IsDeleted] = 0");
+
+                b.HasOne(c => c.ParentCategory)
+                    .WithMany(c => c.SubCategories)
+                    .HasForeignKey(c => c.ParentCategoryId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Product -> Category
+            modelBuilder.Entity<Product>()
+                .HasOne(p => p.Category)
+                .WithMany(c => c.Products)
+                .HasForeignKey(p => p.CategoryId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // ProductImage -> Product
+            modelBuilder.Entity<ProductImage>()
+                .HasOne(pi => pi.Product)
+                .WithMany(p => p.Images)
+                .HasForeignKey(pi => pi.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Listing StockStatus enum to string
+            modelBuilder.Entity<Listing>()
+                .Property(l => l.StockStatus)
+                .HasConversion<string>()
+                .HasMaxLength(30);
 
         }
 

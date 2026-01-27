@@ -20,6 +20,9 @@ using FarmazonDemo.Services.Shipments;
 using FarmazonDemo.Services.Audit;
 using FarmazonDemo.Services.Security;
 using FarmazonDemo.Services.TwoFactor;
+using FarmazonDemo.Services.Categories;
+using FarmazonDemo.Services.Files;
+using FarmazonDemo.Models.Dto;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -157,6 +160,11 @@ builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<IInputSanitizerService, InputSanitizerService>();
 builder.Services.AddScoped<ITwoFactorService, TwoFactorService>();
 
+// Category & File Services
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.Configure<FileUploadSettings>(builder.Configuration.GetSection("FileUploadSettings"));
+builder.Services.AddScoped<IFileService, FileService>();
+
 // --------------------
 // BUILD
 // --------------------
@@ -168,6 +176,9 @@ var app = builder.Build();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseHttpsRedirection();
+
+// Static files for uploaded content
+app.UseStaticFiles();
 
 // CORS must be before Authentication/Authorization
 app.UseCors("AllowFrontend");
