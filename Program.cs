@@ -22,6 +22,8 @@ using FarmazonDemo.Services.Security;
 using FarmazonDemo.Services.TwoFactor;
 using FarmazonDemo.Services.Categories;
 using FarmazonDemo.Services.Files;
+using FarmazonDemo.Services.Profile;
+using FarmazonDemo.Services.Notifications;
 using FarmazonDemo.Models.Dto;
 using System.Threading.RateLimiting;
 
@@ -164,6 +166,10 @@ builder.Services.AddScoped<ITwoFactorService, TwoFactorService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.Configure<FileUploadSettings>(builder.Configuration.GetSection("FileUploadSettings"));
 builder.Services.AddScoped<IFileService, FileService>();
+
+// Profile & Notification Services
+builder.Services.AddScoped<IProfileService, ProfileService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 // --------------------
 // BUILD

@@ -25,6 +25,9 @@ namespace FarmazonDemo.Data
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
+        public DbSet<Address> Addresses { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<NotificationPreferences> NotificationPreferences { get; set; }
 
 
 
@@ -227,6 +230,41 @@ namespace FarmazonDemo.Data
                 .Property(l => l.StockStatus)
                 .HasConversion<string>()
                 .HasMaxLength(30);
+
+            // Address -> User
+            modelBuilder.Entity<Address>()
+                .HasOne(a => a.User)
+                .WithMany()
+                .HasForeignKey(a => a.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Address>()
+                .Property(a => a.Type)
+                .HasConversion<string>()
+                .HasMaxLength(20);
+
+            // Notification -> User
+            modelBuilder.Entity<Notification>()
+                .HasOne(n => n.User)
+                .WithMany()
+                .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Notification>()
+                .Property(n => n.Type)
+                .HasConversion<string>()
+                .HasMaxLength(30);
+
+            // NotificationPreferences -> User (one-to-one)
+            modelBuilder.Entity<NotificationPreferences>()
+                .HasOne(np => np.User)
+                .WithOne()
+                .HasForeignKey<NotificationPreferences>(np => np.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<NotificationPreferences>()
+                .HasIndex(np => np.UserId)
+                .IsUnique();
 
         }
 

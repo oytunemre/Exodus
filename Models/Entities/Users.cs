@@ -1,4 +1,5 @@
-﻿using FarmazonDemo.Models.Enums;
+using System.ComponentModel.DataAnnotations;
+using FarmazonDemo.Models.Enums;
 
 namespace FarmazonDemo.Models.Entities
 {
@@ -9,6 +10,15 @@ namespace FarmazonDemo.Models.Entities
         public required string Password { get; set; } = string.Empty;
         public required string Username { get; set; } = string.Empty;
         public UserRole Role { get; set; } = UserRole.Customer;
+
+        // Profile
+        [StringLength(20)]
+        public string? Phone { get; set; }
+
+        [StringLength(500)]
+        public string? AvatarUrl { get; set; }
+
+        public DateTime? LastLoginAt { get; set; }
 
         // Email Verification
         public bool EmailVerified { get; set; } = false;
