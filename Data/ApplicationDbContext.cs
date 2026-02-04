@@ -42,7 +42,8 @@ namespace FarmazonDemo.Data
         public DbSet<SellerProfile> SellerProfiles { get; set; }
         public DbSet<ShippingCarrier> ShippingCarriers { get; set; }
         public DbSet<StaticPage> StaticPages { get; set; }
-
+        public DbSet<ReturnShipment> ReturnShipments { get; set; }
+        public DbSet<SellerShippingSettings> SellerShippingSettings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -527,6 +528,66 @@ namespace FarmazonDemo.Data
                 b.Property(x => x.VerificationStatus)
                     .HasConversion<string>()
                     .HasMaxLength(20);
+            });
+
+            // RETURN SHIPMENT
+            modelBuilder.Entity<ReturnShipment>(b =>
+            {
+                b.HasIndex(x => x.ReturnCode)
+                    .IsUnique()
+                    .HasFilter("[IsDeleted] = 0");
+
+                b.HasIndex(x => new { x.Status, x.CreatedAt });
+
+                b.Property(x => x.Reason)
+                    .HasConversion<string>()
+                    .HasMaxLength(30);
+
+                b.Property(x => x.PaidBy)
+                    .HasConversion<string>()
+                    .HasMaxLength(20);
+
+                b.Property(x => x.Status)
+                    .HasConversion<string>()
+                    .HasMaxLength(30);
+
+                b.HasOne(x => x.Ticket)
+                    .WithMany()
+                    .HasForeignKey(x => x.TicketId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                b.HasOne(x => x.Refund)
+                    .WithMany()
+                    .HasForeignKey(x => x.RefundId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                b.HasOne(x => x.SellerOrder)
+                    .WithMany()
+                    .HasForeignKey(x => x.SellerOrderId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne(x => x.Carrier)
+                    .WithMany()
+                    .HasForeignKey(x => x.CarrierId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // SELLER SHIPPING SETTINGS
+            modelBuilder.Entity<SellerShippingSettings>(b =>
+            {
+                b.HasOne(x => x.Seller)
+                    .WithOne()
+                    .HasForeignKey<SellerShippingSettings>(x => x.SellerId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasIndex(x => x.SellerId)
+                    .IsUnique()
+                    .HasFilter("[IsDeleted] = 0");
+
+                b.HasOne(x => x.PreferredCarrier)
+                    .WithMany()
+                    .HasForeignKey(x => x.PreferredCarrierId)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
 
         }
