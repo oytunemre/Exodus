@@ -21,7 +21,7 @@ public class CampaignService : ICampaignService
     {
         // Validate dates
         if (dto.EndDate <= dto.StartDate)
-            throw new ValidationException("End date must be after start date");
+            throw new BadRequestException("End date must be after start date");
 
         // Validate campaign type requirements
         ValidateCampaignTypeRequirements(dto);
@@ -31,7 +31,7 @@ public class CampaignService : ICampaignService
         {
             var exists = await _db.Campaigns.AnyAsync(c => c.CouponCode == dto.CouponCode, ct);
             if (exists)
-                throw new ValidationException("Coupon code already exists");
+                throw new BadRequestException("Coupon code already exists");
         }
 
         var campaign = new Campaign
@@ -411,7 +411,7 @@ public class CampaignService : ICampaignService
             CampaignId = u.CampaignId,
             CampaignName = campaign.Name,
             UserId = u.UserId,
-            UserName = u.User?.FullName,
+            UserName = u.User?.Name,
             OrderId = u.OrderId,
             OrderNumber = u.Order?.OrderNumber,
             DiscountApplied = u.DiscountApplied,
@@ -483,24 +483,24 @@ public class CampaignService : ICampaignService
         {
             case CampaignType.PercentageDiscount:
                 if (!dto.DiscountPercentage.HasValue || dto.DiscountPercentage <= 0 || dto.DiscountPercentage > 100)
-                    throw new ValidationException("Percentage discount requires valid discount percentage (1-100)");
+                    throw new BadRequestException("Percentage discount requires valid discount percentage (1-100)");
                 break;
 
             case CampaignType.FixedAmountDiscount:
                 if (!dto.DiscountAmount.HasValue || dto.DiscountAmount <= 0)
-                    throw new ValidationException("Fixed amount discount requires valid discount amount");
+                    throw new BadRequestException("Fixed amount discount requires valid discount amount");
                 break;
 
             case CampaignType.BuyXGetYFree:
                 if (!dto.BuyQuantity.HasValue || dto.BuyQuantity <= 0 || !dto.GetQuantity.HasValue || dto.GetQuantity <= 0)
-                    throw new ValidationException("BOGO campaign requires BuyQuantity and GetQuantity");
+                    throw new BadRequestException("BOGO campaign requires BuyQuantity and GetQuantity");
                 break;
 
             case CampaignType.BuyXPayY:
                 if (!dto.BuyQuantity.HasValue || dto.BuyQuantity <= 0 || !dto.GetQuantity.HasValue || dto.GetQuantity <= 0)
-                    throw new ValidationException("BuyXPayY campaign requires BuyQuantity and GetQuantity (pay amount)");
+                    throw new BadRequestException("BuyXPayY campaign requires BuyQuantity and GetQuantity (pay amount)");
                 if (dto.GetQuantity >= dto.BuyQuantity)
-                    throw new ValidationException("GetQuantity (pay amount) must be less than BuyQuantity");
+                    throw new BadRequestException("GetQuantity (pay amount) must be less than BuyQuantity");
                 break;
         }
     }
@@ -712,7 +712,7 @@ public class CampaignService : ICampaignService
             Description = c.Description,
             Type = c.Type,
             SellerId = c.SellerId,
-            SellerName = c.Seller?.FullName,
+            SellerName = c.Seller?.Name,
             StartDate = c.StartDate,
             EndDate = c.EndDate,
             IsActive = c.IsActive,

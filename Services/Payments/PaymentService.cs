@@ -213,13 +213,13 @@ public class PaymentService : IPaymentService
         var intent = await GetIntentAsync(paymentIntentId, ct);
 
         if (intent.Status != PaymentStatus.Captured && intent.Status != PaymentStatus.PartiallyRefunded)
-            throw new ValidationException("Only captured payments can be refunded");
+            throw new BadRequestException("Only captured payments can be refunded");
 
         var refundAmount = amount ?? (intent.Amount - intent.RefundedAmount);
         var maxRefundable = intent.Amount - intent.RefundedAmount;
 
         if (refundAmount <= 0 || refundAmount > maxRefundable)
-            throw new ValidationException($"Invalid refund amount. Maximum refundable: {maxRefundable:N2}");
+            throw new BadRequestException($"Invalid refund amount. Maximum refundable: {maxRefundable:N2}");
 
         intent.RefundedAmount += refundAmount;
         intent.RefundedAt = DateTime.UtcNow;
@@ -267,10 +267,10 @@ public class PaymentService : IPaymentService
         var intent = await GetIntentAsync(paymentIntentId, ct);
 
         if (!intent.Requires3DSecure)
-            throw new ValidationException("This payment does not require 3D Secure");
+            throw new BadRequestException("This payment does not require 3D Secure");
 
         if (intent.Status != PaymentStatus.Pending)
-            throw new ValidationException("Payment is not awaiting 3D Secure confirmation");
+            throw new BadRequestException("Payment is not awaiting 3D Secure confirmation");
 
         // Simulate 3D Secure result
         if (authenticationResult.Equals("success", StringComparison.OrdinalIgnoreCase))
@@ -305,7 +305,7 @@ public class PaymentService : IPaymentService
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
         if (webhookEvent == null || string.IsNullOrEmpty(webhookEvent.ExternalReference))
-            throw new ValidationException("Invalid webhook payload");
+            throw new BadRequestException("Invalid webhook payload");
 
         var intent = await _db.PaymentIntents
             .FirstOrDefaultAsync(x => x.ExternalReference == webhookEvent.ExternalReference, ct);
@@ -768,7 +768,7 @@ public class PaymentService : IPaymentService
                 basketItems.Add(new BasketItemInfo
                 {
                     Id = item.Id.ToString(),
-                    Name = item.Listing?.Product?.Name ?? "Product",
+                    Name = item.Listing?.Product?.ProductName ?? "Product",
                     Category1 = "Marketplace",
                     ItemType = "PHYSICAL",
                     Price = item.LineTotal
@@ -799,29 +799,29 @@ public class PaymentService : IPaymentService
             Buyer = new BuyerInfo
             {
                 Id = buyer?.Id.ToString() ?? "0",
-                Name = buyer?.FirstName ?? "Guest",
-                Surname = buyer?.LastName ?? "User",
+                Name = buyer?.Name ?? "Guest",
+                Surname = "User",
                 Email = buyer?.Email ?? "guest@farmazon.com",
                 Phone = buyer?.Phone ?? "+905000000000",
                 IdentityNumber = "11111111111",
                 Ip = dto.IpAddress ?? "127.0.0.1",
-                City = order.ShippingCity ?? "Istanbul",
+                City = "Istanbul",
                 Country = "Turkey",
-                RegistrationAddress = order.ShippingAddress ?? "N/A"
+                RegistrationAddress = order.ShippingAddressSnapshot ?? "N/A"
             },
             ShippingAddress = new AddressInfo
             {
-                ContactName = order.ShippingContactName ?? buyer?.FullName ?? "Guest",
-                City = order.ShippingCity ?? "Istanbul",
+                ContactName = buyer?.Name ?? "Guest",
+                City = "Istanbul",
                 Country = "Turkey",
-                Address = order.ShippingAddress ?? "N/A"
+                Address = order.ShippingAddressSnapshot ?? "N/A"
             },
             BillingAddress = new AddressInfo
             {
-                ContactName = order.BillingContactName ?? buyer?.FullName ?? "Guest",
-                City = order.BillingCity ?? "Istanbul",
+                ContactName = buyer?.Name ?? "Guest",
+                City = "Istanbul",
                 Country = "Turkey",
-                Address = order.BillingAddress ?? "N/A"
+                Address = order.BillingAddressSnapshot ?? "N/A"
             },
             BasketItems = basketItems,
             CallbackUrl = dto.CallbackUrl
