@@ -39,6 +39,7 @@ namespace FarmazonDemo.Data
         public DbSet<SiteSetting> SiteSettings { get; set; }
         public DbSet<SupportTicket> SupportTickets { get; set; }
         public DbSet<SupportTicketMessage> SupportTicketMessages { get; set; }
+        public DbSet<SellerProfile> SellerProfiles { get; set; }
 
 
 
@@ -508,6 +509,25 @@ namespace FarmazonDemo.Data
                     .OnDelete(DeleteBehavior.Restrict);
 
                 b.HasIndex(x => new { x.TicketId, x.CreatedAt });
+            });
+
+            // SELLER PROFILE
+            modelBuilder.Entity<SellerProfile>(b =>
+            {
+                b.HasOne(x => x.User)
+                    .WithOne()
+                    .HasForeignKey<SellerProfile>(x => x.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasIndex(x => x.UserId)
+                    .IsUnique()
+                    .HasFilter("[IsDeleted] = 0");
+
+                b.HasIndex(x => x.VerificationStatus);
+
+                b.Property(x => x.VerificationStatus)
+                    .HasConversion<string>()
+                    .HasMaxLength(20);
             });
 
         }
