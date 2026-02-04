@@ -26,6 +26,8 @@ using FarmazonDemo.Services.Profile;
 using FarmazonDemo.Services.Notifications;
 using FarmazonDemo.Services.Dashboard;
 using FarmazonDemo.Services.Reports;
+using FarmazonDemo.Services.PaymentGateway;
+using FarmazonDemo.Services.Campaigns;
 using FarmazonDemo.Models.Dto;
 using System.Threading.RateLimiting;
 
@@ -176,6 +178,13 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 // Dashboard & Report Services
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IReportService, ReportService>();
+
+// Payment Gateway (iyzico)
+builder.Services.Configure<IyzicoSettings>(builder.Configuration.GetSection("IyzicoSettings"));
+builder.Services.AddHttpClient<IPaymentGateway, IyzicoPaymentGateway>();
+
+// Campaign Service
+builder.Services.AddScoped<ICampaignService, CampaignService>();
 
 // --------------------
 // BUILD

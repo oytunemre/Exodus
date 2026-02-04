@@ -4,6 +4,7 @@ using FarmazonDemo.Models.Entities;
 using FarmazonDemo.Models.Enums;
 using FarmazonDemo.Services.Common;
 using FarmazonDemo.Services.Notifications;
+using FarmazonDemo.Services.PaymentGateway;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
@@ -13,11 +14,19 @@ public class PaymentService : IPaymentService
 {
     private readonly ApplicationDbContext _db;
     private readonly INotificationService _notificationService;
+    private readonly IPaymentGateway? _paymentGateway;
+    private readonly ILogger<PaymentService> _logger;
 
-    public PaymentService(ApplicationDbContext db, INotificationService notificationService)
+    public PaymentService(
+        ApplicationDbContext db,
+        INotificationService notificationService,
+        ILogger<PaymentService> logger,
+        IPaymentGateway? paymentGateway = null)
     {
         _db = db;
         _notificationService = notificationService;
+        _logger = logger;
+        _paymentGateway = paymentGateway;
     }
 
     public async Task<PaymentIntentResponseDto> CreateIntentAsync(CreatePaymentIntentDto dto, CancellationToken ct = default)
@@ -468,6 +477,355 @@ public class PaymentService : IPaymentService
     private static string GenerateExternalReference()
     {
         return $"PAY-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..8].ToUpper()}";
+    }
+
+    // Gateway Methods (iyzico integration)
+
+    public async Task<IyzicoPaymentResponseDto> ProcessWithGatewayAsync(ProcessGatewayPaymentDto dto, CancellationToken ct = default)
+    {
+        if (_paymentGateway == null)
+            throw new InvalidOperationException("Payment gateway is not configured");
+
+        var order = await _db.Orders
+            .Include(o => o.Buyer)
+            .Include(o => o.SellerOrders)
+                .ThenInclude(so => so.Items)
+                    .ThenInclude(i => i.Listing)
+                        .ThenInclude(l => l!.Product)
+            .FirstOrDefaultAsync(o => o.Id == dto.OrderId, ct);
+
+        if (order is null)
+            throw new NotFoundException($"Order not found. OrderId={dto.OrderId}");
+
+        // Create or get existing payment intent
+        var intent = await _db.PaymentIntents.FirstOrDefaultAsync(p => p.OrderId == dto.OrderId, ct);
+        if (intent is null)
+        {
+            intent = new PaymentIntent
+            {
+                OrderId = order.Id,
+                Amount = order.TotalAmount,
+                Currency = "TRY",
+                Method = PaymentMethod.CreditCard,
+                Status = PaymentStatus.Created,
+                Provider = _paymentGateway.ProviderName.ToUpper(),
+                ExpiresAt = DateTime.UtcNow.AddHours(24),
+                InstallmentCount = dto.InstallmentCount
+            };
+            _db.PaymentIntents.Add(intent);
+            await _db.SaveChangesAsync(ct);
+        }
+
+        // Build gateway request
+        var gatewayRequest = BuildGatewayRequest(order, dto, intent);
+
+        // Process payment
+        var result = await _paymentGateway.InitiatePaymentAsync(gatewayRequest, ct);
+
+        if (result.Success)
+        {
+            intent.Status = PaymentStatus.Captured;
+            intent.CapturedAt = DateTime.UtcNow;
+            intent.ExternalReference = result.PaymentId;
+            intent.CardLast4 = result.CardLast4;
+            intent.CardBrand = result.CardBrand;
+
+            order.Status = OrderStatus.Processing;
+            order.PaidAt = DateTime.UtcNow;
+
+            await _db.SaveChangesAsync(ct);
+            await AddEventAsync(intent.Id, PaymentStatus.Captured, "payment.captured.gateway",
+                JsonSerializer.Serialize(new { gatewayPaymentId = result.PaymentId }), _paymentGateway.ProviderName, ct);
+
+            await _notificationService.SendPaymentUpdateAsync(
+                order.BuyerId,
+                order.Id,
+                "Odeme Basarili",
+                $"{intent.Amount:N2} {intent.Currency} tutarindaki odemeniz basariyla tamamlandi."
+            );
+        }
+        else
+        {
+            intent.Status = PaymentStatus.Failed;
+            intent.FailedAt = DateTime.UtcNow;
+            intent.FailureReason = result.ErrorMessage;
+
+            await _db.SaveChangesAsync(ct);
+            await AddEventAsync(intent.Id, PaymentStatus.Failed, "payment.failed.gateway",
+                JsonSerializer.Serialize(new { errorCode = result.ErrorCode, errorMessage = result.ErrorMessage }), _paymentGateway.ProviderName, ct);
+        }
+
+        return new IyzicoPaymentResponseDto
+        {
+            Success = result.Success,
+            PaymentIntentId = intent.Id,
+            GatewayPaymentId = result.PaymentId,
+            GatewayTransactionId = result.PaymentTransactionId,
+            PaidPrice = result.PaidPrice,
+            Currency = result.Currency,
+            Installment = result.Installment,
+            CardLast4 = result.CardLast4,
+            CardBrand = result.CardBrand,
+            ErrorCode = result.ErrorCode,
+            ErrorMessage = result.ErrorMessage
+        };
+    }
+
+    public async Task<Iyzico3DSResponseDto> Initialize3DSPaymentAsync(ProcessGatewayPaymentDto dto, CancellationToken ct = default)
+    {
+        if (_paymentGateway == null)
+            throw new InvalidOperationException("Payment gateway is not configured");
+
+        var order = await _db.Orders
+            .Include(o => o.Buyer)
+            .Include(o => o.SellerOrders)
+                .ThenInclude(so => so.Items)
+                    .ThenInclude(i => i.Listing)
+                        .ThenInclude(l => l!.Product)
+            .FirstOrDefaultAsync(o => o.Id == dto.OrderId, ct);
+
+        if (order is null)
+            throw new NotFoundException($"Order not found. OrderId={dto.OrderId}");
+
+        // Create payment intent
+        var intent = await _db.PaymentIntents.FirstOrDefaultAsync(p => p.OrderId == dto.OrderId, ct);
+        if (intent is null)
+        {
+            intent = new PaymentIntent
+            {
+                OrderId = order.Id,
+                Amount = order.TotalAmount,
+                Currency = "TRY",
+                Method = PaymentMethod.CreditCard,
+                Status = PaymentStatus.Pending,
+                Provider = _paymentGateway.ProviderName.ToUpper(),
+                ExpiresAt = DateTime.UtcNow.AddHours(24),
+                InstallmentCount = dto.InstallmentCount,
+                Requires3DSecure = true
+            };
+            _db.PaymentIntents.Add(intent);
+            await _db.SaveChangesAsync(ct);
+        }
+
+        // Build gateway request
+        var gatewayRequest = BuildGatewayRequest(order, dto, intent);
+        gatewayRequest.CallbackUrl = dto.CallbackUrl;
+
+        // Initialize 3DS
+        var result = await _paymentGateway.Initiate3DSPaymentAsync(gatewayRequest, ct);
+
+        if (result.Success)
+        {
+            intent.ThreeDSecureUrl = result.RedirectUrl;
+            await _db.SaveChangesAsync(ct);
+            await AddEventAsync(intent.Id, PaymentStatus.Pending, "3ds.initialized",
+                JsonSerializer.Serialize(new { paymentId = result.PaymentId }), _paymentGateway.ProviderName, ct);
+        }
+
+        return new Iyzico3DSResponseDto
+        {
+            Success = result.Success,
+            PaymentIntentId = intent.Id,
+            ThreeDSHtmlContent = result.ThreeDSHtmlContent,
+            RedirectUrl = result.RedirectUrl,
+            ErrorCode = result.ErrorCode,
+            ErrorMessage = result.ErrorMessage
+        };
+    }
+
+    public async Task<IyzicoPaymentResponseDto> Complete3DSPaymentAsync(string paymentToken, CancellationToken ct = default)
+    {
+        if (_paymentGateway == null)
+            throw new InvalidOperationException("Payment gateway is not configured");
+
+        var result = await _paymentGateway.Complete3DSPaymentAsync(paymentToken, ct);
+
+        // Find the payment intent by external reference or conversation id
+        var intent = await _db.PaymentIntents
+            .FirstOrDefaultAsync(p => p.ExternalReference == paymentToken || p.Status == PaymentStatus.Pending, ct);
+
+        if (intent != null)
+        {
+            if (result.Success)
+            {
+                intent.Status = PaymentStatus.Captured;
+                intent.CapturedAt = DateTime.UtcNow;
+                intent.ExternalReference = result.PaymentId;
+                intent.CardLast4 = result.CardLast4;
+                intent.CardBrand = result.CardBrand;
+
+                var order = await _db.Orders.FindAsync(new object[] { intent.OrderId }, ct);
+                if (order != null)
+                {
+                    order.Status = OrderStatus.Processing;
+                    order.PaidAt = DateTime.UtcNow;
+
+                    await _notificationService.SendPaymentUpdateAsync(
+                        order.BuyerId,
+                        order.Id,
+                        "Odeme Basarili",
+                        $"{intent.Amount:N2} {intent.Currency} tutarindaki odemeniz 3D Secure ile tamamlandi."
+                    );
+                }
+
+                await _db.SaveChangesAsync(ct);
+                await AddEventAsync(intent.Id, PaymentStatus.Captured, "3ds.completed",
+                    JsonSerializer.Serialize(new { paymentId = result.PaymentId }), _paymentGateway.ProviderName, ct);
+            }
+            else
+            {
+                intent.Status = PaymentStatus.Failed;
+                intent.FailedAt = DateTime.UtcNow;
+                intent.FailureReason = result.ErrorMessage;
+
+                await _db.SaveChangesAsync(ct);
+                await AddEventAsync(intent.Id, PaymentStatus.Failed, "3ds.failed",
+                    JsonSerializer.Serialize(new { errorCode = result.ErrorCode, errorMessage = result.ErrorMessage }), _paymentGateway.ProviderName, ct);
+            }
+        }
+
+        return new IyzicoPaymentResponseDto
+        {
+            Success = result.Success,
+            PaymentIntentId = intent?.Id,
+            GatewayPaymentId = result.PaymentId,
+            GatewayTransactionId = result.PaymentTransactionId,
+            PaidPrice = result.PaidPrice,
+            Currency = result.Currency,
+            Installment = result.Installment,
+            CardLast4 = result.CardLast4,
+            CardBrand = result.CardBrand,
+            CardFamily = result.CardFamily,
+            CardType = result.CardType,
+            FraudStatus = result.FraudStatus,
+            ErrorCode = result.ErrorCode,
+            ErrorMessage = result.ErrorMessage
+        };
+    }
+
+    public async Task<BinCheckResponseDto> CheckBinAsync(string binNumber, CancellationToken ct = default)
+    {
+        if (_paymentGateway == null)
+            throw new InvalidOperationException("Payment gateway is not configured");
+
+        var result = await _paymentGateway.CheckBinAsync(binNumber, ct);
+
+        return new BinCheckResponseDto
+        {
+            Success = result.Success,
+            BinNumber = result.BinNumber,
+            CardType = result.CardType,
+            CardAssociation = result.CardAssociation,
+            CardFamily = result.CardFamily,
+            BankName = result.BankName,
+            BankCode = result.BankCode,
+            Commercial = result.Commercial,
+            ErrorCode = result.ErrorCode,
+            ErrorMessage = result.ErrorMessage
+        };
+    }
+
+    public async Task<InstallmentResponseDto> GetInstallmentOptionsAsync(string binNumber, decimal price, CancellationToken ct = default)
+    {
+        if (_paymentGateway == null)
+            throw new InvalidOperationException("Payment gateway is not configured");
+
+        var result = await _paymentGateway.GetInstallmentOptionsAsync(binNumber, price, ct);
+
+        return new InstallmentResponseDto
+        {
+            Success = result.Success,
+            Options = result.Options.Select(o => new InstallmentOptionDto
+            {
+                BankName = o.BankName,
+                BankCode = o.BankCode,
+                CardType = o.CardType,
+                CardAssociation = o.CardAssociation,
+                CardFamily = o.CardFamily,
+                Force3DS = o.Force3DS,
+                Details = o.Details.Select(d => new InstallmentDetailDto
+                {
+                    InstallmentNumber = d.InstallmentNumber,
+                    TotalPrice = d.TotalPrice,
+                    InstallmentPrice = d.InstallmentPrice,
+                    InstallmentRate = d.InstallmentRate
+                }).ToList()
+            }).ToList(),
+            ErrorCode = result.ErrorCode,
+            ErrorMessage = result.ErrorMessage
+        };
+    }
+
+    private PaymentRequest BuildGatewayRequest(Order order, ProcessGatewayPaymentDto dto, PaymentIntent intent)
+    {
+        var buyer = order.Buyer;
+        var basketItems = new List<BasketItemInfo>();
+
+        foreach (var sellerOrder in order.SellerOrders)
+        {
+            foreach (var item in sellerOrder.Items)
+            {
+                basketItems.Add(new BasketItemInfo
+                {
+                    Id = item.Id.ToString(),
+                    Name = item.Listing?.Product?.Name ?? "Product",
+                    Category1 = "Marketplace",
+                    ItemType = "PHYSICAL",
+                    Price = item.LineTotal
+                });
+            }
+        }
+
+        return new PaymentRequest
+        {
+            ConversationId = intent.Id.ToString(),
+            Price = order.TotalAmount,
+            PaidPrice = order.TotalAmount,
+            Currency = "TRY",
+            InstallmentCount = dto.InstallmentCount,
+            BasketId = order.OrderNumber,
+            PaymentMethod = PaymentMethod.CreditCard,
+            Card = new CardInfo
+            {
+                CardHolderName = dto.Card.CardHolderName,
+                CardNumber = dto.Card.CardNumber,
+                ExpireMonth = dto.Card.ExpireMonth,
+                ExpireYear = dto.Card.ExpireYear,
+                Cvc = dto.Card.Cvc,
+                RegisterCard = dto.Card.RegisterCard,
+                CardToken = dto.Card.CardToken,
+                CardUserKey = dto.Card.CardUserKey
+            },
+            Buyer = new BuyerInfo
+            {
+                Id = buyer?.Id.ToString() ?? "0",
+                Name = buyer?.FirstName ?? "Guest",
+                Surname = buyer?.LastName ?? "User",
+                Email = buyer?.Email ?? "guest@farmazon.com",
+                Phone = buyer?.Phone ?? "+905000000000",
+                IdentityNumber = "11111111111",
+                Ip = dto.IpAddress ?? "127.0.0.1",
+                City = order.ShippingCity ?? "Istanbul",
+                Country = "Turkey",
+                RegistrationAddress = order.ShippingAddress ?? "N/A"
+            },
+            ShippingAddress = new AddressInfo
+            {
+                ContactName = order.ShippingContactName ?? buyer?.FullName ?? "Guest",
+                City = order.ShippingCity ?? "Istanbul",
+                Country = "Turkey",
+                Address = order.ShippingAddress ?? "N/A"
+            },
+            BillingAddress = new AddressInfo
+            {
+                ContactName = order.BillingContactName ?? buyer?.FullName ?? "Guest",
+                City = order.BillingCity ?? "Istanbul",
+                Country = "Turkey",
+                Address = order.BillingAddress ?? "N/A"
+            },
+            BasketItems = basketItems,
+            CallbackUrl = dto.CallbackUrl
+        };
     }
 
     private class WebhookEvent

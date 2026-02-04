@@ -151,6 +151,111 @@ public class PaymentController : ControllerBase
         await _paymentService.ProcessWebhookAsync(provider, dto.Payload, signature, ct);
         return Ok(new { received = true });
     }
+
+    // =====================================================
+    // IYZICO GATEWAY ENDPOINTS
+    // =====================================================
+
+    /// <summary>
+    /// Process payment directly via iyzico gateway (non-3DS)
+    /// </summary>
+    [HttpPost("gateway/process")]
+    public async Task<ActionResult<IyzicoPaymentResponseDto>> ProcessWithGateway([FromBody] ProcessGatewayPaymentDto dto, CancellationToken ct)
+    {
+        dto.IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var result = await _paymentService.ProcessWithGatewayAsync(dto, ct);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Initialize 3D Secure payment via iyzico
+    /// </summary>
+    [HttpPost("gateway/3ds/initialize")]
+    public async Task<ActionResult<Iyzico3DSResponseDto>> Initialize3DSPayment([FromBody] ProcessGatewayPaymentDto dto, CancellationToken ct)
+    {
+        dto.IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+        var result = await _paymentService.Initialize3DSPaymentAsync(dto, ct);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Complete 3D Secure payment after bank redirect
+    /// </summary>
+    [HttpPost("gateway/3ds/complete")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IyzicoPaymentResponseDto>> Complete3DSPayment([FromForm] ThreeDSCallbackDto callback, CancellationToken ct)
+    {
+        if (string.IsNullOrEmpty(callback.PaymentId))
+            return BadRequest(new { error = "PaymentId is required" });
+
+        var result = await _paymentService.Complete3DSPaymentAsync(callback.PaymentId, ct);
+
+        // Redirect to frontend with result
+        if (result.Success)
+        {
+            return Redirect($"/payment/success?paymentId={result.PaymentIntentId}");
+        }
+        else
+        {
+            return Redirect($"/payment/failed?error={result.ErrorMessage}");
+        }
+    }
+
+    /// <summary>
+    /// Check BIN number to get card details
+    /// </summary>
+    [HttpGet("gateway/bin/{binNumber}")]
+    public async Task<ActionResult<BinCheckResponseDto>> CheckBin(string binNumber, CancellationToken ct)
+    {
+        var result = await _paymentService.CheckBinAsync(binNumber, ct);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Get available installment options for a BIN and price
+    /// </summary>
+    [HttpGet("gateway/installments")]
+    public async Task<ActionResult<InstallmentResponseDto>> GetInstallmentOptions(
+        [FromQuery] string binNumber,
+        [FromQuery] decimal price,
+        CancellationToken ct)
+    {
+        var result = await _paymentService.GetInstallmentOptionsAsync(binNumber, price, ct);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// 3D Secure callback endpoint (called by iyzico after bank auth)
+    /// </summary>
+    [HttpPost("3ds-callback")]
+    [AllowAnonymous]
+    public async Task<ActionResult> ThreeDSCallback([FromForm] ThreeDSCallbackDto callback, CancellationToken ct)
+    {
+        if (string.IsNullOrEmpty(callback.PaymentId))
+            return BadRequest("Invalid callback");
+
+        var result = await _paymentService.Complete3DSPaymentAsync(callback.PaymentId, ct);
+
+        // Return HTML page that posts message to parent window (for iframe integration)
+        var html = $@"
+<!DOCTYPE html>
+<html>
+<head><title>Odeme Sonucu</title></head>
+<body>
+<script>
+    window.parent.postMessage({{
+        type: '3ds_complete',
+        success: {result.Success.ToString().ToLower()},
+        paymentId: '{result.PaymentIntentId}',
+        errorMessage: '{result.ErrorMessage ?? ""}'
+    }}, '*');
+</script>
+<p>{(result.Success ? "Odeme basarili! Yonlendiriliyorsunuz..." : $"Odeme basarisiz: {result.ErrorMessage}")}</p>
+</body>
+</html>";
+
+        return Content(html, "text/html");
+    }
 }
 
 // Additional DTOs for controller actions

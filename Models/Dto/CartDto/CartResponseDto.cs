@@ -15,6 +15,8 @@ public class CartItemResponseDto
 
     public int ProductId { get; set; }
     public string ProductName { get; set; } = string.Empty;
+    public int? CategoryId { get; set; }
+    public int SellerId { get; set; }
 
     public decimal UnitPrice { get; set; }
     public int Quantity { get; set; }

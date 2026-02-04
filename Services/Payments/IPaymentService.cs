@@ -35,4 +35,11 @@ public interface IPaymentService
 
     // History
     Task<List<PaymentEventDto>> GetPaymentEventsAsync(int paymentIntentId, CancellationToken ct = default);
+
+    // iyzico Gateway Methods
+    Task<IyzicoPaymentResponseDto> ProcessWithGatewayAsync(ProcessGatewayPaymentDto dto, CancellationToken ct = default);
+    Task<Iyzico3DSResponseDto> Initialize3DSPaymentAsync(ProcessGatewayPaymentDto dto, CancellationToken ct = default);
+    Task<IyzicoPaymentResponseDto> Complete3DSPaymentAsync(string paymentToken, CancellationToken ct = default);
+    Task<BinCheckResponseDto> CheckBinAsync(string binNumber, CancellationToken ct = default);
+    Task<InstallmentResponseDto> GetInstallmentOptionsAsync(string binNumber, decimal price, CancellationToken ct = default);
 }

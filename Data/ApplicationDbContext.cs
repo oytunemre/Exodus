@@ -31,6 +31,10 @@ namespace FarmazonDemo.Data
         public DbSet<OrderEvent> OrderEvents { get; set; }
         public DbSet<Invoice> Invoices { get; set; }
         public DbSet<Refund> Refunds { get; set; }
+        public DbSet<Campaign> Campaigns { get; set; }
+        public DbSet<CampaignProduct> CampaignProducts { get; set; }
+        public DbSet<CampaignCategory> CampaignCategories { get; set; }
+        public DbSet<CampaignUsage> CampaignUsages { get; set; }
 
 
 
@@ -341,6 +345,86 @@ namespace FarmazonDemo.Data
                 .Property(r => r.Method)
                 .HasConversion<string>()
                 .HasMaxLength(30);
+
+            // CAMPAIGN
+            modelBuilder.Entity<Campaign>(b =>
+            {
+                b.HasOne(c => c.Seller)
+                    .WithMany()
+                    .HasForeignKey(c => c.SellerId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.Property(c => c.Type)
+                    .HasConversion<string>()
+                    .HasMaxLength(30);
+
+                b.Property(c => c.Scope)
+                    .HasConversion<string>()
+                    .HasMaxLength(30);
+
+                b.HasIndex(c => c.CouponCode)
+                    .IsUnique()
+                    .HasFilter("[CouponCode] IS NOT NULL AND [IsDeleted] = 0");
+
+                b.Property(c => c.DiscountPercentage).HasColumnType("decimal(5,2)");
+                b.Property(c => c.DiscountAmount).HasColumnType("decimal(18,2)");
+                b.Property(c => c.MaxDiscountAmount).HasColumnType("decimal(18,2)");
+                b.Property(c => c.MinimumOrderAmount).HasColumnType("decimal(18,2)");
+            });
+
+            // CampaignProduct
+            modelBuilder.Entity<CampaignProduct>(b =>
+            {
+                b.HasOne(cp => cp.Campaign)
+                    .WithMany(c => c.CampaignProducts)
+                    .HasForeignKey(cp => cp.CampaignId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(cp => cp.Product)
+                    .WithMany()
+                    .HasForeignKey(cp => cp.ProductId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(cp => cp.Listing)
+                    .WithMany()
+                    .HasForeignKey(cp => cp.ListingId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // CampaignCategory
+            modelBuilder.Entity<CampaignCategory>(b =>
+            {
+                b.HasOne(cc => cc.Campaign)
+                    .WithMany(c => c.CampaignCategories)
+                    .HasForeignKey(cc => cc.CampaignId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(cc => cc.Category)
+                    .WithMany()
+                    .HasForeignKey(cc => cc.CategoryId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // CampaignUsage
+            modelBuilder.Entity<CampaignUsage>(b =>
+            {
+                b.HasOne(cu => cu.Campaign)
+                    .WithMany(c => c.Usages)
+                    .HasForeignKey(cu => cu.CampaignId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne(cu => cu.User)
+                    .WithMany()
+                    .HasForeignKey(cu => cu.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne(cu => cu.Order)
+                    .WithMany()
+                    .HasForeignKey(cu => cu.OrderId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                b.Property(cu => cu.DiscountApplied).HasColumnType("decimal(18,2)");
+            });
 
         }
 

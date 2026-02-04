@@ -195,6 +195,8 @@ public class CartService : ICartService
             ListingId = i.ListingId,
             ProductId = i.Listing?.ProductId ?? 0,
             ProductName = i.Listing?.Product?.ProductName ?? "",
+            CategoryId = i.Listing?.Product?.CategoryId,
+            SellerId = i.Listing?.SellerId ?? 0,
             UnitPrice = i.UnitPrice,
             Quantity = i.Quantity,
             LineTotal = i.UnitPrice * i.Quantity
