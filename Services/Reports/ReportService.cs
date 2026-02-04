@@ -54,7 +54,7 @@ public class ReportService : IReportService
             {
                 CategoryId = g.Key.CategoryId ?? 0,
                 CategoryName = g.Key.Name,
-                TotalSales = g.Sum(i => i.TotalPrice),
+                TotalSales = g.Sum(i => i.LineTotal),
                 OrderCount = g.Count()
             })
             .OrderByDescending(c => c.TotalSales)
@@ -75,11 +75,11 @@ public class ReportService : IReportService
             .Where(so => so.CreatedAt >= fromDate && so.CreatedAt <= toDate && !so.IsDeleted)
             .Include(so => so.Seller)
             .Include(so => so.Items)
-            .GroupBy(so => new { so.SellerId, so.Seller.FirstName, so.Seller.LastName })
+            .GroupBy(so => new { so.SellerId, so.Seller.Name })
             .Select(g => new SalesBySellerDto
             {
                 SellerId = g.Key.SellerId,
-                SellerName = g.Key.FirstName + " " + g.Key.LastName,
+                SellerName = g.Key.Name,
                 TotalSales = g.Sum(so => so.SubTotal),
                 OrderCount = g.Count(),
                 ItemsSold = g.SelectMany(so => so.Items).Sum(i => i.Quantity)
@@ -119,11 +119,11 @@ public class ReportService : IReportService
             {
                 ListingId = l.Id,
                 ProductId = l.ProductId,
-                ProductName = l.Product?.Name ?? "Unknown",
-                SellerName = $"{l.Seller?.FirstName} {l.Seller?.LastName}",
+                ProductName = l.Product?.ProductName ?? "Unknown",
+                SellerName = l.Seller?.Name ?? "Unknown",
                 CurrentStock = l.StockQuantity,
                 Price = l.Price,
-                Sku = l.Sku
+                Sku = l.SKU
             })
             .OrderBy(i => i.CurrentStock)
             .ToList();
@@ -134,11 +134,11 @@ public class ReportService : IReportService
             {
                 ListingId = l.Id,
                 ProductId = l.ProductId,
-                ProductName = l.Product?.Name ?? "Unknown",
-                SellerName = $"{l.Seller?.FirstName} {l.Seller?.LastName}",
+                ProductName = l.Product?.ProductName ?? "Unknown",
+                SellerName = l.Seller?.Name ?? "Unknown",
                 CurrentStock = 0,
                 Price = l.Price,
-                Sku = l.Sku
+                Sku = l.SKU
             })
             .ToList();
 
@@ -159,7 +159,7 @@ public class ReportService : IReportService
     public async Task<CustomerReportDto> GenerateCustomerReportAsync(DateTime fromDate, DateTime toDate, CancellationToken ct = default)
     {
         var customers = await _db.Users
-            .Where(u => u.Role == "Customer" && !u.IsDeleted)
+            .Where(u => u.Role == UserRole.Customer && !u.IsDeleted)
             .ToListAsync(ct);
 
         var newCustomers = customers.Count(c => c.CreatedAt >= fromDate && c.CreatedAt <= toDate);
@@ -183,11 +183,11 @@ public class ReportService : IReportService
         var topCustomers = await _db.Orders
             .Where(o => o.CreatedAt >= fromDate && o.CreatedAt <= toDate && !o.IsDeleted)
             .Include(o => o.Buyer)
-            .GroupBy(o => new { o.BuyerId, o.Buyer.FirstName, o.Buyer.LastName, o.Buyer.Email })
+            .GroupBy(o => new { o.BuyerId, o.Buyer.Name, o.Buyer.Email })
             .Select(g => new TopCustomerDto
             {
                 UserId = g.Key.BuyerId,
-                Name = g.Key.FirstName + " " + g.Key.LastName,
+                Name = g.Key.Name,
                 Email = g.Key.Email,
                 OrderCount = g.Count(),
                 TotalSpent = g.Sum(o => o.TotalAmount),

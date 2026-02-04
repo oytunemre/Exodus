@@ -115,7 +115,7 @@ public static class DbSeeder
                     SellerId = sellerId,
                     ProductId = productId,
                     Price = l.Price,
-                    Stock = l.Stock,
+                    StockQuantity = l.Stock,
                     Condition = l.Condition,
                     IsActive = l.IsActive
                 });
@@ -194,8 +194,9 @@ public static class DbSeeder
         // Order toplamı sellerOrders'tan hesaplanacak
         var order = new Order
         {
+            OrderNumber = $"ORD-{DateTime.UtcNow:yyyyMMddHHmmss}",
             BuyerId = buyer.Id,
-            Status = OrderStatus.Placed,
+            Status = OrderStatus.Pending,
             SellerOrders = new List<SellerOrder>() // null patlamasın
         };
 
@@ -245,7 +246,7 @@ public static class DbSeeder
             order.SellerOrders.Add(sellerOrder);
         }
 
-        order.Total = order.SellerOrders.Sum(x => x.SubTotal);
+        order.TotalAmount = order.SellerOrders.Sum(x => x.SubTotal);
 
         db.Orders.Add(order);
         await db.SaveChangesAsync();

@@ -61,12 +61,12 @@ namespace FarmazonDemo.Controllers.Admin
                 .OrderByDescending(o => o.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(o => new OrderSummaryDto
+                .Select(o => new
                 {
                     Id = o.Id,
                     OrderNumber = o.OrderNumber,
                     BuyerId = o.BuyerId,
-                    BuyerName = o.Buyer.FirstName + " " + o.Buyer.LastName,
+                    BuyerName = o.Buyer.Name,
                     Status = o.Status,
                     TotalAmount = o.TotalAmount,
                     Currency = o.Currency,
@@ -135,7 +135,7 @@ namespace FarmazonDemo.Controllers.Admin
                 .OrderByDescending(r => r.CreatedAt)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(r => new RefundResponseDto
+                .Select(r => new
                 {
                     Id = r.Id,
                     RefundNumber = r.RefundNumber,

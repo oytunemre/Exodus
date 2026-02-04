@@ -44,7 +44,7 @@ public class ListingService : IListingService
             ProductId = dto.ProductId,
             SellerId = dto.SellerId,
             Price = dto.Price,
-            Stock = dto.Stock,
+            StockQuantity = dto.Stock,
             Condition = dto.Condition, // enum
             IsActive = true
         };
@@ -64,7 +64,7 @@ public class ListingService : IListingService
         if (dto.Stock < 0) throw new BadRequestException("Stock must be >= 0.");
 
         listing.Price = dto.Price;
-        listing.Stock = dto.Stock;
+        listing.StockQuantity = dto.Stock;
 
         // dto.Condition nullable; gelmediyse mevcut kalsın
         if (dto.Condition.HasValue)
@@ -95,7 +95,7 @@ public class ListingService : IListingService
             ProductId = l.ProductId,
             SellerId = l.SellerId,
             Price = l.Price,
-            Stock = l.Stock,
+            Stock = l.StockQuantity,
             Condition = l.Condition, // enum
             IsActive = l.IsActive
         };

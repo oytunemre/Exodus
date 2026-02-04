@@ -540,7 +540,7 @@ namespace FarmazonDemo.Services.Orders
             return status switch
             {
                 OrderStatus.Pending => SellerOrderStatus.Placed,
-                OrderStatus.Processing => SellerOrderStatus.Processing,
+                OrderStatus.Processing => SellerOrderStatus.Confirmed,
                 OrderStatus.Shipped => SellerOrderStatus.Shipped,
                 OrderStatus.Delivered => SellerOrderStatus.Delivered,
                 OrderStatus.Cancelled => SellerOrderStatus.Cancelled,
@@ -553,7 +553,7 @@ namespace FarmazonDemo.Services.Orders
             return status switch
             {
                 SellerOrderStatus.Placed => OrderStatus.Pending,
-                SellerOrderStatus.Processing => OrderStatus.Processing,
+                SellerOrderStatus.Confirmed => OrderStatus.Processing,
                 SellerOrderStatus.Shipped => OrderStatus.Shipped,
                 SellerOrderStatus.Delivered => OrderStatus.Delivered,
                 SellerOrderStatus.Cancelled => OrderStatus.Cancelled,

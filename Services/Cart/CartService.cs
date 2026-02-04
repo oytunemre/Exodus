@@ -53,7 +53,7 @@ public class CartService : ICartService
 
                 if (listing is null) throw new KeyNotFoundException("Listing bulunamadı.");
                 if (!listing.IsActive) throw new InvalidOperationException("Listing aktif değil.");
-                if (listing.Stock < dto.Quantity) throw new InvalidOperationException("Yetersiz stok.");
+                if (listing.StockQuantity < dto.Quantity) throw new InvalidOperationException("Yetersiz stok.");
 
                 var cart = await GetOrCreateCartEntityAsync(dto.UserId);
 
@@ -63,7 +63,7 @@ public class CartService : ICartService
                 if (existingItem is not null)
                 {
                     var newQty = existingItem.Quantity + dto.Quantity;
-                    if (listing.Stock < newQty)
+                    if (listing.StockQuantity < newQty)
                         throw new InvalidOperationException("Sepetteki toplam adet stoğu aşıyor.");
 
                     existingItem.Quantity = newQty;
@@ -89,7 +89,7 @@ public class CartService : ICartService
                         .FirstAsync(i => i.CartId == cart.Id && i.ListingId == dto.ListingId);
 
                     var newQty = item.Quantity + dto.Quantity;
-                    if (listing.Stock < newQty)
+                    if (listing.StockQuantity < newQty)
                         throw new InvalidOperationException("Sepetteki toplam adet stoğu aşıyor.");
 
                     item.Quantity = newQty;
@@ -130,7 +130,7 @@ public class CartService : ICartService
         var listing = await _db.Listings.FirstOrDefaultAsync(l => l.Id == item.ListingId);
         if (listing is null) throw new KeyNotFoundException("Listing bulunamadı.");
         if (!listing.IsActive) throw new InvalidOperationException("Listing aktif değil.");
-        if (listing.Stock < quantity) throw new InvalidOperationException("Yetersiz stok.");
+        if (listing.StockQuantity < quantity) throw new InvalidOperationException("Yetersiz stok.");
 
         item.Quantity = quantity;
 

@@ -386,7 +386,7 @@ public class PaymentService : IPaymentService
 
         if (!validTransitions.TryGetValue(intent.Status, out var allowed) || !allowed.Contains(targetStatus))
         {
-            throw new ValidationException($"Cannot transition from {intent.Status} to {targetStatus}");
+            throw new BadRequestException($"Cannot transition from {intent.Status} to {targetStatus}");
         }
     }
 

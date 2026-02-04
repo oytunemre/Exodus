@@ -49,8 +49,8 @@ public class DashboardService : IDashboardService
         var currentRevenue = currentOrders.Where(o => o.Status == OrderStatus.Completed).Sum(o => o.TotalAmount);
         var previousRevenue = previousOrders.Where(o => o.Status == OrderStatus.Completed).Sum(o => o.TotalAmount);
 
-        var totalCustomers = await _db.Users.CountAsync(u => u.Role == "Customer" && !u.IsDeleted, ct);
-        var newCustomers = await _db.Users.CountAsync(u => u.Role == "Customer" && u.CreatedAt >= from && !u.IsDeleted, ct);
+        var totalCustomers = await _db.Users.CountAsync(u => u.Role == UserRole.Customer && !u.IsDeleted, ct);
+        var newCustomers = await _db.Users.CountAsync(u => u.Role == UserRole.Customer && u.CreatedAt >= from && !u.IsDeleted, ct);
 
         var totalProducts = await _db.Products.CountAsync(p => !p.IsDeleted, ct);
         var lowStockProducts = await _db.Listings.CountAsync(l => l.StockQuantity > 0 && l.StockQuantity < 10 && !l.IsDeleted, ct);
@@ -98,24 +98,24 @@ public class DashboardService : IDashboardService
             .ToList();
 
         // Top selling products
-        var topProducts = await _db.OrderItems
+        var topProducts = await _db.SellerOrderItems
             .Where(oi => oi.CreatedAt >= fromDate && oi.CreatedAt <= toDate && !oi.IsDeleted)
             .Include(oi => oi.Listing)
                 .ThenInclude(l => l.Product)
-            .GroupBy(oi => new { oi.Listing.ProductId, oi.Listing.Product.Name })
+            .GroupBy(oi => new { oi.Listing.ProductId, oi.Listing.Product.ProductName })
             .Select(g => new TopSellingProductDto
             {
                 ProductId = g.Key.ProductId,
-                ProductName = g.Key.Name,
+                ProductName = g.Key.ProductName,
                 QuantitySold = g.Sum(oi => oi.Quantity),
-                Revenue = g.Sum(oi => oi.TotalPrice)
+                Revenue = g.Sum(oi => oi.LineTotal)
             })
             .OrderByDescending(p => p.Revenue)
             .Take(10)
             .ToListAsync(ct);
 
         // Sales by category
-        var salesByCategory = await _db.OrderItems
+        var salesByCategory = await _db.SellerOrderItems
             .Where(oi => oi.CreatedAt >= fromDate && oi.CreatedAt <= toDate && !oi.IsDeleted)
             .Include(oi => oi.Listing)
                 .ThenInclude(l => l.Product)
@@ -126,7 +126,7 @@ public class DashboardService : IDashboardService
             {
                 CategoryId = g.Key.CategoryId ?? 0,
                 CategoryName = g.Key.Name,
-                TotalSales = g.Sum(oi => oi.TotalPrice),
+                TotalSales = g.Sum(oi => oi.LineTotal),
                 OrderCount = g.Count()
             })
             .OrderByDescending(c => c.TotalSales)
@@ -220,11 +220,11 @@ public class DashboardService : IDashboardService
             NewUsersToday = users.Count(u => u.CreatedAt >= today),
             NewUsersThisWeek = users.Count(u => u.CreatedAt >= weekAgo),
             NewUsersThisMonth = users.Count(u => u.CreatedAt >= monthAgo),
-            TotalCustomers = users.Count(u => u.Role == "Customer"),
-            TotalSellers = users.Count(u => u.Role == "Seller"),
-            TotalAdmins = users.Count(u => u.Role == "Admin"),
-            VerifiedUsers = users.Count(u => u.EmailConfirmed),
-            UnverifiedUsers = users.Count(u => !u.EmailConfirmed),
+            TotalCustomers = users.Count(u => u.Role == UserRole.Customer),
+            TotalSellers = users.Count(u => u.Role == UserRole.Seller),
+            TotalAdmins = users.Count(u => u.Role == UserRole.Admin),
+            VerifiedUsers = users.Count(u => u.EmailVerified),
+            UnverifiedUsers = users.Count(u => !u.EmailVerified),
             UserGrowth = userGrowth
         };
     }
@@ -232,7 +232,7 @@ public class DashboardService : IDashboardService
     public async Task<ProductStatisticsDto> GetProductStatisticsAsync(CancellationToken ct = default)
     {
         var products = await _db.Products.Where(p => !p.IsDeleted).ToListAsync(ct);
-        var listings = await _db.Listings.Where(l => !l.IsDeleted).ToListAsync(ct);
+        var listings = await _db.Listings.Where(l => !l.IsDeleted).Include(l => l.Product).ToListAsync(ct);
         var categories = await _db.Categories.Where(c => !c.IsDeleted).ToListAsync(ct);
 
         var productsByCategory = await _db.Products
@@ -244,15 +244,21 @@ public class DashboardService : IDashboardService
                 CategoryId = g.Key.CategoryId ?? 0,
                 CategoryName = g.Key.Name,
                 ProductCount = g.Count(),
-                ListingCount = g.SelectMany(p => p.Listings).Count(l => !l.IsDeleted)
+                ListingCount = 0 // Will be calculated below
             })
             .ToListAsync(ct);
+
+        // Calculate listing counts per category
+        foreach (var category in productsByCategory)
+        {
+            category.ListingCount = listings.Count(l => l.Product?.CategoryId == category.CategoryId);
+        }
 
         return new ProductStatisticsDto
         {
             TotalProducts = products.Count,
-            ActiveProducts = products.Count(p => p.IsActive),
-            InactiveProducts = products.Count(p => !p.IsActive),
+            ActiveProducts = listings.Count(l => l.IsActive), // Use listings' IsActive as products don't have this
+            InactiveProducts = listings.Count(l => !l.IsActive),
             OutOfStockProducts = listings.Count(l => l.StockQuantity == 0),
             LowStockProducts = listings.Count(l => l.StockQuantity > 0 && l.StockQuantity < 10),
             TotalListings = listings.Count,
@@ -278,7 +284,7 @@ public class DashboardService : IDashboardService
         {
             Type = "Order",
             Title = $"New Order #{o.OrderNumber}",
-            Description = $"{o.Buyer?.FirstName} {o.Buyer?.LastName} placed an order for {o.TotalAmount:N2} TRY",
+            Description = $"{o.Buyer?.Name} placed an order for {o.TotalAmount:N2} TRY",
             Timestamp = o.CreatedAt,
             EntityId = o.Id.ToString(),
             EntityType = "Order"
@@ -295,7 +301,7 @@ public class DashboardService : IDashboardService
         {
             Type = "User",
             Title = $"New {u.Role} Registration",
-            Description = $"{u.FirstName} {u.LastName} ({u.Email}) registered",
+            Description = $"{u.Name} ({u.Email}) registered",
             Timestamp = u.CreatedAt,
             EntityId = u.Id.ToString(),
             EntityType = "User"
