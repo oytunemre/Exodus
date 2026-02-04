@@ -37,6 +37,8 @@ namespace FarmazonDemo.Data
         public DbSet<CampaignUsage> CampaignUsages { get; set; }
         public DbSet<Banner> Banners { get; set; }
         public DbSet<SiteSetting> SiteSettings { get; set; }
+        public DbSet<SupportTicket> SupportTickets { get; set; }
+        public DbSet<SupportTicketMessage> SupportTicketMessages { get; set; }
 
 
 
@@ -448,6 +450,64 @@ namespace FarmazonDemo.Data
                 b.Property(x => x.Category)
                     .HasConversion<string>()
                     .HasMaxLength(30);
+            });
+
+            // SUPPORT TICKET
+            modelBuilder.Entity<SupportTicket>(b =>
+            {
+                b.HasIndex(x => x.TicketNumber)
+                    .IsUnique()
+                    .HasFilter("[IsDeleted] = 0");
+
+                b.HasIndex(x => new { x.Status, x.Priority, x.CreatedAt });
+
+                b.Property(x => x.Category)
+                    .HasConversion<string>()
+                    .HasMaxLength(30);
+
+                b.Property(x => x.Priority)
+                    .HasConversion<string>()
+                    .HasMaxLength(20);
+
+                b.Property(x => x.Status)
+                    .HasConversion<string>()
+                    .HasMaxLength(30);
+
+                b.HasOne(x => x.User)
+                    .WithMany()
+                    .HasForeignKey(x => x.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne(x => x.Order)
+                    .WithMany()
+                    .HasForeignKey(x => x.OrderId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                b.HasOne(x => x.SellerOrder)
+                    .WithMany()
+                    .HasForeignKey(x => x.SellerOrderId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                b.HasOne(x => x.AssignedTo)
+                    .WithMany()
+                    .HasForeignKey(x => x.AssignedToId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // SUPPORT TICKET MESSAGE
+            modelBuilder.Entity<SupportTicketMessage>(b =>
+            {
+                b.HasOne(x => x.Ticket)
+                    .WithMany(t => t.Messages)
+                    .HasForeignKey(x => x.TicketId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(x => x.Sender)
+                    .WithMany()
+                    .HasForeignKey(x => x.SenderId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasIndex(x => new { x.TicketId, x.CreatedAt });
             });
 
         }
