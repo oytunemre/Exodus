@@ -40,9 +40,8 @@ namespace FarmazonDemo.Data
         public DbSet<SupportTicket> SupportTickets { get; set; }
         public DbSet<SupportTicketMessage> SupportTicketMessages { get; set; }
         public DbSet<SellerProfile> SellerProfiles { get; set; }
-
-
-
+        public DbSet<ShippingCarrier> ShippingCarriers { get; set; }
+        public DbSet<StaticPage> StaticPages { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
