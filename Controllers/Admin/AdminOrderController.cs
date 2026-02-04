@@ -84,7 +84,7 @@ namespace FarmazonDemo.Controllers.Admin
         }
 
         /// <summary>
-        /// Get order by ID (admin - can see any order)
+        /// Get order by ID (admin - can see any order) with detailed information
         /// </summary>
         [HttpGet("{id:int}")]
         public async Task<ActionResult> GetOrder(int id)
@@ -92,16 +92,156 @@ namespace FarmazonDemo.Controllers.Admin
             var order = await _context.Orders
                 .Include(o => o.Buyer)
                 .Include(o => o.SellerOrders)
+                    .ThenInclude(so => so.Seller)
+                .Include(o => o.SellerOrders)
                     .ThenInclude(so => so.Items)
                         .ThenInclude(i => i.Listing)
                             .ThenInclude(l => l.Product)
+                                .ThenInclude(p => p.Images)
+                .Include(o => o.SellerOrders)
+                    .ThenInclude(so => so.Shipment)
                 .Include(o => o.OrderEvents)
                 .FirstOrDefaultAsync(o => o.Id == id);
 
             if (order == null)
                 throw new NotFoundException("Order not found");
 
-            return Ok(order);
+            // Get commission rate from settings
+            var commissionSetting = await _context.SiteSettings
+                .FirstOrDefaultAsync(s => s.Key == "Commission.DefaultRate");
+            var commissionRate = decimal.TryParse(commissionSetting?.Value, out var rate) ? rate : 10m;
+
+            // Calculate totals
+            var itemsTotal = order.SellerOrders.Sum(so => so.SubTotal);
+            var totalCommission = itemsTotal * (commissionRate / 100);
+            var sellerEarnings = itemsTotal - totalCommission;
+
+            var response = new
+            {
+                // Order Info
+                order.Id,
+                order.OrderNumber,
+                order.Status,
+                order.Currency,
+                order.CreatedAt,
+                order.UpdatedAt,
+                order.PaidAt,
+                order.ShippedAt,
+                order.DeliveredAt,
+                order.CompletedAt,
+
+                // Buyer Info
+                Buyer = new
+                {
+                    order.Buyer.Id,
+                    order.Buyer.Name,
+                    order.Buyer.Email,
+                    order.Buyer.Phone
+                },
+
+                // Price Breakdown
+                PriceBreakdown = new
+                {
+                    order.SubTotal,
+                    order.ShippingCost,
+                    order.TaxAmount,
+                    order.DiscountAmount,
+                    order.TotalAmount
+                },
+
+                // Commission Info (Marketplace)
+                CommissionInfo = new
+                {
+                    CommissionRate = commissionRate,
+                    ItemsTotal = itemsTotal,
+                    TotalCommission = totalCommission,
+                    SellerEarnings = sellerEarnings
+                },
+
+                // Addresses
+                ShippingAddress = order.ShippingAddressSnapshot,
+                BillingAddress = order.BillingAddressSnapshot,
+
+                // Notes
+                order.CustomerNote,
+                order.AdminNote,
+
+                // Cancellation Info
+                Cancellation = order.CancellationReason.HasValue ? new
+                {
+                    Reason = order.CancellationReason,
+                    Note = order.CancellationNote,
+                    CancelledAt = order.CancelledAt
+                } : null,
+
+                // Seller Orders with Items
+                SellerOrders = order.SellerOrders.Select(so => new
+                {
+                    so.Id,
+                    so.Status,
+                    so.SubTotal,
+                    Seller = new
+                    {
+                        so.Seller.Id,
+                        so.Seller.Name,
+                        so.Seller.Email,
+                        so.Seller.Phone
+                    },
+                    // Commission for this seller
+                    Commission = new
+                    {
+                        Rate = commissionRate,
+                        Amount = so.SubTotal * (commissionRate / 100),
+                        SellerEarning = so.SubTotal - (so.SubTotal * (commissionRate / 100))
+                    },
+                    // Shipment Info
+                    Shipment = so.Shipment != null ? new
+                    {
+                        so.Shipment.Id,
+                        so.Shipment.TrackingNumber,
+                        so.Shipment.CarrierName,
+                        so.Shipment.Status,
+                        so.Shipment.ShippedAt,
+                        so.Shipment.EstimatedDeliveryAt,
+                        so.Shipment.DeliveredAt
+                    } : null,
+                    // Items with Product Images
+                    Items = so.Items.Select(item => new
+                    {
+                        item.Id,
+                        item.ProductId,
+                        item.ProductName,
+                        item.UnitPrice,
+                        item.Quantity,
+                        item.LineTotal,
+                        item.ListingId,
+                        // Product Images
+                        ProductImages = item.Listing?.Product?.Images?
+                            .OrderBy(img => img.DisplayOrder)
+                            .Select(img => new
+                            {
+                                img.Id,
+                                img.ImageUrl,
+                                img.AltText,
+                                img.DisplayOrder
+                            }).ToList() ?? new List<object>()
+                    }).ToList()
+                }).ToList(),
+
+                // Order Events / History
+                OrderHistory = order.OrderEvents
+                    .OrderByDescending(e => e.CreatedAt)
+                    .Select(e => new
+                    {
+                        e.Id,
+                        e.EventType,
+                        e.Description,
+                        e.CreatedAt,
+                        e.CreatedBy
+                    }).ToList()
+            };
+
+            return Ok(response);
         }
 
         /// <summary>

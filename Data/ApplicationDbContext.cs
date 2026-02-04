@@ -35,6 +35,8 @@ namespace FarmazonDemo.Data
         public DbSet<CampaignProduct> CampaignProducts { get; set; }
         public DbSet<CampaignCategory> CampaignCategories { get; set; }
         public DbSet<CampaignUsage> CampaignUsages { get; set; }
+        public DbSet<Banner> Banners { get; set; }
+        public DbSet<SiteSetting> SiteSettings { get; set; }
 
 
 
@@ -424,6 +426,28 @@ namespace FarmazonDemo.Data
                     .OnDelete(DeleteBehavior.SetNull);
 
                 b.Property(cu => cu.DiscountApplied).HasColumnType("decimal(18,2)");
+            });
+
+            // BANNER
+            modelBuilder.Entity<Banner>(b =>
+            {
+                b.Property(x => x.Position)
+                    .HasConversion<string>()
+                    .HasMaxLength(30);
+
+                b.HasIndex(x => new { x.Position, x.DisplayOrder });
+            });
+
+            // SITE SETTINGS
+            modelBuilder.Entity<SiteSetting>(b =>
+            {
+                b.HasIndex(x => x.Key)
+                    .IsUnique()
+                    .HasFilter("[IsDeleted] = 0");
+
+                b.Property(x => x.Category)
+                    .HasConversion<string>()
+                    .HasMaxLength(30);
             });
 
         }

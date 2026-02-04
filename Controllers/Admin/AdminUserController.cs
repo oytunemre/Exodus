@@ -81,7 +81,7 @@ namespace FarmazonDemo.Controllers.Admin
         }
 
         /// <summary>
-        /// Get user by ID
+        /// Get user by ID with detailed stats
         /// </summary>
         [HttpGet("{id}")]
         public async Task<ActionResult> GetUserById(int id)
@@ -94,21 +94,118 @@ namespace FarmazonDemo.Controllers.Admin
                     u.Name,
                     u.Email,
                     u.Username,
+                    u.Phone,
                     u.Role,
+                    u.IsActive,
                     u.EmailVerified,
                     u.TwoFactorEnabled,
                     IsLocked = u.LockoutEndTime.HasValue && u.LockoutEndTime > DateTime.UtcNow,
                     u.LockoutEndTime,
                     u.FailedLoginAttempts,
+                    u.LastLoginAt,
                     u.CreatedAt,
-                    u.UpdatedAt
+                    u.UpdatedAt,
+                    // Stats
+                    OrderCount = _context.Orders.Count(o => o.BuyerId == u.Id),
+                    TotalSpent = _context.Orders
+                        .Where(o => o.BuyerId == u.Id && o.Status == OrderStatus.Completed)
+                        .Sum(o => (decimal?)o.TotalAmount) ?? 0,
+                    ListingCount = u.Role == UserRole.Seller
+                        ? _context.Listings.Count(l => l.SellerId == u.Id)
+                        : 0,
+                    AddressCount = _context.Addresses.Count(a => a.UserId == u.Id)
                 })
                 .FirstOrDefaultAsync();
 
             if (user == null)
-                return NotFound();
+                throw new NotFoundException("User not found");
 
             return Ok(user);
+        }
+
+        /// <summary>
+        /// Update user information
+        /// </summary>
+        [HttpPut("{id}")]
+        public async Task<ActionResult> UpdateUser(int id, [FromBody] AdminUpdateUserDto dto)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+                throw new NotFoundException("User not found");
+
+            if (!string.IsNullOrEmpty(dto.Name))
+                user.Name = dto.Name;
+
+            if (!string.IsNullOrEmpty(dto.Email))
+            {
+                var emailExists = await _context.Users.AnyAsync(u => u.Email == dto.Email && u.Id != id);
+                if (emailExists)
+                    throw new BadRequestException("Email already in use");
+                user.Email = dto.Email;
+            }
+
+            if (!string.IsNullOrEmpty(dto.Phone))
+                user.Phone = dto.Phone;
+
+            if (dto.IsActive.HasValue)
+                user.IsActive = dto.IsActive.Value;
+
+            if (dto.EmailVerified.HasValue)
+                user.EmailVerified = dto.EmailVerified.Value;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Message = "User updated successfully", UserId = id });
+        }
+
+        /// <summary>
+        /// Toggle user active status
+        /// </summary>
+        [HttpPatch("{id}/toggle-active")]
+        public async Task<ActionResult> ToggleActive(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+                throw new NotFoundException("User not found");
+
+            // Prevent deactivating last admin
+            if (user.Role == UserRole.Admin && user.IsActive)
+            {
+                var activeAdminCount = await _context.Users.CountAsync(u => u.Role == UserRole.Admin && u.IsActive && u.Id != id);
+                if (activeAdminCount == 0)
+                    throw new BadRequestException("Cannot deactivate the last active admin");
+            }
+
+            user.IsActive = !user.IsActive;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Message = user.IsActive ? "User activated" : "User deactivated", UserId = id, IsActive = user.IsActive });
+        }
+
+        /// <summary>
+        /// Reset user password
+        /// </summary>
+        [HttpPost("{id}/reset-password")]
+        public async Task<ActionResult> ResetPassword(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+                throw new NotFoundException("User not found");
+
+            var tempPassword = Guid.NewGuid().ToString("N")[..8];
+            user.Password = BCrypt.Net.BCrypt.HashPassword(tempPassword);
+            user.LockoutEndTime = null;
+            user.FailedLoginAttempts = 0;
+
+            await _context.SaveChangesAsync();
+
+            // In production, send via email
+            return Ok(new
+            {
+                Message = "Password reset successfully",
+                UserId = id,
+                TemporaryPassword = tempPassword
+            });
         }
 
         /// <summary>
@@ -218,5 +315,14 @@ namespace FarmazonDemo.Controllers.Admin
     public class LockAccountDto
     {
         public int DurationMinutes { get; set; } = 60;
+    }
+
+    public class AdminUpdateUserDto
+    {
+        public string? Name { get; set; }
+        public string? Email { get; set; }
+        public string? Phone { get; set; }
+        public bool? IsActive { get; set; }
+        public bool? EmailVerified { get; set; }
     }
 }
