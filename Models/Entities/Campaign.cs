@@ -19,7 +19,7 @@ public class Campaign : BaseEntity
     public int SellerId { get; set; }
 
     [ForeignKey(nameof(SellerId))]
-    public User? Seller { get; set; }
+    public Users? Seller { get; set; }
 
     // Campaign validity
     public DateTime StartDate { get; set; }

@@ -321,7 +321,7 @@ namespace FarmazonDemo.Services.Profile
 
         #region Mappers
 
-        private static UserProfileResponseDto MapToProfileDto(Users user)
+        private static UserProfileResponseDto MapToProfileDto(FarmazonDemo.Models.Entities.Users user)
         {
             return new UserProfileResponseDto
             {

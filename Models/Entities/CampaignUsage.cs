@@ -12,7 +12,7 @@ public class CampaignUsage : BaseEntity
     public int UserId { get; set; }
 
     [ForeignKey(nameof(UserId))]
-    public User? User { get; set; }
+    public Users? User { get; set; }
 
     public int? OrderId { get; set; }
 
