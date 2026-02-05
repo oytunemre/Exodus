@@ -215,7 +215,7 @@ namespace FarmazonDemo.Controllers.Admin
                         item.LineTotal,
                         item.ListingId,
                         // Product Images
-                        ProductImages = item.Listing?.Product?.Images?
+                        ProductImages = (item.Listing?.Product?.Images ?? Enumerable.Empty<Models.Entities.ProductImage>())
                             .OrderBy(img => img.DisplayOrder)
                             .Select(img => new
                             {
@@ -223,7 +223,7 @@ namespace FarmazonDemo.Controllers.Admin
                                 img.Url,
                                 img.AltText,
                                 img.DisplayOrder
-                            }).ToList() ?? new List<object>()
+                            }).ToList()
                     }).ToList()
                 }).ToList(),
 
