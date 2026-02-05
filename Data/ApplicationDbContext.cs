@@ -45,6 +45,29 @@ namespace FarmazonDemo.Data
         public DbSet<ReturnShipment> ReturnShipments { get; set; }
         public DbSet<SellerShippingSettings> SellerShippingSettings { get; set; }
 
+        // New admin panel entities
+        public DbSet<Review> Reviews { get; set; }
+        public DbSet<ReviewVote> ReviewVotes { get; set; }
+        public DbSet<ReviewReport> ReviewReports { get; set; }
+        public DbSet<SellerPayout> SellerPayouts { get; set; }
+        public DbSet<SellerPayoutItem> SellerPayoutItems { get; set; }
+        public DbSet<TaxRate> TaxRates { get; set; }
+        public DbSet<Region> Regions { get; set; }
+        public DbSet<ShippingZone> ShippingZones { get; set; }
+        public DbSet<ProductAttribute> ProductAttributes { get; set; }
+        public DbSet<ProductAttributeValue> ProductAttributeValues { get; set; }
+        public DbSet<ProductAttributeMapping> ProductAttributeMappings { get; set; }
+        public DbSet<Brand> Brands { get; set; }
+        public DbSet<EmailTemplate> EmailTemplates { get; set; }
+        public DbSet<Wishlist> Wishlists { get; set; }
+        public DbSet<WishlistItem> WishlistItems { get; set; }
+        public DbSet<GiftCard> GiftCards { get; set; }
+        public DbSet<GiftCardUsage> GiftCardUsages { get; set; }
+        public DbSet<HomeWidget> HomeWidgets { get; set; }
+        public DbSet<Affiliate> Affiliates { get; set; }
+        public DbSet<AffiliateReferral> AffiliateReferrals { get; set; }
+        public DbSet<AffiliatePayout> AffiliatePayouts { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -588,6 +611,317 @@ namespace FarmazonDemo.Data
                     .WithMany()
                     .HasForeignKey(x => x.PreferredCarrierId)
                     .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // REVIEW
+            modelBuilder.Entity<Review>(b =>
+            {
+                b.HasOne(x => x.User)
+                    .WithMany()
+                    .HasForeignKey(x => x.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne(x => x.Product)
+                    .WithMany()
+                    .HasForeignKey(x => x.ProductId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(x => x.Seller)
+                    .WithMany()
+                    .HasForeignKey(x => x.SellerId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne(x => x.Order)
+                    .WithMany()
+                    .HasForeignKey(x => x.OrderId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                b.Property(x => x.Type).HasConversion<string>().HasMaxLength(20);
+                b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+
+                b.HasIndex(x => new { x.ProductId, x.Status });
+                b.HasIndex(x => new { x.SellerId, x.Status });
+            });
+
+            modelBuilder.Entity<ReviewVote>(b =>
+            {
+                b.HasOne(x => x.Review)
+                    .WithMany()
+                    .HasForeignKey(x => x.ReviewId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(x => x.User)
+                    .WithMany()
+                    .HasForeignKey(x => x.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasIndex(x => new { x.ReviewId, x.UserId })
+                    .IsUnique()
+                    .HasFilter("[IsDeleted] = 0");
+            });
+
+            modelBuilder.Entity<ReviewReport>(b =>
+            {
+                b.HasOne(x => x.Review)
+                    .WithMany()
+                    .HasForeignKey(x => x.ReviewId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(x => x.User)
+                    .WithMany()
+                    .HasForeignKey(x => x.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.Property(x => x.Reason).HasConversion<string>().HasMaxLength(30);
+            });
+
+            // SELLER PAYOUT
+            modelBuilder.Entity<SellerPayout>(b =>
+            {
+                b.HasOne(x => x.Seller)
+                    .WithMany()
+                    .HasForeignKey(x => x.SellerId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasIndex(x => x.PayoutNumber)
+                    .IsUnique()
+                    .HasFilter("[IsDeleted] = 0");
+
+                b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+                b.HasIndex(x => new { x.SellerId, x.Status });
+            });
+
+            modelBuilder.Entity<SellerPayoutItem>(b =>
+            {
+                b.HasOne(x => x.Payout)
+                    .WithMany(p => p.Items)
+                    .HasForeignKey(x => x.PayoutId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(x => x.SellerOrder)
+                    .WithMany()
+                    .HasForeignKey(x => x.SellerOrderId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // TAX RATE
+            modelBuilder.Entity<TaxRate>(b =>
+            {
+                b.HasIndex(x => x.Code)
+                    .IsUnique()
+                    .HasFilter("[Code] IS NOT NULL AND [IsDeleted] = 0");
+            });
+
+            // REGION
+            modelBuilder.Entity<Region>(b =>
+            {
+                b.HasOne(x => x.Parent)
+                    .WithMany(x => x.Children)
+                    .HasForeignKey(x => x.ParentId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.Property(x => x.Type).HasConversion<string>().HasMaxLength(20);
+                b.HasIndex(x => new { x.Type, x.ParentId });
+            });
+
+            // PRODUCT ATTRIBUTE
+            modelBuilder.Entity<ProductAttribute>(b =>
+            {
+                b.HasIndex(x => x.Code)
+                    .IsUnique()
+                    .HasFilter("[Code] IS NOT NULL AND [IsDeleted] = 0");
+
+                b.Property(x => x.Type).HasConversion<string>().HasMaxLength(20);
+            });
+
+            modelBuilder.Entity<ProductAttributeValue>(b =>
+            {
+                b.HasOne(x => x.Attribute)
+                    .WithMany(a => a.Values)
+                    .HasForeignKey(x => x.AttributeId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ProductAttributeMapping>(b =>
+            {
+                b.HasOne(x => x.Product)
+                    .WithMany()
+                    .HasForeignKey(x => x.ProductId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(x => x.Attribute)
+                    .WithMany()
+                    .HasForeignKey(x => x.AttributeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne(x => x.AttributeValue)
+                    .WithMany()
+                    .HasForeignKey(x => x.AttributeValueId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasIndex(x => new { x.ProductId, x.AttributeId, x.AttributeValueId })
+                    .IsUnique()
+                    .HasFilter("[IsDeleted] = 0");
+            });
+
+            // BRAND
+            modelBuilder.Entity<Brand>(b =>
+            {
+                b.HasIndex(x => x.Slug)
+                    .IsUnique()
+                    .HasFilter("[IsDeleted] = 0");
+            });
+
+            // EMAIL TEMPLATE
+            modelBuilder.Entity<EmailTemplate>(b =>
+            {
+                b.HasIndex(x => x.Code)
+                    .IsUnique()
+                    .HasFilter("[IsDeleted] = 0");
+
+                b.Property(x => x.Type).HasConversion<string>().HasMaxLength(30);
+            });
+
+            // WISHLIST
+            modelBuilder.Entity<Wishlist>(b =>
+            {
+                b.HasOne(x => x.User)
+                    .WithMany()
+                    .HasForeignKey(x => x.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<WishlistItem>(b =>
+            {
+                b.HasOne(x => x.Wishlist)
+                    .WithMany(w => w.Items)
+                    .HasForeignKey(x => x.WishlistId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(x => x.Product)
+                    .WithMany()
+                    .HasForeignKey(x => x.ProductId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(x => x.Listing)
+                    .WithMany()
+                    .HasForeignKey(x => x.ListingId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                b.HasIndex(x => new { x.WishlistId, x.ProductId })
+                    .IsUnique()
+                    .HasFilter("[IsDeleted] = 0");
+            });
+
+            // GIFT CARD
+            modelBuilder.Entity<GiftCard>(b =>
+            {
+                b.HasIndex(x => x.Code)
+                    .IsUnique()
+                    .HasFilter("[IsDeleted] = 0");
+
+                b.HasOne(x => x.PurchasedBy)
+                    .WithMany()
+                    .HasForeignKey(x => x.PurchasedByUserId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                b.HasOne(x => x.Recipient)
+                    .WithMany()
+                    .HasForeignKey(x => x.RecipientUserId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                b.HasOne(x => x.Order)
+                    .WithMany()
+                    .HasForeignKey(x => x.OrderId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+            });
+
+            modelBuilder.Entity<GiftCardUsage>(b =>
+            {
+                b.HasOne(x => x.GiftCard)
+                    .WithMany(g => g.Usages)
+                    .HasForeignKey(x => x.GiftCardId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(x => x.Order)
+                    .WithMany()
+                    .HasForeignKey(x => x.OrderId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                b.HasOne(x => x.User)
+                    .WithMany()
+                    .HasForeignKey(x => x.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.Property(x => x.Type).HasConversion<string>().HasMaxLength(20);
+            });
+
+            // HOME WIDGET
+            modelBuilder.Entity<HomeWidget>(b =>
+            {
+                b.HasIndex(x => x.Code)
+                    .IsUnique()
+                    .HasFilter("[Code] IS NOT NULL AND [IsDeleted] = 0");
+
+                b.Property(x => x.Type).HasConversion<string>().HasMaxLength(30);
+                b.Property(x => x.Position).HasConversion<string>().HasMaxLength(20);
+
+                b.HasIndex(x => new { x.Position, x.DisplayOrder });
+            });
+
+            // AFFILIATE
+            modelBuilder.Entity<Affiliate>(b =>
+            {
+                b.HasOne(x => x.User)
+                    .WithMany()
+                    .HasForeignKey(x => x.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasIndex(x => x.ReferralCode)
+                    .IsUnique()
+                    .HasFilter("[IsDeleted] = 0");
+
+                b.HasIndex(x => x.UserId)
+                    .IsUnique()
+                    .HasFilter("[IsDeleted] = 0");
+
+                b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+            });
+
+            modelBuilder.Entity<AffiliateReferral>(b =>
+            {
+                b.HasOne(x => x.Affiliate)
+                    .WithMany(a => a.Referrals)
+                    .HasForeignKey(x => x.AffiliateId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(x => x.ReferredUser)
+                    .WithMany()
+                    .HasForeignKey(x => x.ReferredUserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne(x => x.Order)
+                    .WithMany()
+                    .HasForeignKey(x => x.OrderId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+            });
+
+            modelBuilder.Entity<AffiliatePayout>(b =>
+            {
+                b.HasOne(x => x.Affiliate)
+                    .WithMany(a => a.Payouts)
+                    .HasForeignKey(x => x.AffiliateId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasIndex(x => x.PayoutNumber)
+                    .IsUnique()
+                    .HasFilter("[IsDeleted] = 0");
+
+                b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
             });
 
         }
