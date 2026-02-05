@@ -40,7 +40,7 @@ public class AdminAffiliateController : ControllerBase
             query = query.Where(a =>
                 a.ReferralCode.Contains(search) ||
                 a.User.Email.Contains(search) ||
-                (a.User.FirstName + " " + a.User.LastName).Contains(search));
+                a.User.Name.Contains(search));
 
         query = sortBy?.ToLower() switch
         {
@@ -60,7 +60,7 @@ public class AdminAffiliateController : ControllerBase
                 a.Id,
                 a.UserId,
                 UserEmail = a.User.Email,
-                UserName = a.User.FirstName + " " + a.User.LastName,
+                UserName = a.User.Name,
                 a.ReferralCode,
                 a.CommissionRate,
                 a.MinPayoutAmount,
@@ -106,8 +106,8 @@ public class AdminAffiliateController : ControllerBase
             {
                 affiliate.User.Id,
                 affiliate.User.Email,
-                Name = affiliate.User.FirstName + " " + affiliate.User.LastName,
-                affiliate.User.PhoneNumber
+                Name = affiliate.User.Name,
+                affiliate.User.Phone
             },
             affiliate.ReferralCode,
             affiliate.CommissionRate,
@@ -244,7 +244,7 @@ public class AdminAffiliateController : ControllerBase
                 r.Id,
                 r.ReferredUserId,
                 ReferredUserEmail = r.ReferredUser.Email,
-                ReferredUserName = r.ReferredUser.FirstName + " " + r.ReferredUser.LastName,
+                ReferredUserName = r.ReferredUser.Name,
                 r.OrderId,
                 OrderNumber = r.Order != null ? r.Order.OrderNumber : null,
                 r.OrderAmount,
@@ -334,7 +334,7 @@ public class AdminAffiliateController : ControllerBase
                 p.PayoutNumber,
                 p.AffiliateId,
                 AffiliateEmail = p.Affiliate.User.Email,
-                AffiliateName = p.Affiliate.User.FirstName + " " + p.Affiliate.User.LastName,
+                AffiliateName = p.Affiliate.User.Name,
                 p.Amount,
                 p.Currency,
                 p.Status,

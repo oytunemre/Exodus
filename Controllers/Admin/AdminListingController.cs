@@ -97,7 +97,7 @@ public class AdminListingController : ControllerBase
                 l.Id,
                 l.ProductId,
                 ProductName = l.Product.ProductName,
-                ProductImage = l.Product.Images.OrderBy(i => i.DisplayOrder).Select(i => i.ImageUrl).FirstOrDefault(),
+                ProductImage = l.Product.Images.OrderBy(i => i.DisplayOrder).Select(i => i.Url).FirstOrDefault(),
                 CategoryName = l.Product.Category != null ? l.Product.Category.Name : null,
                 l.SellerId,
                 SellerName = l.Seller.Name,
@@ -149,7 +149,7 @@ public class AdminListingController : ControllerBase
                     l.Product.Brand,
                     l.Product.Manufacturer,
                     CategoryName = l.Product.Category != null ? l.Product.Category.Name : null,
-                    Images = l.Product.Images.OrderBy(i => i.DisplayOrder).Select(i => new { i.Id, i.ImageUrl, i.AltText }),
+                    Images = l.Product.Images.OrderBy(i => i.DisplayOrder).Select(i => new { i.Id, i.Url, i.AltText }),
                     Barcodes = l.Product.Barcodes.Select(b => b.Barcode)
                 },
                 l.SellerId,

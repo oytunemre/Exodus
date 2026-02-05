@@ -133,7 +133,7 @@ public class AdminNotificationController : ControllerBase
                     .Select(u => u.Id)
                     .ToListAsync(),
                 NotificationTargetGroup.ActiveUsers => await _db.Users
-                    .Where(u => u.IsActive && u.LastLoginAt >= DateTime.UtcNow.AddDays(-30))
+                    .Where(u => (!u.LockoutEndTime.HasValue || u.LockoutEndTime <= DateTime.UtcNow) && u.LastLoginAt >= DateTime.UtcNow.AddDays(-30))
                     .Select(u => u.Id)
                     .ToListAsync(),
                 NotificationTargetGroup.VerifiedSellers => await _db.SellerProfiles
@@ -179,7 +179,7 @@ public class AdminNotificationController : ControllerBase
             query = query.Where(u => u.Role == dto.Role.Value);
 
         if (dto.IsActive.HasValue)
-            query = query.Where(u => u.IsActive == dto.IsActive.Value);
+            query = query.Where(u => dto.IsActive.Value ? (!u.LockoutEndTime.HasValue || u.LockoutEndTime <= DateTime.UtcNow) : (u.LockoutEndTime.HasValue && u.LockoutEndTime > DateTime.UtcNow));
 
         if (dto.IsEmailVerified.HasValue)
             query = query.Where(u => u.EmailVerified == dto.IsEmailVerified.Value);
@@ -324,7 +324,7 @@ public class AdminNotificationController : ControllerBase
                 NotificationTargetGroup.AllUsers => query,
                 NotificationTargetGroup.AllCustomers => query.Where(u => u.Role == UserRole.Customer),
                 NotificationTargetGroup.AllSellers => query.Where(u => u.Role == UserRole.Seller),
-                NotificationTargetGroup.ActiveUsers => query.Where(u => u.IsActive && u.LastLoginAt >= DateTime.UtcNow.AddDays(-30)),
+                NotificationTargetGroup.ActiveUsers => query.Where(u => (!u.LockoutEndTime.HasValue || u.LockoutEndTime <= DateTime.UtcNow) && u.LastLoginAt >= DateTime.UtcNow.AddDays(-30)),
                 _ => query
             };
         }
@@ -333,7 +333,7 @@ public class AdminNotificationController : ControllerBase
             query = query.Where(u => u.Role == dto.Role.Value);
 
         if (dto.IsActive.HasValue)
-            query = query.Where(u => u.IsActive == dto.IsActive.Value);
+            query = query.Where(u => dto.IsActive.Value ? (!u.LockoutEndTime.HasValue || u.LockoutEndTime <= DateTime.UtcNow) : (u.LockoutEndTime.HasValue && u.LockoutEndTime > DateTime.UtcNow));
 
         var count = await query.CountAsync();
         var sampleRecipients = await query

@@ -129,7 +129,7 @@ public class AdminGiftCardController : ControllerBase
             {
                 giftCard.PurchasedBy.Id,
                 giftCard.PurchasedBy.Email,
-                Name = giftCard.PurchasedBy.FirstName + " " + giftCard.PurchasedBy.LastName
+                Name = giftCard.PurchasedBy.Name
             } : null,
             giftCard.OrderId,
             giftCard.RecipientUserId,
@@ -137,7 +137,7 @@ public class AdminGiftCardController : ControllerBase
             {
                 giftCard.Recipient.Id,
                 giftCard.Recipient.Email,
-                Name = giftCard.Recipient.FirstName + " " + giftCard.Recipient.LastName
+                Name = giftCard.Recipient.Name
             } : null,
             giftCard.RecipientEmail,
             giftCard.RecipientName,

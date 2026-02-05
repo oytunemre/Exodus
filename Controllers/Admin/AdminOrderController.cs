@@ -199,10 +199,9 @@ namespace FarmazonDemo.Controllers.Admin
                     {
                         so.Shipment.Id,
                         so.Shipment.TrackingNumber,
-                        so.Shipment.CarrierName,
+                        so.Shipment.Carrier,
                         so.Shipment.Status,
                         so.Shipment.ShippedAt,
-                        so.Shipment.EstimatedDeliveryAt,
                         so.Shipment.DeliveredAt
                     } : null,
                     // Items with Product Images
@@ -221,7 +220,7 @@ namespace FarmazonDemo.Controllers.Admin
                             .Select(img => new
                             {
                                 img.Id,
-                                img.ImageUrl,
+                                img.Url,
                                 img.AltText,
                                 img.DisplayOrder
                             }).ToList() ?? new List<object>()
@@ -234,10 +233,11 @@ namespace FarmazonDemo.Controllers.Admin
                     .Select(e => new
                     {
                         e.Id,
-                        e.EventType,
+                        e.Title,
                         e.Description,
                         e.CreatedAt,
-                        e.CreatedBy
+                        e.UserId,
+                        e.UserType
                     }).ToList()
             };
 

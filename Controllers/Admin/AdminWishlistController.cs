@@ -57,7 +57,7 @@ public class AdminWishlistController : ControllerBase
                 w.Name,
                 w.UserId,
                 UserEmail = w.User.Email,
-                UserName = w.User.FirstName + " " + w.User.LastName,
+                UserName = w.User.Name,
                 w.IsDefault,
                 w.IsPublic,
                 ItemCount = w.Items.Count,
@@ -95,15 +95,15 @@ public class AdminWishlistController : ControllerBase
             wishlist.Name,
             wishlist.UserId,
             UserEmail = wishlist.User.Email,
-            UserName = wishlist.User.FirstName + " " + wishlist.User.LastName,
+            UserName = wishlist.User.Name,
             wishlist.IsDefault,
             wishlist.IsPublic,
             Items = wishlist.Items.Select(i => new
             {
                 i.Id,
                 i.ProductId,
-                ProductName = i.Product.Name,
-                ProductImage = i.Product.MainImage,
+                ProductName = i.Product.ProductName,
+                ProductImage = i.Product.Images.Where(img => img.IsPrimary).Select(img => img.Url).FirstOrDefault(),
                 i.ListingId,
                 ListingPrice = i.Listing?.Price,
                 i.Note,
@@ -198,8 +198,8 @@ public class AdminWishlistController : ControllerBase
             .Select(g => new
             {
                 ProductId = g.Key,
-                ProductName = g.First().Product.Name,
-                ProductImage = g.First().Product.MainImage,
+                ProductName = g.First().Product.ProductName,
+                ProductImage = g.First().Product.Images.Where(img => img.IsPrimary).Select(img => img.Url).FirstOrDefault(),
                 WishlistCount = g.Count()
             })
             .OrderByDescending(x => x.WishlistCount)

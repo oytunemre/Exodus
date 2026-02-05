@@ -96,7 +96,7 @@ namespace FarmazonDemo.Controllers.Admin
                     u.Username,
                     u.Phone,
                     u.Role,
-                    u.IsActive,
+                    IsActive = !u.LockoutEndTime.HasValue || u.LockoutEndTime <= DateTime.UtcNow,
                     u.EmailVerified,
                     u.TwoFactorEnabled,
                     IsLocked = u.LockoutEndTime.HasValue && u.LockoutEndTime > DateTime.UtcNow,
@@ -148,7 +148,7 @@ namespace FarmazonDemo.Controllers.Admin
                 user.Phone = dto.Phone;
 
             if (dto.IsActive.HasValue)
-                user.IsActive = dto.IsActive.Value;
+                user.LockoutEndTime = dto.IsActive.Value ? null : DateTime.MaxValue;
 
             if (dto.EmailVerified.HasValue)
                 user.EmailVerified = dto.EmailVerified.Value;
@@ -168,18 +168,21 @@ namespace FarmazonDemo.Controllers.Admin
             if (user == null)
                 throw new NotFoundException("User not found");
 
+            var isCurrentlyActive = !user.LockoutEndTime.HasValue || user.LockoutEndTime <= DateTime.UtcNow;
+
             // Prevent deactivating last admin
-            if (user.Role == UserRole.Admin && user.IsActive)
+            if (user.Role == UserRole.Admin && isCurrentlyActive)
             {
-                var activeAdminCount = await _context.Users.CountAsync(u => u.Role == UserRole.Admin && u.IsActive && u.Id != id);
+                var activeAdminCount = await _context.Users.CountAsync(u => u.Role == UserRole.Admin && (!u.LockoutEndTime.HasValue || u.LockoutEndTime <= DateTime.UtcNow) && u.Id != id);
                 if (activeAdminCount == 0)
                     throw new BadRequestException("Cannot deactivate the last active admin");
             }
 
-            user.IsActive = !user.IsActive;
+            user.LockoutEndTime = isCurrentlyActive ? DateTime.MaxValue : null;
             await _context.SaveChangesAsync();
 
-            return Ok(new { Message = user.IsActive ? "User activated" : "User deactivated", UserId = id, IsActive = user.IsActive });
+            var isNowActive = !user.LockoutEndTime.HasValue || user.LockoutEndTime <= DateTime.UtcNow;
+            return Ok(new { Message = isNowActive ? "User activated" : "User deactivated", UserId = id, IsActive = isNowActive });
         }
 
         /// <summary>

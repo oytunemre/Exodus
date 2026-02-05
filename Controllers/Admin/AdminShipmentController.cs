@@ -187,10 +187,9 @@ public class AdminShipmentController : ControllerBase
             ShippingAddress = shipment.SellerOrder.Order.ShippingAddressSnapshot,
             Events = events.Select(e => new
             {
-                e.Id,
+                e.ShipmentEventId,
                 e.Status,
-                e.Description,
-                e.Location,
+                e.PayloadJson,
                 e.CreatedAt
             })
         });
@@ -223,8 +222,7 @@ public class AdminShipmentController : ControllerBase
         {
             ShipmentId = id,
             Status = dto.Status,
-            Description = dto.Description ?? $"Status changed to {dto.Status}",
-            Location = dto.Location
+            PayloadJson = System.Text.Json.JsonSerializer.Serialize(new { Description = dto.Description ?? $"Status changed to {dto.Status}", Location = dto.Location })
         });
 
         // Update seller order status if delivered
@@ -294,7 +292,7 @@ public class AdminShipmentController : ControllerBase
             TotalShipments = shipments.Count,
             ShippedCount = shipments.Count(s => s.Status == ShipmentStatus.Shipped),
             DeliveredCount = shipments.Count(s => s.Status == ShipmentStatus.Delivered),
-            InTransitCount = shipments.Count(s => s.Status == ShipmentStatus.InTransit),
+            PackedCount = shipments.Count(s => s.Status == ShipmentStatus.Packed),
 
             AverageDeliveryTime = shipments
                 .Where(s => s.ShippedAt.HasValue && s.DeliveredAt.HasValue)
@@ -306,10 +304,11 @@ public class AdminShipmentController : ControllerBase
             CurrentStatus = new
             {
                 Pending = allShipments.Count(s => s.Status == ShipmentStatus.Created),
+                Packed = allShipments.Count(s => s.Status == ShipmentStatus.Packed),
                 Shipped = allShipments.Count(s => s.Status == ShipmentStatus.Shipped),
-                InTransit = allShipments.Count(s => s.Status == ShipmentStatus.InTransit),
                 Delivered = allShipments.Count(s => s.Status == ShipmentStatus.Delivered),
-                Failed = allShipments.Count(s => s.Status == ShipmentStatus.Failed)
+                Returned = allShipments.Count(s => s.Status == ShipmentStatus.Returned),
+                Cancelled = allShipments.Count(s => s.Status == ShipmentStatus.Cancelled)
             },
 
             // By carrier

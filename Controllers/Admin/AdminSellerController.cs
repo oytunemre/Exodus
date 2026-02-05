@@ -47,7 +47,7 @@ public class AdminSellerController : ControllerBase
                 (u.Phone != null && u.Phone.Contains(search)));
 
         if (isActive.HasValue)
-            query = query.Where(u => u.IsActive == isActive.Value);
+            query = query.Where(u => isActive.Value ? (!u.LockoutEndTime.HasValue || u.LockoutEndTime <= DateTime.UtcNow) : (u.LockoutEndTime.HasValue && u.LockoutEndTime > DateTime.UtcNow));
 
         // Sorting
         query = sortBy?.ToLower() switch
@@ -68,7 +68,7 @@ public class AdminSellerController : ControllerBase
                 u.Name,
                 u.Email,
                 u.Phone,
-                u.IsActive,
+                IsActive = !u.LockoutEndTime.HasValue || u.LockoutEndTime <= DateTime.UtcNow,
                 u.EmailVerified,
                 u.CreatedAt,
                 u.LastLoginAt,
@@ -124,7 +124,7 @@ public class AdminSellerController : ControllerBase
                 u.Email,
                 u.Phone,
                 u.Username,
-                u.IsActive,
+                IsActive = !u.LockoutEndTime.HasValue || u.LockoutEndTime <= DateTime.UtcNow,
                 u.EmailVerified,
                 u.LastLoginAt,
                 u.CreatedAt,
@@ -291,7 +291,7 @@ public class AdminSellerController : ControllerBase
             profile.VerifiedAt = DateTime.UtcNow;
             profile.VerifiedByAdminId = adminId;
             profile.RejectionReason = null;
-            user.IsActive = true;
+            user.LockoutEndTime = null; // Activate user
         }
         else
         {
@@ -376,7 +376,7 @@ public class AdminSellerController : ControllerBase
         // Deactivate user
         var user = await _db.Users.FindAsync(id);
         if (user != null)
-            user.IsActive = false;
+            user.LockoutEndTime = DateTime.MaxValue; // Deactivate user
 
         await _db.SaveChangesAsync();
 
@@ -409,7 +409,7 @@ public class AdminSellerController : ControllerBase
         // Reactivate user
         var user = await _db.Users.FindAsync(id);
         if (user != null)
-            user.IsActive = true;
+            user.LockoutEndTime = null; // Activate user
 
         await _db.SaveChangesAsync();
 
@@ -524,8 +524,8 @@ public class AdminSellerController : ControllerBase
         var stats = new
         {
             TotalSellers = sellers.Count,
-            ActiveSellers = sellers.Count(s => s.IsActive),
-            InactiveSellers = sellers.Count(s => !s.IsActive),
+            ActiveSellers = sellers.Count(s => !s.LockoutEndTime.HasValue || s.LockoutEndTime <= DateTime.UtcNow),
+            InactiveSellers = sellers.Count(s => s.LockoutEndTime.HasValue && s.LockoutEndTime > DateTime.UtcNow),
 
             ByVerificationStatus = profiles
                 .GroupBy(p => p.VerificationStatus)

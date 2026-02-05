@@ -79,7 +79,7 @@ public class AdminInvoiceController : ControllerBase
         var invoice = new Invoice {
             InvoiceNumber = invoiceNumber, OrderId = orderId,
             SubTotal = order.SubTotal, TaxAmount = order.TaxAmount, TotalAmount = order.TotalAmount,
-            Currency = order.Currency, BillingAddress = order.BillingAddressSnapshot ?? order.ShippingAddressSnapshot ?? ""
+            Currency = order.Currency, BuyerName = order.Buyer.Name, BuyerAddress = order.BillingAddressSnapshot ?? order.ShippingAddressSnapshot
         };
 
         _db.Invoices.Add(invoice);
