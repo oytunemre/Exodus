@@ -22,7 +22,7 @@ public class AdminPaymentController : ControllerBase
 
     [HttpGet]
     public async Task<ActionResult> GetPayments(
-        [FromQuery] PaymentIntentStatus? status = null,
+        [FromQuery] PaymentStatus? status = null,
         [FromQuery] int? orderId = null,
         [FromQuery] int? userId = null,
         [FromQuery] DateTime? fromDate = null,
@@ -42,7 +42,7 @@ public class AdminPaymentController : ControllerBase
         var payments = await query.OrderByDescending(p => p.CreatedAt).Skip((page - 1) * pageSize).Take(pageSize)
             .Select(p => new {
                 p.Id, p.OrderId, OrderNumber = p.Order.OrderNumber, p.Amount, p.Currency, p.Status,
-                p.PaymentMethod, p.ExternalPaymentId, p.CreatedAt,
+                p.Method, p.ExternalReference, p.CreatedAt,
                 Buyer = new { p.Order.Buyer.Id, p.Order.Buyer.Name, p.Order.Buyer.Email }
             }).ToListAsync();
 
@@ -82,12 +82,12 @@ public class AdminPaymentController : ControllerBase
     public async Task<ActionResult> GetFailedPayments([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var query = _db.PaymentIntents.Include(p => p.Order).ThenInclude(o => o.Buyer)
-            .Where(p => p.Status == PaymentIntentStatus.Failed || p.Status == PaymentIntentStatus.Cancelled);
+            .Where(p => p.Status == PaymentStatus.Failed || p.Status == PaymentStatus.Cancelled);
 
         var totalCount = await query.CountAsync();
         var payments = await query.OrderByDescending(p => p.CreatedAt).Skip((page - 1) * pageSize).Take(pageSize)
             .Select(p => new {
-                p.Id, p.OrderId, OrderNumber = p.Order.OrderNumber, p.Amount, p.Status, p.ErrorMessage, p.CreatedAt,
+                p.Id, p.OrderId, OrderNumber = p.Order.OrderNumber, p.Amount, p.Status, p.FailureReason, p.CreatedAt,
                 Buyer = new { p.Order.Buyer.Id, p.Order.Buyer.Name, p.Order.Buyer.Email }
             }).ToListAsync();
 
@@ -105,12 +105,12 @@ public class AdminPaymentController : ControllerBase
         return Ok(new {
             Period = new { From = from, To = to },
             Total = payments.Count,
-            Successful = payments.Count(p => p.Status == PaymentIntentStatus.Succeeded),
-            Failed = payments.Count(p => p.Status == PaymentIntentStatus.Failed),
-            Pending = payments.Count(p => p.Status == PaymentIntentStatus.Pending),
-            TotalAmount = payments.Where(p => p.Status == PaymentIntentStatus.Succeeded).Sum(p => p.Amount),
-            FailedAmount = payments.Where(p => p.Status == PaymentIntentStatus.Failed).Sum(p => p.Amount),
-            SuccessRate = payments.Any() ? (double)payments.Count(p => p.Status == PaymentIntentStatus.Succeeded) / payments.Count * 100 : 0
+            Successful = payments.Count(p => p.Status == PaymentStatus.Captured),
+            Failed = payments.Count(p => p.Status == PaymentStatus.Failed),
+            Pending = payments.Count(p => p.Status == PaymentStatus.Pending),
+            TotalAmount = payments.Where(p => p.Status == PaymentStatus.Captured).Sum(p => p.Amount),
+            FailedAmount = payments.Where(p => p.Status == PaymentStatus.Failed).Sum(p => p.Amount),
+            SuccessRate = payments.Any() ? (double)payments.Count(p => p.Status == PaymentStatus.Captured) / payments.Count * 100 : 0
         });
     }
 }
