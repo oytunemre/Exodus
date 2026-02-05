@@ -232,11 +232,22 @@ public class IyzicoPaymentGateway : IPaymentGateway
     {
         try
         {
+            var cleanBin = binNumber?.Replace(" ", "").Replace("-", "") ?? "";
+            if (cleanBin.Length < 6)
+            {
+                return new BinCheckResult
+                {
+                    Success = false,
+                    ErrorCode = "INVALID_BIN",
+                    ErrorMessage = "BIN number must be at least 6 digits"
+                };
+            }
+
             var request = new Dictionary<string, object>
             {
                 ["locale"] = "tr",
                 ["conversationId"] = Guid.NewGuid().ToString(),
-                ["binNumber"] = binNumber.Replace(" ", "")[..6]
+                ["binNumber"] = cleanBin[..6]
             };
 
             var response = await SendRequestAsync<IyzicoBinCheckResponse>("/payment/bin/check", request, ct);
@@ -271,11 +282,22 @@ public class IyzicoPaymentGateway : IPaymentGateway
     {
         try
         {
+            var cleanBin = binNumber?.Replace(" ", "").Replace("-", "") ?? "";
+            if (cleanBin.Length < 6)
+            {
+                return new InstallmentResult
+                {
+                    Success = false,
+                    ErrorCode = "INVALID_BIN",
+                    ErrorMessage = "BIN number must be at least 6 digits"
+                };
+            }
+
             var request = new Dictionary<string, object>
             {
                 ["locale"] = "tr",
                 ["conversationId"] = Guid.NewGuid().ToString(),
-                ["binNumber"] = binNumber.Replace(" ", "")[..6],
+                ["binNumber"] = cleanBin[..6],
                 ["price"] = price.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)
             };
 

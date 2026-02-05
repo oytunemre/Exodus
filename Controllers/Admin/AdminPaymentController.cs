@@ -41,9 +41,11 @@ public class AdminPaymentController : ControllerBase
         var totalCount = await query.CountAsync();
         var payments = await query.OrderByDescending(p => p.CreatedAt).Skip((page - 1) * pageSize).Take(pageSize)
             .Select(p => new {
-                p.Id, p.OrderId, OrderNumber = p.Order.OrderNumber, p.Amount, p.Currency, p.Status,
+                p.Id, p.OrderId, OrderNumber = p.Order != null ? p.Order.OrderNumber : null, p.Amount, p.Currency, p.Status,
                 p.Method, p.ExternalReference, p.CreatedAt,
-                Buyer = new { p.Order.Buyer.Id, p.Order.Buyer.Name, p.Order.Buyer.Email }
+                Buyer = p.Order != null && p.Order.Buyer != null
+                    ? new { p.Order.Buyer.Id, p.Order.Buyer.Name, p.Order.Buyer.Email }
+                    : null
             }).ToListAsync();
 
         return Ok(new { Items = payments, TotalCount = totalCount, Page = page, PageSize = pageSize });
@@ -87,8 +89,10 @@ public class AdminPaymentController : ControllerBase
         var totalCount = await query.CountAsync();
         var payments = await query.OrderByDescending(p => p.CreatedAt).Skip((page - 1) * pageSize).Take(pageSize)
             .Select(p => new {
-                p.Id, p.OrderId, OrderNumber = p.Order.OrderNumber, p.Amount, p.Status, p.FailureReason, p.CreatedAt,
-                Buyer = new { p.Order.Buyer.Id, p.Order.Buyer.Name, p.Order.Buyer.Email }
+                p.Id, p.OrderId, OrderNumber = p.Order != null ? p.Order.OrderNumber : null, p.Amount, p.Status, p.FailureReason, p.CreatedAt,
+                Buyer = p.Order != null && p.Order.Buyer != null
+                    ? new { p.Order.Buyer.Id, p.Order.Buyer.Name, p.Order.Buyer.Email }
+                    : null
             }).ToListAsync();
 
         return Ok(new { Items = payments, TotalCount = totalCount, Page = page, PageSize = pageSize });

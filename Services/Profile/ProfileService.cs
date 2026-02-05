@@ -258,6 +258,12 @@ namespace FarmazonDemo.Services.Profile
             {
                 addr.IsDefault = false;
             }
+
+            // Save changes to persist the default address updates
+            if (defaultAddresses.Count > 0)
+            {
+                await _context.SaveChangesAsync();
+            }
         }
 
         #endregion

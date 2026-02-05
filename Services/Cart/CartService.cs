@@ -99,7 +99,9 @@ public class CartService : ICartService
                 await tx.CommitAsync();
 
                 var cartLoaded = await LoadCartAsync(cart.Id);
-                return MapCart(cartLoaded!);
+                if (cartLoaded == null)
+                    throw new InvalidOperationException("Failed to load cart after update");
+                return MapCart(cartLoaded);
             }
             catch
             {
@@ -124,7 +126,9 @@ public class CartService : ICartService
             await _db.SaveChangesAsync();
 
             var cartAfterRemove = await LoadCartAsync(item.CartId);
-            return MapCart(cartAfterRemove!);
+            if (cartAfterRemove == null)
+                throw new InvalidOperationException("Failed to load cart after removing item");
+            return MapCart(cartAfterRemove);
         }
 
         var listing = await _db.Listings.FirstOrDefaultAsync(l => l.Id == item.ListingId);
@@ -137,7 +141,9 @@ public class CartService : ICartService
         await _db.SaveChangesAsync();
 
         var cart = await LoadCartAsync(item.CartId);
-        return MapCart(cart!);
+        if (cart == null)
+            throw new InvalidOperationException("Failed to load cart after quantity update");
+        return MapCart(cart);
     }
 
     public async Task<CartResponseDto> RemoveItemAsync(int userId, int cartItemId)
@@ -155,7 +161,9 @@ public class CartService : ICartService
         await _db.SaveChangesAsync();
 
         var cart = await LoadCartAsync(cartId);
-        return MapCart(cart!);
+        if (cart == null)
+            throw new InvalidOperationException("Failed to load cart after removing item");
+        return MapCart(cart);
     }
 
     private async Task<Cart> GetOrCreateCartEntityAsync(int userId)

@@ -640,9 +640,17 @@ public class PaymentService : IPaymentService
 
         var result = await _paymentGateway.Complete3DSPaymentAsync(paymentToken, ct);
 
-        // Find the payment intent by external reference or conversation id
+        // Find the payment intent by external reference or conversation id (which is the intent.Id)
+        // First try to find by external reference, then by conversation id (intent.Id stored as string)
         var intent = await _db.PaymentIntents
-            .FirstOrDefaultAsync(p => p.ExternalReference == paymentToken || p.Status == PaymentStatus.Pending, ct);
+            .FirstOrDefaultAsync(p => p.ExternalReference == paymentToken, ct);
+
+        // If not found by external reference, try to parse paymentToken as conversation id (intent.Id)
+        if (intent == null && int.TryParse(paymentToken, out var intentId))
+        {
+            intent = await _db.PaymentIntents
+                .FirstOrDefaultAsync(p => p.Id == intentId && p.Status == PaymentStatus.Pending && p.Requires3DSecure, ct);
+        }
 
         if (intent != null)
         {

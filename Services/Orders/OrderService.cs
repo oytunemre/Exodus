@@ -70,6 +70,14 @@ namespace FarmazonDemo.Services.Orders
                     _db.Orders.Add(order);
                     await _db.SaveChangesAsync();
 
+                    // Pre-load all listings to avoid N+1 queries
+                    var listingIds = cart.Items.Select(i => i.ListingId).ToList();
+                    var listings = await _db.Listings
+                        .Include(l => l.Product)
+                            .ThenInclude(p => p.Images)
+                        .Where(l => listingIds.Contains(l.Id))
+                        .ToDictionaryAsync(l => l.Id);
+
                     // Group by seller
                     var groups = cart.Items.GroupBy(i => i.Listing.SellerId);
                     decimal totalSubTotal = 0;
@@ -87,12 +95,7 @@ namespace FarmazonDemo.Services.Orders
 
                         foreach (var cartItem in g)
                         {
-                            var listing = await _db.Listings
-                                .Include(l => l.Product)
-                                    .ThenInclude(p => p.Images)
-                                .FirstOrDefaultAsync(l => l.Id == cartItem.ListingId);
-
-                            if (listing is null)
+                            if (!listings.TryGetValue(cartItem.ListingId, out var listing))
                                 throw new NotFoundException($"Listing not found. ListingId={cartItem.ListingId}");
 
                             if (!listing.IsActive)
@@ -199,6 +202,8 @@ namespace FarmazonDemo.Services.Orders
                     .ThenInclude(so => so.Items)
                 .Include(o => o.SellerOrders)
                     .ThenInclude(so => so.Shipment)
+                .Include(o => o.SellerOrders)
+                    .ThenInclude(so => so.Seller)
                 .Include(o => o.OrderEvents)
                 .FirstOrDefaultAsync(o => o.OrderNumber == orderNumber && o.BuyerId == userId);
 
@@ -442,6 +447,7 @@ namespace FarmazonDemo.Services.Orders
                 .Include(so => so.Order)
                 .Include(so => so.Items)
                 .Include(so => so.Shipment)
+                .Include(so => so.Seller)
                 .AsQueryable();
 
             if (status.HasValue)
@@ -460,7 +466,7 @@ namespace FarmazonDemo.Services.Orders
             {
                 Id = so.Id,
                 SellerId = so.SellerId,
-                SellerName = "",
+                SellerName = so.Seller?.Name ?? "Unknown Seller",
                 Status = MapSellerStatusToOrderStatus(so.Status),
                 Total = so.SubTotal,
                 Items = so.Items.Select(i => new OrderItemDto

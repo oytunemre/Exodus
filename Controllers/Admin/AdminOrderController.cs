@@ -38,7 +38,7 @@ namespace FarmazonDemo.Controllers.Admin
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 20)
         {
-            var query = _context.Orders.AsQueryable();
+            var query = _context.Orders.Include(o => o.Buyer).AsQueryable();
 
             if (status.HasValue)
                 query = query.Where(o => o.Status == status.Value);
@@ -66,7 +66,7 @@ namespace FarmazonDemo.Controllers.Admin
                     Id = o.Id,
                     OrderNumber = o.OrderNumber,
                     BuyerId = o.BuyerId,
-                    BuyerName = o.Buyer.Name,
+                    BuyerName = o.Buyer != null ? o.Buyer.Name : "Unknown",
                     Status = o.Status,
                     TotalAmount = o.TotalAmount,
                     Currency = o.Currency,
