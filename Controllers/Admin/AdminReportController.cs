@@ -299,7 +299,8 @@ public class AdminReportController : ControllerBase
                 .ThenInclude(l => l.Product)
                     .ThenInclude(p => p.Category)
             .Where(i => i.SellerOrder.CreatedAt >= from && i.SellerOrder.CreatedAt <= to)
-            .GroupBy(i => new { i.Listing.Product.CategoryId, CategoryName = i.Listing.Product.Category.Name })
+            .Where(i => i.Listing != null && i.Listing.Product != null)
+            .GroupBy(i => new { i.Listing!.Product!.CategoryId, CategoryName = i.Listing.Product.Category != null ? i.Listing.Product.Category.Name : "Uncategorized" })
             .Select(g => new
             {
                 CategoryId = g.Key.CategoryId,

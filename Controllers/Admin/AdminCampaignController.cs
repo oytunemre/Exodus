@@ -167,18 +167,22 @@ public class AdminCampaignController : ControllerBase
                 Seller = c.Seller != null ? new { c.Seller.Id, c.Seller.Name, c.Seller.Email } : null,
 
                 // Targeted products
-                Products = c.CampaignProducts.Select(cp => new
-                {
-                    cp.Product.Id,
-                    cp.Product.ProductName
-                }).ToList(),
+                Products = c.CampaignProducts
+                    .Where(cp => cp.Product != null)
+                    .Select(cp => new
+                    {
+                        cp.Product!.Id,
+                        cp.Product.ProductName
+                    }).ToList(),
 
                 // Targeted categories
-                Categories = c.CampaignCategories.Select(cc => new
-                {
-                    cc.Category.Id,
-                    cc.Category.Name
-                }).ToList(),
+                Categories = c.CampaignCategories
+                    .Where(cc => cc.Category != null)
+                    .Select(cc => new
+                    {
+                        cc.Category!.Id,
+                        cc.Category.Name
+                    }).ToList(),
 
                 // Stats
                 TotalDiscountGiven = _db.CampaignUsages
@@ -499,7 +503,7 @@ public class AdminCampaignController : ControllerBase
             .Select(u => new
             {
                 u.Id,
-                User = new { u.User.Id, u.User.Name, u.User.Email },
+                User = u.User != null ? new { u.User.Id, u.User.Name, u.User.Email } : null,
                 Order = u.Order != null ? new { u.Order.Id, u.Order.OrderNumber, u.Order.TotalAmount } : null,
                 u.DiscountApplied,
                 u.CreatedAt

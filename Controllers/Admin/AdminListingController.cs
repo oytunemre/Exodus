@@ -73,9 +73,9 @@ public class AdminListingController : ControllerBase
 
         if (!string.IsNullOrEmpty(search))
             query = query.Where(l =>
-                l.Product.ProductName.Contains(search) ||
-                l.SKU.Contains(search) ||
-                l.Seller.Name.Contains(search));
+                (l.Product != null && l.Product.ProductName.Contains(search)) ||
+                (l.SKU != null && l.SKU.Contains(search)) ||
+                (l.Seller != null && l.Seller.Name.Contains(search)));
 
         // Sorting
         query = sortBy?.ToLower() switch
