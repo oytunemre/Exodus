@@ -1,14 +1,14 @@
-using FarmazonDemo.Data;
-using FarmazonDemo.Models.Dto.Payment;
-using FarmazonDemo.Models.Entities;
-using FarmazonDemo.Models.Enums;
-using FarmazonDemo.Services.Common;
-using FarmazonDemo.Services.Notifications;
-using FarmazonDemo.Services.PaymentGateway;
+using Exodus.Data;
+using Exodus.Models.Dto.Payment;
+using Exodus.Models.Entities;
+using Exodus.Models.Enums;
+using Exodus.Services.Common;
+using Exodus.Services.Notifications;
+using Exodus.Services.PaymentGateway;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
-namespace FarmazonDemo.Services.Payments;
+namespace Exodus.Services.Payments;
 
 public class PaymentService : IPaymentService
 {
@@ -809,7 +809,7 @@ public class PaymentService : IPaymentService
                 Id = buyer?.Id.ToString() ?? "0",
                 Name = buyer?.Name ?? "Guest",
                 Surname = "User",
-                Email = buyer?.Email ?? "guest@farmazon.com",
+                Email = buyer?.Email ?? "guest@exodus.com",
                 Phone = buyer?.Phone ?? "+905000000000",
                 IdentityNumber = "11111111111",
                 Ip = dto.IpAddress ?? "127.0.0.1",

@@ -1,7 +1,7 @@
-﻿using FarmazonDemo.Models.Dto.Shipment;
+﻿using Exodus.Models.Dto.Shipment;
 using FluentValidation;
 
-namespace FarmazonDemo.Validation.Shipments;
+namespace Exodus.Validation.Shipments;
 
 public class ShipSellerOrderDtoValidator : AbstractValidator<ShipSellerOrderDto>
 {

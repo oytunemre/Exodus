@@ -1,7 +1,7 @@
-﻿using FarmazonDemo.Models.Dto.ListingDto;
+﻿using Exodus.Models.Dto.ListingDto;
 using FluentValidation;
 
-namespace FarmazonDemo.Validation.Listings;
+namespace Exodus.Validation.Listings;
 
 public class AddListingDtoValidator : AbstractValidator<AddListingDto>
 {

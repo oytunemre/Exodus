@@ -1,10 +1,10 @@
-using FarmazonDemo.Data;
-using FarmazonDemo.Models;
-using FarmazonDemo.Models.Dto;
-using FarmazonDemo.Models.Entities;
-using FarmazonDemo.Services.Common;
-using FarmazonDemo.Services.Email;
-using FarmazonDemo.Services.TwoFactor;
+using Exodus.Data;
+using Exodus.Models;
+using Exodus.Models.Dto;
+using Exodus.Models.Entities;
+using Exodus.Services.Common;
+using Exodus.Services.Email;
+using Exodus.Services.TwoFactor;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -13,7 +13,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace FarmazonDemo.Services.Auth
+namespace Exodus.Services.Auth
 {
     public class AuthService : IAuthService
     {

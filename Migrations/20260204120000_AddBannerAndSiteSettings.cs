@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace FarmazonDemo.Migrations
+namespace Exodus.Migrations
 {
     /// <inheritdoc />
     public partial class AddBannerAndSiteSettings : Migration
@@ -82,7 +82,7 @@ namespace FarmazonDemo.Migrations
                     { "Shipping.FreeThreshold", "500", "Ücretsiz kargo limiti (TL)", "Shipping", true, DateTime.UtcNow, DateTime.UtcNow, false },
                     { "Commission.DefaultRate", "10", "Varsayılan komisyon oranı (%)", "Commission", false, DateTime.UtcNow, DateTime.UtcNow, false },
                     { "Commission.MinAmount", "1", "Minimum komisyon tutarı (TL)", "Commission", false, DateTime.UtcNow, DateTime.UtcNow, false },
-                    { "General.SiteName", "Farmazon", "Site adı", "General", true, DateTime.UtcNow, DateTime.UtcNow, false },
+                    { "General.SiteName", "Exodus", "Site adı", "General", true, DateTime.UtcNow, DateTime.UtcNow, false },
                     { "Payment.MinOrderAmount", "50", "Minimum sipariş tutarı (TL)", "Payment", true, DateTime.UtcNow, DateTime.UtcNow, false }
                 });
         }

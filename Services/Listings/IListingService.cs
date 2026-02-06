@@ -1,6 +1,6 @@
-﻿using FarmazonDemo.Models.Dto.ListingDto;
+﻿using Exodus.Models.Dto.ListingDto;
 
-namespace FarmazonDemo.Services.Listings;
+namespace Exodus.Services.Listings;
 
 public interface IListingService
 {

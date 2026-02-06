@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace FarmazonDemo.Models.Entities;
+namespace Exodus.Models.Entities;
 
 /// <summary>
 /// İade kargo bilgileri - Ticket veya Refund ile ilişkili
@@ -100,7 +100,7 @@ public enum ShippingPaidBy
 {
     Buyer = 0,      // Alıcı
     Seller = 1,     // Satıcı
-    Platform = 2    // Platform (Farmazon)
+    Platform = 2    // Platform (Exodus)
 }
 
 /// <summary>

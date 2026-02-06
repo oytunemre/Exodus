@@ -1,4 +1,4 @@
-﻿namespace FarmazonDemo.Models.Dto.OrderDto
+﻿namespace Exodus.Models.Dto.OrderDto
 {
     public class CheckoutOrderDto
     {

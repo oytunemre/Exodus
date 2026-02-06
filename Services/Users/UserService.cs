@@ -1,12 +1,12 @@
-﻿using FarmazonDemo.Data;
-using FarmazonDemo.Models.Dto.UserDto;
-using FarmazonDemo.Services.Common;
+﻿using Exodus.Data;
+using Exodus.Models.Dto.UserDto;
+using Exodus.Services.Common;
 using Microsoft.EntityFrameworkCore;
 
 // ALIAS: Entity'yi farklı isimle çağırıyoruz
-using UserEntity = FarmazonDemo.Models.Entities.Users;
+using UserEntity = Exodus.Models.Entities.Users;
 
-namespace FarmazonDemo.Services.Users;
+namespace Exodus.Services.Users;
 
 public class UserService : IUserService
 {

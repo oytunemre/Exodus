@@ -1,11 +1,11 @@
-using FarmazonDemo.Models.Dto;
-using FarmazonDemo.Services.Notifications;
-using FarmazonDemo.Services.Common;
+using Exodus.Models.Dto;
+using Exodus.Services.Notifications;
+using Exodus.Services.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace FarmazonDemo.Controllers
+namespace Exodus.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

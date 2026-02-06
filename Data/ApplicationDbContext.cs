@@ -1,8 +1,8 @@
-﻿using FarmazonDemo.Models.Entities;
+﻿using Exodus.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
-namespace FarmazonDemo.Data
+namespace Exodus.Data
 {
     public class ApplicationDbContext : DbContext
     {

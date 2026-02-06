@@ -1,4 +1,4 @@
-﻿namespace FarmazonDemo.Models.Entities
+﻿namespace Exodus.Models.Entities
 {
     public class Cart : BaseEntity
     {

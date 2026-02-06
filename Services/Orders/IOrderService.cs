@@ -1,8 +1,8 @@
-using FarmazonDemo.Models.Dto;
-using FarmazonDemo.Models.Dto.OrderDto;
-using FarmazonDemo.Models.Enums;
+using Exodus.Models.Dto;
+using Exodus.Models.Dto.OrderDto;
+using Exodus.Models.Enums;
 
-namespace FarmazonDemo.Services.Orders
+namespace Exodus.Services.Orders
 {
     public interface IOrderService
     {

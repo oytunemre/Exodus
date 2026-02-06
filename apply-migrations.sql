@@ -1,7 +1,7 @@
--- FarmazonDemo Database Migration Script
+-- Exodus Database Migration Script
 -- Add User Role Field
 
-USE FarmazonDemodb;
+USE Exodusdb;
 GO
 
 -- Check if Role column exists

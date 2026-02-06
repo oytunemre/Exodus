@@ -1,11 +1,11 @@
-using FarmazonDemo.Models.Dto.Payment;
-using FarmazonDemo.Services.Payments;
-using FarmazonDemo.Services.Common;
+using Exodus.Models.Dto.Payment;
+using Exodus.Services.Payments;
+using Exodus.Services.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace FarmazonDemo.Controllers;
+namespace Exodus.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

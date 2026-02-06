@@ -1,4 +1,4 @@
-### FarmazonDemo API Test File
+### Exodus API Test File
 ### Use REST Client extension in VS Code or any HTTP client
 
 @baseUrl = https://localhost:7193

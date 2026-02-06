@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace FarmazonDemo.Migrations
+namespace Exodus.Migrations
 {
     /// <inheritdoc />
     public partial class AddSellerProfileShippingCarrierStaticPage : Migration
@@ -164,27 +164,27 @@ namespace FarmazonDemo.Migrations
             migrationBuilder.InsertData(
                 table: "StaticPages",
                 columns: new[] { "Title", "Slug", "Content", "MetaTitle", "MetaDescription", "IsPublished", "ShowInFooter", "ShowInHeader", "DisplayOrder", "PageType", "PublishedAt", "CreatedAt", "UpdatedAt", "IsDeleted" },
-                values: new object[] { "Hakkımızda", "hakkimizda", "<h1>Hakkımızda</h1><p>Farmazon, Türkiye'nin önde gelen online pazaryeri platformudur.</p>", "Hakkımızda - Farmazon", "Farmazon hakkında bilgi edinin", true, true, false, 1, 3, DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, false });
+                values: new object[] { "Hakkımızda", "hakkimizda", "<h1>Hakkımızda</h1><p>Exodus, Türkiye'nin önde gelen online pazaryeri platformudur.</p>", "Hakkımızda - Exodus", "Exodus hakkında bilgi edinin", true, true, false, 1, 3, DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, false });
 
             migrationBuilder.InsertData(
                 table: "StaticPages",
                 columns: new[] { "Title", "Slug", "Content", "MetaTitle", "MetaDescription", "IsPublished", "ShowInFooter", "ShowInHeader", "DisplayOrder", "PageType", "PublishedAt", "CreatedAt", "UpdatedAt", "IsDeleted" },
-                values: new object[] { "Gizlilik Politikası", "gizlilik-politikasi", "<h1>Gizlilik Politikası</h1><p>Kişisel verilerinizin korunması bizim için önemlidir.</p>", "Gizlilik Politikası - Farmazon", "Farmazon gizlilik politikası", true, true, false, 2, 1, DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, false });
+                values: new object[] { "Gizlilik Politikası", "gizlilik-politikasi", "<h1>Gizlilik Politikası</h1><p>Kişisel verilerinizin korunması bizim için önemlidir.</p>", "Gizlilik Politikası - Exodus", "Exodus gizlilik politikası", true, true, false, 2, 1, DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, false });
 
             migrationBuilder.InsertData(
                 table: "StaticPages",
                 columns: new[] { "Title", "Slug", "Content", "MetaTitle", "MetaDescription", "IsPublished", "ShowInFooter", "ShowInHeader", "DisplayOrder", "PageType", "PublishedAt", "CreatedAt", "UpdatedAt", "IsDeleted" },
-                values: new object[] { "Kullanım Şartları", "kullanim-sartlari", "<h1>Kullanım Şartları</h1><p>Platformumuzu kullanmadan önce lütfen okuyunuz.</p>", "Kullanım Şartları - Farmazon", "Farmazon kullanım şartları", true, true, false, 3, 1, DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, false });
+                values: new object[] { "Kullanım Şartları", "kullanim-sartlari", "<h1>Kullanım Şartları</h1><p>Platformumuzu kullanmadan önce lütfen okuyunuz.</p>", "Kullanım Şartları - Exodus", "Exodus kullanım şartları", true, true, false, 3, 1, DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, false });
 
             migrationBuilder.InsertData(
                 table: "StaticPages",
                 columns: new[] { "Title", "Slug", "Content", "MetaTitle", "MetaDescription", "IsPublished", "ShowInFooter", "ShowInHeader", "DisplayOrder", "PageType", "PublishedAt", "CreatedAt", "UpdatedAt", "IsDeleted" },
-                values: new object[] { "İletişim", "iletisim", "<h1>İletişim</h1><p>Bize ulaşmak için: destek@farmazon.com</p>", "İletişim - Farmazon", "Farmazon iletişim bilgileri", true, true, true, 4, 3, DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, false });
+                values: new object[] { "İletişim", "iletisim", "<h1>İletişim</h1><p>Bize ulaşmak için: destek@exodus.com</p>", "İletişim - Exodus", "Exodus iletişim bilgileri", true, true, true, 4, 3, DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, false });
 
             migrationBuilder.InsertData(
                 table: "StaticPages",
                 columns: new[] { "Title", "Slug", "Content", "MetaTitle", "MetaDescription", "IsPublished", "ShowInFooter", "ShowInHeader", "DisplayOrder", "PageType", "PublishedAt", "CreatedAt", "UpdatedAt", "IsDeleted" },
-                values: new object[] { "Sıkça Sorulan Sorular", "sss", "<h1>Sıkça Sorulan Sorular</h1><h2>Nasıl sipariş verebilirim?</h2><p>Ürünü sepete ekleyip ödeme adımlarını takip edebilirsiniz.</p>", "SSS - Farmazon", "Farmazon sıkça sorulan sorular", true, true, false, 5, 2, DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, false });
+                values: new object[] { "Sıkça Sorulan Sorular", "sss", "<h1>Sıkça Sorulan Sorular</h1><h2>Nasıl sipariş verebilirim?</h2><p>Ürünü sepete ekleyip ödeme adımlarını takip edebilirsiniz.</p>", "SSS - Exodus", "Exodus sıkça sorulan sorular", true, true, false, 5, 2, DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, false });
         }
 
         /// <inheritdoc />

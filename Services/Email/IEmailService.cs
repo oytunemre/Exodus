@@ -1,4 +1,4 @@
-namespace FarmazonDemo.Services.Email
+namespace Exodus.Services.Email
 {
     public interface IEmailService
     {

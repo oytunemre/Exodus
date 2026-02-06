@@ -1,7 +1,7 @@
-﻿using FarmazonDemo.Models.Dto.Payment;
+﻿using Exodus.Models.Dto.Payment;
 using FluentValidation;
 
-namespace FarmazonDemo.Validation.Payments;
+namespace Exodus.Validation.Payments;
 
 public class CreatePaymentIntentDtoValidator : AbstractValidator<CreatePaymentIntentDto>
 {

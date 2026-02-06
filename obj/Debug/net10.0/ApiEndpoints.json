@@ -1,6 +1,6 @@
 [
   {
-    "ContainingType": "FarmazonDemo.Controllers.ListingController",
+    "ContainingType": "Exodus.Controllers.ListingController",
     "Method": "GetAll",
     "RelativePath": "api/listings",
     "HttpMethod": "GET",
@@ -10,7 +10,7 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "FarmazonDemo.Controllers.ListingController",
+    "ContainingType": "Exodus.Controllers.ListingController",
     "Method": "Create",
     "RelativePath": "api/listings",
     "HttpMethod": "POST",
@@ -19,14 +19,14 @@
     "Parameters": [
       {
         "Name": "dto",
-        "Type": "FarmazonDemo.Models.Dto.ListingDto.CreateListingDto",
+        "Type": "Exodus.Models.Dto.ListingDto.CreateListingDto",
         "IsRequired": true
       }
     ],
     "ReturnTypes": []
   },
   {
-    "ContainingType": "FarmazonDemo.Controllers.ListingController",
+    "ContainingType": "Exodus.Controllers.ListingController",
     "Method": "GetById",
     "RelativePath": "api/listings/{id}",
     "HttpMethod": "GET",
@@ -42,7 +42,7 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "FarmazonDemo.Controllers.ListingController",
+    "ContainingType": "Exodus.Controllers.ListingController",
     "Method": "Update",
     "RelativePath": "api/listings/{id}",
     "HttpMethod": "PUT",
@@ -56,14 +56,14 @@
       },
       {
         "Name": "dto",
-        "Type": "FarmazonDemo.Models.Dto.ListingDto.UpdateListingDto",
+        "Type": "Exodus.Models.Dto.ListingDto.UpdateListingDto",
         "IsRequired": true
       }
     ],
     "ReturnTypes": []
   },
   {
-    "ContainingType": "FarmazonDemo.Controllers.ListingController",
+    "ContainingType": "Exodus.Controllers.ListingController",
     "Method": "Delete",
     "RelativePath": "api/listings/{id}",
     "HttpMethod": "DELETE",
@@ -79,7 +79,7 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "FarmazonDemo.Controllers.ProductController",
+    "ContainingType": "Exodus.Controllers.ProductController",
     "Method": "getAllProducts",
     "RelativePath": "api/Product",
     "HttpMethod": "GET",
@@ -89,7 +89,7 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "FarmazonDemo.Controllers.ProductController",
+    "ContainingType": "Exodus.Controllers.ProductController",
     "Method": "AddProduct",
     "RelativePath": "api/Product",
     "HttpMethod": "POST",
@@ -98,14 +98,14 @@
     "Parameters": [
       {
         "Name": "AddProductDto",
-        "Type": "FarmazonDemo.Models.Dto.ProductDto.AddProductDto",
+        "Type": "Exodus.Models.Dto.ProductDto.AddProductDto",
         "IsRequired": true
       }
     ],
     "ReturnTypes": []
   },
   {
-    "ContainingType": "FarmazonDemo.Controllers.ProductController",
+    "ContainingType": "Exodus.Controllers.ProductController",
     "Method": "getProductById",
     "RelativePath": "api/Product/{ProductId}",
     "HttpMethod": "GET",
@@ -121,7 +121,7 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "FarmazonDemo.Controllers.ProductController",
+    "ContainingType": "Exodus.Controllers.ProductController",
     "Method": "updateProduct",
     "RelativePath": "api/Product/{ProductId}",
     "HttpMethod": "PUT",
@@ -135,14 +135,14 @@
       },
       {
         "Name": "productUpdateDto",
-        "Type": "FarmazonDemo.Models.Dto.ProductDto.ProductUpdateDto",
+        "Type": "Exodus.Models.Dto.ProductDto.ProductUpdateDto",
         "IsRequired": true
       }
     ],
     "ReturnTypes": []
   },
   {
-    "ContainingType": "FarmazonDemo.Controllers.ProductController",
+    "ContainingType": "Exodus.Controllers.ProductController",
     "Method": "DeleteProduct",
     "RelativePath": "api/Product/{ProductId}",
     "HttpMethod": "DELETE",
@@ -158,7 +158,7 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "FarmazonDemo.Controllers.UserController",
+    "ContainingType": "Exodus.Controllers.UserController",
     "Method": "GetAllUsers",
     "RelativePath": "api/User",
     "HttpMethod": "GET",
@@ -168,7 +168,7 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "FarmazonDemo.Controllers.UserController",
+    "ContainingType": "Exodus.Controllers.UserController",
     "Method": "AddUser",
     "RelativePath": "api/User",
     "HttpMethod": "POST",
@@ -177,14 +177,14 @@
     "Parameters": [
       {
         "Name": "addUserDto",
-        "Type": "FarmazonDemo.Models.Dto.adduserDto",
+        "Type": "Exodus.Models.Dto.adduserDto",
         "IsRequired": true
       }
     ],
     "ReturnTypes": []
   },
   {
-    "ContainingType": "FarmazonDemo.Controllers.UserController",
+    "ContainingType": "Exodus.Controllers.UserController",
     "Method": "GetUserbyId",
     "RelativePath": "api/User/{UserId}",
     "HttpMethod": "GET",
@@ -200,7 +200,7 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "FarmazonDemo.Controllers.UserController",
+    "ContainingType": "Exodus.Controllers.UserController",
     "Method": "UpdateUser",
     "RelativePath": "api/User/{UserId}",
     "HttpMethod": "PUT",
@@ -214,14 +214,14 @@
       },
       {
         "Name": "userUpdateDto",
-        "Type": "FarmazonDemo.Models.Dto.UserUpdateDto",
+        "Type": "Exodus.Models.Dto.UserUpdateDto",
         "IsRequired": true
       }
     ],
     "ReturnTypes": []
   },
   {
-    "ContainingType": "FarmazonDemo.Controllers.UserController",
+    "ContainingType": "Exodus.Controllers.UserController",
     "Method": "DeleteUser",
     "RelativePath": "api/User/{UserId}",
     "HttpMethod": "DELETE",

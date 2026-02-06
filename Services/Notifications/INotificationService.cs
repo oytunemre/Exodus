@@ -1,7 +1,7 @@
-using FarmazonDemo.Models.Dto;
-using FarmazonDemo.Models.Entities;
+using Exodus.Models.Dto;
+using Exodus.Models.Entities;
 
-namespace FarmazonDemo.Services.Notifications
+namespace Exodus.Services.Notifications
 {
     public interface INotificationService
     {

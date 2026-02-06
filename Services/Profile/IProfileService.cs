@@ -1,6 +1,6 @@
-using FarmazonDemo.Models.Dto;
+using Exodus.Models.Dto;
 
-namespace FarmazonDemo.Services.Profile
+namespace Exodus.Services.Profile
 {
     public interface IProfileService
     {

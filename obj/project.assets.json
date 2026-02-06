@@ -3973,11 +3973,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\nilgo\\source\\repos\\oytunemre\\FarmazonDemo\\FarmazonDemo.csproj",
-      "projectName": "FarmazonDemo",
-      "projectPath": "C:\\Users\\nilgo\\source\\repos\\oytunemre\\FarmazonDemo\\FarmazonDemo.csproj",
+      "projectUniqueName": "C:\\Users\\nilgo\\source\\repos\\oytunemre\\Exodus\\Exodus.csproj",
+      "projectName": "Exodus",
+      "projectPath": "C:\\Users\\nilgo\\source\\repos\\oytunemre\\Exodus\\Exodus.csproj",
       "packagesPath": "C:\\Users\\nilgo\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\nilgo\\source\\repos\\oytunemre\\FarmazonDemo\\obj\\",
+      "outputPath": "C:\\Users\\nilgo\\source\\repos\\oytunemre\\Exodus\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

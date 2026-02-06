@@ -1,4 +1,4 @@
-namespace FarmazonDemo.Services.Audit
+namespace Exodus.Services.Audit
 {
     public interface IAuditService
     {

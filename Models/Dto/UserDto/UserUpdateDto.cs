@@ -1,4 +1,4 @@
-﻿namespace FarmazonDemo.Models.Dto.UserDto
+﻿namespace Exodus.Models.Dto.UserDto
 {
     public class UserUpdateDto
     {

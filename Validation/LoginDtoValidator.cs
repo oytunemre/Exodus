@@ -1,7 +1,7 @@
 using FluentValidation;
-using FarmazonDemo.Models.Dto;
+using Exodus.Models.Dto;
 
-namespace FarmazonDemo.Validation
+namespace Exodus.Validation
 {
     public class LoginDtoValidator : AbstractValidator<LoginDto>
     {

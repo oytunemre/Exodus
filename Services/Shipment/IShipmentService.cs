@@ -1,6 +1,6 @@
-﻿using FarmazonDemo.Models.Dto.Shipment;
+﻿using Exodus.Models.Dto.Shipment;
 
-namespace FarmazonDemo.Services.Shipments;
+namespace Exodus.Services.Shipments;
 
 public interface IShipmentService
 {

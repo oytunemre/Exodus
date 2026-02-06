@@ -1,5 +1,5 @@
-﻿using FarmazonDemo.Models.Dto.OrderDto.SellerOrders;
-using FarmazonDemo.Models.Enums;
+﻿using Exodus.Models.Dto.OrderDto.SellerOrders;
+using Exodus.Models.Enums;
 
 public class SellerOrderResponseDto
 {

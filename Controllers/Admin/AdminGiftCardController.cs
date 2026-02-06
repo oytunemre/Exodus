@@ -1,12 +1,12 @@
-using FarmazonDemo.Data;
-using FarmazonDemo.Models.Entities;
-using FarmazonDemo.Services.Common;
+using Exodus.Data;
+using Exodus.Models.Entities;
+using Exodus.Services.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 
-namespace FarmazonDemo.Controllers.Admin;
+namespace Exodus.Controllers.Admin;
 
 [Route("api/admin/gift-cards")]
 [ApiController]

@@ -1,10 +1,10 @@
-﻿using FarmazonDemo.Data;
-using FarmazonDemo.Models.Dto.ProductDto;
-using FarmazonDemo.Models.Entities;
-using FarmazonDemo.Services.Common;
+﻿using Exodus.Data;
+using Exodus.Models.Dto.ProductDto;
+using Exodus.Models.Entities;
+using Exodus.Services.Common;
 using Microsoft.EntityFrameworkCore;
 
-namespace FarmazonDemo.Services.Products;
+namespace Exodus.Services.Products;
 
 public class ProductService : IProductService
 {

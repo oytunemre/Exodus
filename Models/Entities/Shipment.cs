@@ -1,6 +1,6 @@
-﻿using FarmazonDemo.Models.Enums;
+﻿using Exodus.Models.Enums;
 
-namespace FarmazonDemo.Models.Entities;
+namespace Exodus.Models.Entities;
 
 public class Shipment : BaseEntity
 {

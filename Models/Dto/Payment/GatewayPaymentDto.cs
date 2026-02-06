@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace FarmazonDemo.Models.Dto.Payment;
+namespace Exodus.Models.Dto.Payment;
 
 public class ProcessGatewayPaymentDto
 {

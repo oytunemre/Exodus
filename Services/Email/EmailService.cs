@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Options;
 
-namespace FarmazonDemo.Services.Email
+namespace Exodus.Services.Email
 {
     public class EmailSettings
     {
@@ -8,8 +8,8 @@ namespace FarmazonDemo.Services.Email
         public int SmtpPort { get; set; } = 587;
         public string SmtpUsername { get; set; } = string.Empty;
         public string SmtpPassword { get; set; } = string.Empty;
-        public string FromEmail { get; set; } = "noreply@farmazon.com";
-        public string FromName { get; set; } = "Farmazon";
+        public string FromEmail { get; set; } = "noreply@exodus.com";
+        public string FromName { get; set; } = "Exodus";
         public string BaseUrl { get; set; } = "http://localhost:5000";
     }
 
@@ -33,9 +33,9 @@ namespace FarmazonDemo.Services.Email
         {
             var verificationUrl = $"{_settings.BaseUrl}/api/auth/verify-email?token={token}";
 
-            var subject = "Verify your email - Farmazon";
+            var subject = "Verify your email - Exodus";
             var body = $@"
-                <h2>Welcome to Farmazon!</h2>
+                <h2>Welcome to Exodus!</h2>
                 <p>Please verify your email address by clicking the link below:</p>
                 <p><a href='{verificationUrl}'>Verify Email</a></p>
                 <p>Or copy this link: {verificationUrl}</p>
@@ -51,7 +51,7 @@ namespace FarmazonDemo.Services.Email
         {
             var resetUrl = $"{_settings.BaseUrl}/reset-password?token={token}";
 
-            var subject = "Reset your password - Farmazon";
+            var subject = "Reset your password - Exodus";
             var body = $@"
                 <h2>Password Reset Request</h2>
                 <p>You requested to reset your password. Click the link below:</p>
@@ -67,7 +67,7 @@ namespace FarmazonDemo.Services.Email
 
         public async Task SendAccountLockedAsync(string email, DateTime lockoutEndTime)
         {
-            var subject = "Account Locked - Farmazon";
+            var subject = "Account Locked - Exodus";
             var body = $@"
                 <h2>Account Temporarily Locked</h2>
                 <p>Your account has been temporarily locked due to multiple failed login attempts.</p>

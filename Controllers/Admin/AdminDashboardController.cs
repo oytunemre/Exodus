@@ -1,10 +1,10 @@
-using FarmazonDemo.Models.Dto.DashboardDto;
-using FarmazonDemo.Services.Dashboard;
-using FarmazonDemo.Services.Reports;
+using Exodus.Models.Dto.DashboardDto;
+using Exodus.Services.Dashboard;
+using Exodus.Services.Reports;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace FarmazonDemo.Controllers.Admin;
+namespace Exodus.Controllers.Admin;
 
 [Route("api/admin/dashboard")]
 [ApiController]

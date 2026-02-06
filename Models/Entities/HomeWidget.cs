@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace FarmazonDemo.Models.Entities;
+namespace Exodus.Models.Entities;
 
 /// <summary>
 /// Anasayfa widget/bölüm tanımları

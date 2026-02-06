@@ -1,6 +1,6 @@
-﻿using FarmazonDemo.Models.Enums;
+﻿using Exodus.Models.Enums;
 
-namespace FarmazonDemo.Models.Dto.Shipment;
+namespace Exodus.Models.Dto.Shipment;
 
 public class ShipmentEventDto
 {

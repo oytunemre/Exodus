@@ -1,6 +1,6 @@
-﻿using FarmazonDemo.Models.Dto.UserDto;
+﻿using Exodus.Models.Dto.UserDto;
 
-namespace FarmazonDemo.Services.Users;
+namespace Exodus.Services.Users;
 
 public interface IUserService
 {

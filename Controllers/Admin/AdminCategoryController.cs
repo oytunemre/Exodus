@@ -1,9 +1,9 @@
-using FarmazonDemo.Models.Dto;
-using FarmazonDemo.Services.Categories;
+using Exodus.Models.Dto;
+using Exodus.Services.Categories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace FarmazonDemo.Controllers.Admin
+namespace Exodus.Controllers.Admin
 {
     [ApiController]
     [Route("api/admin/categories")]

@@ -1,4 +1,4 @@
-# FarmazonDemo - A'dan Z'ye Proje Ozellikleri
+# Exodus - A'dan Z'ye Proje Ozellikleri
 
 **ASP.NET Core 10.0** ile gelistirilmis kapsamli bir e-ticaret marketplace platformu.
 

@@ -1,4 +1,4 @@
-namespace FarmazonDemo.Services.Security
+namespace Exodus.Services.Security
 {
     public interface IInputSanitizerService
     {

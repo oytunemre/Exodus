@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace FarmazonDemo.Models.Dto
+namespace Exodus.Models.Dto
 {
     public class EmailRequestDto
     {

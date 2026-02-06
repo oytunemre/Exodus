@@ -6,7 +6,7 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v10.0": {
-      "FarmazonDemo/1.0.0": {
+      "Exodus/1.0.0": {
         "dependencies": {
           "BCrypt.Net-Next": "4.0.3",
           "FluentValidation.AspNetCore": "11.3.1",
@@ -16,7 +16,7 @@
           "Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore": "10.0.0"
         },
         "runtime": {
-          "FarmazonDemo.dll": {}
+          "Exodus.dll": {}
         }
       },
       "Azure.Core/1.47.1": {
@@ -925,7 +925,7 @@
     }
   },
   "libraries": {
-    "FarmazonDemo/1.0.0": {
+    "Exodus/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
