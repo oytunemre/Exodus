@@ -68,6 +68,24 @@ namespace FarmazonDemo.Data
         public DbSet<AffiliateReferral> AffiliateReferrals { get; set; }
         public DbSet<AffiliatePayout> AffiliatePayouts { get; set; }
 
+        // Product Q&A
+        public DbSet<ProductQuestion> ProductQuestions { get; set; }
+        public DbSet<ProductAnswer> ProductAnswers { get; set; }
+
+        // Recently Viewed
+        public DbSet<RecentlyViewed> RecentlyViewed { get; set; }
+
+        // Seller Reviews
+        public DbSet<SellerReview> SellerReviews { get; set; }
+
+        // Loyalty Points
+        public DbSet<LoyaltyPoint> LoyaltyPoints { get; set; }
+        public DbSet<LoyaltyTransaction> LoyaltyTransactions { get; set; }
+
+        // Product Comparison
+        public DbSet<ProductComparison> ProductComparisons { get; set; }
+        public DbSet<ProductComparisonItem> ProductComparisonItems { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -922,6 +940,138 @@ namespace FarmazonDemo.Data
                     .HasFilter("[IsDeleted] = 0");
 
                 b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+            });
+
+            // PRODUCT QUESTION
+            modelBuilder.Entity<ProductQuestion>(b =>
+            {
+                b.HasOne(x => x.Product)
+                    .WithMany()
+                    .HasForeignKey(x => x.ProductId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(x => x.AskedByUser)
+                    .WithMany()
+                    .HasForeignKey(x => x.AskedByUserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+                b.HasIndex(x => new { x.ProductId, x.Status });
+            });
+
+            modelBuilder.Entity<ProductAnswer>(b =>
+            {
+                b.HasOne(x => x.Question)
+                    .WithMany(q => q.Answers)
+                    .HasForeignKey(x => x.QuestionId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(x => x.AnsweredByUser)
+                    .WithMany()
+                    .HasForeignKey(x => x.AnsweredByUserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // RECENTLY VIEWED
+            modelBuilder.Entity<RecentlyViewed>(b =>
+            {
+                b.HasOne(x => x.User)
+                    .WithMany()
+                    .HasForeignKey(x => x.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(x => x.Product)
+                    .WithMany()
+                    .HasForeignKey(x => x.ProductId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasIndex(x => new { x.UserId, x.ProductId })
+                    .IsUnique()
+                    .HasFilter("[IsDeleted] = 0");
+
+                b.HasIndex(x => new { x.UserId, x.ViewedAt });
+            });
+
+            // SELLER REVIEW
+            modelBuilder.Entity<SellerReview>(b =>
+            {
+                b.HasOne(x => x.Seller)
+                    .WithMany()
+                    .HasForeignKey(x => x.SellerId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne(x => x.User)
+                    .WithMany()
+                    .HasForeignKey(x => x.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne(x => x.Order)
+                    .WithMany()
+                    .HasForeignKey(x => x.OrderId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+                b.HasIndex(x => new { x.SellerId, x.Status });
+                b.HasIndex(x => new { x.UserId, x.SellerId, x.OrderId })
+                    .IsUnique()
+                    .HasFilter("[IsDeleted] = 0");
+            });
+
+            // LOYALTY POINT
+            modelBuilder.Entity<LoyaltyPoint>(b =>
+            {
+                b.HasOne(x => x.User)
+                    .WithMany()
+                    .HasForeignKey(x => x.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasIndex(x => x.UserId)
+                    .IsUnique()
+                    .HasFilter("[IsDeleted] = 0");
+
+                b.Property(x => x.Tier).HasConversion<string>().HasMaxLength(20);
+            });
+
+            modelBuilder.Entity<LoyaltyTransaction>(b =>
+            {
+                b.HasOne(x => x.LoyaltyPoint)
+                    .WithMany(lp => lp.Transactions)
+                    .HasForeignKey(x => x.LoyaltyPointId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(x => x.Order)
+                    .WithMany()
+                    .HasForeignKey(x => x.OrderId)
+                    .OnDelete(DeleteBehavior.SetNull);
+
+                b.Property(x => x.Type).HasConversion<string>().HasMaxLength(20);
+                b.HasIndex(x => new { x.LoyaltyPointId, x.CreatedAt });
+            });
+
+            // PRODUCT COMPARISON
+            modelBuilder.Entity<ProductComparison>(b =>
+            {
+                b.HasOne(x => x.User)
+                    .WithMany()
+                    .HasForeignKey(x => x.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ProductComparisonItem>(b =>
+            {
+                b.HasOne(x => x.Comparison)
+                    .WithMany(c => c.Items)
+                    .HasForeignKey(x => x.ComparisonId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasOne(x => x.Product)
+                    .WithMany()
+                    .HasForeignKey(x => x.ProductId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                b.HasIndex(x => new { x.ComparisonId, x.ProductId })
+                    .IsUnique()
+                    .HasFilter("[IsDeleted] = 0");
             });
 
         }

@@ -28,6 +28,12 @@ using FarmazonDemo.Services.Dashboard;
 using FarmazonDemo.Services.Reports;
 using FarmazonDemo.Services.PaymentGateway;
 using FarmazonDemo.Services.Campaigns;
+using FarmazonDemo.Services.Addresses;
+using FarmazonDemo.Services.ProductQA;
+using FarmazonDemo.Services.RecentlyViewedProducts;
+using FarmazonDemo.Services.SellerReviews;
+using FarmazonDemo.Services.Loyalty;
+using FarmazonDemo.Services.Comparison;
 using FarmazonDemo.Models.Dto;
 using System.Threading.RateLimiting;
 
@@ -185,6 +191,24 @@ builder.Services.AddHttpClient<IPaymentGateway, IyzicoPaymentGateway>();
 
 // Campaign Service
 builder.Services.AddScoped<ICampaignService, CampaignService>();
+
+// Address Service
+builder.Services.AddScoped<IAddressService, AddressService>();
+
+// Product Q&A Service
+builder.Services.AddScoped<IProductQAService, ProductQAService>();
+
+// Recently Viewed Service
+builder.Services.AddScoped<IRecentlyViewedService, RecentlyViewedService>();
+
+// Seller Review Service
+builder.Services.AddScoped<ISellerReviewService, SellerReviewService>();
+
+// Loyalty Service
+builder.Services.AddScoped<ILoyaltyService, LoyaltyService>();
+
+// Product Comparison Service
+builder.Services.AddScoped<IProductComparisonService, ProductComparisonService>();
 
 // --------------------
 // BUILD
