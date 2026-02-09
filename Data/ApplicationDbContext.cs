@@ -269,7 +269,7 @@ namespace Exodus.Data
                 .HasOne(p => p.Category)
                 .WithMany(c => c.Products)
                 .HasForeignKey(p => p.CategoryId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.NoAction);
 
             // ProductImage -> Product
             modelBuilder.Entity<ProductImage>()
@@ -467,7 +467,7 @@ namespace Exodus.Data
                 b.HasOne(cu => cu.Order)
                     .WithMany()
                     .HasForeignKey(cu => cu.OrderId)
-                    .OnDelete(DeleteBehavior.SetNull);
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 b.Property(cu => cu.DiscountApplied).HasColumnType("decimal(18,2)");
             });
@@ -523,17 +523,17 @@ namespace Exodus.Data
                 b.HasOne(x => x.Order)
                     .WithMany()
                     .HasForeignKey(x => x.OrderId)
-                    .OnDelete(DeleteBehavior.SetNull);
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 b.HasOne(x => x.SellerOrder)
                     .WithMany()
                     .HasForeignKey(x => x.SellerOrderId)
-                    .OnDelete(DeleteBehavior.SetNull);
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 b.HasOne(x => x.AssignedTo)
                     .WithMany()
                     .HasForeignKey(x => x.AssignedToId)
-                    .OnDelete(DeleteBehavior.SetNull);
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
             // SUPPORT TICKET MESSAGE
@@ -595,12 +595,12 @@ namespace Exodus.Data
                 b.HasOne(x => x.Ticket)
                     .WithMany()
                     .HasForeignKey(x => x.TicketId)
-                    .OnDelete(DeleteBehavior.SetNull);
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 b.HasOne(x => x.Refund)
                     .WithMany()
                     .HasForeignKey(x => x.RefundId)
-                    .OnDelete(DeleteBehavior.SetNull);
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 b.HasOne(x => x.SellerOrder)
                     .WithMany()
@@ -610,7 +610,7 @@ namespace Exodus.Data
                 b.HasOne(x => x.Carrier)
                     .WithMany()
                     .HasForeignKey(x => x.CarrierId)
-                    .OnDelete(DeleteBehavior.SetNull);
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
             // SELLER SHIPPING SETTINGS
@@ -628,7 +628,7 @@ namespace Exodus.Data
                 b.HasOne(x => x.PreferredCarrier)
                     .WithMany()
                     .HasForeignKey(x => x.PreferredCarrierId)
-                    .OnDelete(DeleteBehavior.SetNull);
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
             // REVIEW
@@ -652,7 +652,7 @@ namespace Exodus.Data
                 b.HasOne(x => x.Order)
                     .WithMany()
                     .HasForeignKey(x => x.OrderId)
-                    .OnDelete(DeleteBehavior.SetNull);
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 b.Property(x => x.Type).HasConversion<string>().HasMaxLength(20);
                 b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
@@ -824,7 +824,7 @@ namespace Exodus.Data
                 b.HasOne(x => x.Listing)
                     .WithMany()
                     .HasForeignKey(x => x.ListingId)
-                    .OnDelete(DeleteBehavior.SetNull);
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 b.HasIndex(x => new { x.WishlistId, x.ProductId })
                     .IsUnique()
@@ -923,7 +923,7 @@ namespace Exodus.Data
                 b.HasOne(x => x.Order)
                     .WithMany()
                     .HasForeignKey(x => x.OrderId)
-                    .OnDelete(DeleteBehavior.SetNull);
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
             });
@@ -1008,7 +1008,7 @@ namespace Exodus.Data
                 b.HasOne(x => x.Order)
                     .WithMany()
                     .HasForeignKey(x => x.OrderId)
-                    .OnDelete(DeleteBehavior.SetNull);
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
                 b.HasIndex(x => new { x.SellerId, x.Status });
@@ -1042,7 +1042,7 @@ namespace Exodus.Data
                 b.HasOne(x => x.Order)
                     .WithMany()
                     .HasForeignKey(x => x.OrderId)
-                    .OnDelete(DeleteBehavior.SetNull);
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 b.Property(x => x.Type).HasConversion<string>().HasMaxLength(20);
                 b.HasIndex(x => new { x.LoyaltyPointId, x.CreatedAt });
