@@ -1,4 +1,4 @@
-﻿namespace FarmazonDemo.Models.Dto.Payment;
+﻿namespace Exodus.Models.Dto.Payment;
 
 public class SimulatePaymentDto
 {

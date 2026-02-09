@@ -1,4 +1,4 @@
-﻿namespace FarmazonDemo.Models.Dto.Shipment;
+﻿namespace Exodus.Models.Dto.Shipment;
 
 public class ShipSellerOrderDto
 {

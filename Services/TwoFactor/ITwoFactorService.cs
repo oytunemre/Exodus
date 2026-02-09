@@ -1,4 +1,4 @@
-namespace FarmazonDemo.Services.TwoFactor
+namespace Exodus.Services.TwoFactor
 {
     public interface ITwoFactorService
     {

@@ -1,6 +1,6 @@
-using FarmazonDemo.Models.Dto;
+using Exodus.Models.Dto;
 
-namespace FarmazonDemo.Services.Categories
+namespace Exodus.Services.Categories
 {
     public interface ICategoryService
     {

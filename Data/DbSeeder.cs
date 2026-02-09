@@ -1,8 +1,8 @@
-﻿using FarmazonDemo.Models.Entities;
-using FarmazonDemo.Models.Enums;
+﻿using Exodus.Models.Entities;
+using Exodus.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 
-namespace FarmazonDemo.Data;
+namespace Exodus.Data;
 
 public static class DbSeeder
 {

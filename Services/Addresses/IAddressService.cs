@@ -1,4 +1,4 @@
-namespace FarmazonDemo.Services.Addresses;
+namespace Exodus.Services.Addresses;
 
 public interface IAddressService
 {

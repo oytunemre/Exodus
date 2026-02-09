@@ -1,7 +1,7 @@
-using FarmazonDemo.Models.Dto.Payment;
-using FarmazonDemo.Models.Enums;
+using Exodus.Models.Dto.Payment;
+using Exodus.Models.Enums;
 
-namespace FarmazonDemo.Services.Payments;
+namespace Exodus.Services.Payments;
 
 public interface IPaymentService
 {

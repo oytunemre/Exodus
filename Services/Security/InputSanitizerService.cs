@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using System.Web;
 
-namespace FarmazonDemo.Services.Security
+namespace Exodus.Services.Security
 {
     public class InputSanitizerService : IInputSanitizerService
     {

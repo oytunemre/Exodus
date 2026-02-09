@@ -1,11 +1,11 @@
-using FarmazonDemo.Models;
+using Exodus.Models;
 using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace FarmazonDemo.Services.PaymentGateway;
+namespace Exodus.Services.PaymentGateway;
 
 public class IyzicoPaymentGateway : IPaymentGateway
 {

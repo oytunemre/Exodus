@@ -1,10 +1,10 @@
-using FarmazonDemo.Models.Dto.Campaign;
-using FarmazonDemo.Services.Campaigns;
+using Exodus.Models.Dto.Campaign;
+using Exodus.Services.Campaigns;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace FarmazonDemo.Controllers.Seller;
+namespace Exodus.Controllers.Seller;
 
 [ApiController]
 [Route("api/seller/campaigns")]

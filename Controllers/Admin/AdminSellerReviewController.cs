@@ -1,8 +1,8 @@
-using FarmazonDemo.Services.SellerReviews;
+using Exodus.Services.SellerReviews;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace FarmazonDemo.Controllers.Admin;
+namespace Exodus.Controllers.Admin;
 
 [ApiController]
 [Route("api/admin/seller-reviews")]

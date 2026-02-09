@@ -1,6 +1,6 @@
-using FarmazonDemo.Models.Dto.DashboardDto;
+using Exodus.Models.Dto.DashboardDto;
 
-namespace FarmazonDemo.Services.Dashboard;
+namespace Exodus.Services.Dashboard;
 
 public interface IDashboardService
 {

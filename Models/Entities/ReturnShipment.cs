@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace FarmazonDemo.Models.Entities;
+namespace Exodus.Models.Entities;
 
 /// <summary>
 /// İade kargo bilgileri - Ticket veya Refund ile ilişkili

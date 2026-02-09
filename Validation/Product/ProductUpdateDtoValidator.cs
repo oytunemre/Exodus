@@ -1,4 +1,4 @@
-﻿using FarmazonDemo.Models.Dto.ProductDto;
+﻿using Exodus.Models.Dto.ProductDto;
 using FluentValidation;
 
 public class ProductUpdateDtoValidator : AbstractValidator<ProductUpdateDto>

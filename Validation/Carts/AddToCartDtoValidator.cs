@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
-using FarmazonDemo.Models.Dto.CartDto;
+using Exodus.Models.Dto.CartDto;
 
-namespace FarmazonDemo.Validation.Carts;
+namespace Exodus.Validation.Carts;
 
 public class AddToCartDtoValidator : AbstractValidator<AddToCartDto>
 {

@@ -1,4 +1,4 @@
-﻿namespace FarmazonDemo.Models.Dto.SellerDto
+﻿namespace Exodus.Models.Dto.SellerDto
 {
     public class SellerOrderItemDto
     {

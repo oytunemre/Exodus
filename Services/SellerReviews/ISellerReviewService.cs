@@ -1,4 +1,4 @@
-namespace FarmazonDemo.Services.SellerReviews;
+namespace Exodus.Services.SellerReviews;
 
 public interface ISellerReviewService
 {

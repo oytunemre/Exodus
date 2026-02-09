@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using FarmazonDemo.Models.Entities;
+using Exodus.Models.Entities;
 
-namespace FarmazonDemo.Models.Dto.Campaign;
+namespace Exodus.Models.Dto.Campaign;
 
 public class CampaignDto
 {

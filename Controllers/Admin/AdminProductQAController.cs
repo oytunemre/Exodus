@@ -1,9 +1,9 @@
-using FarmazonDemo.Models.Entities;
-using FarmazonDemo.Services.ProductQA;
+using Exodus.Models.Entities;
+using Exodus.Services.ProductQA;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace FarmazonDemo.Controllers.Admin;
+namespace Exodus.Controllers.Admin;
 
 [ApiController]
 [Route("api/admin/product-qa")]

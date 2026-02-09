@@ -1,9 +1,9 @@
-using FarmazonDemo.Data;
-using FarmazonDemo.Models.Entities;
+using Exodus.Data;
+using Exodus.Models.Entities;
 using Microsoft.EntityFrameworkCore;
-using Users = FarmazonDemo.Models.Entities.Users;
+using Users = Exodus.Models.Entities.Users;
 
-namespace FarmazonDemo.Services.Loyalty;
+namespace Exodus.Services.Loyalty;
 
 public class LoyaltyService : ILoyaltyService
 {

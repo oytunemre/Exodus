@@ -1,8 +1,8 @@
-using FarmazonDemo.Services.Loyalty;
+using Exodus.Services.Loyalty;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace FarmazonDemo.Controllers.Admin;
+namespace Exodus.Controllers.Admin;
 
 [ApiController]
 [Route("api/admin/loyalty")]

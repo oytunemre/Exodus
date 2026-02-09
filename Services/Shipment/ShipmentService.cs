@@ -1,11 +1,11 @@
-﻿using FarmazonDemo.Data;
-using FarmazonDemo.Models.Dto.Shipment;
-using FarmazonDemo.Models.Entities;
-using FarmazonDemo.Models.Enums;
-using FarmazonDemo.Services.Common;
+﻿using Exodus.Data;
+using Exodus.Models.Dto.Shipment;
+using Exodus.Models.Entities;
+using Exodus.Models.Enums;
+using Exodus.Services.Common;
 using Microsoft.EntityFrameworkCore;
 
-namespace FarmazonDemo.Services.Shipments;
+namespace Exodus.Services.Shipments;
 
 public class ShipmentService : IShipmentService
 {

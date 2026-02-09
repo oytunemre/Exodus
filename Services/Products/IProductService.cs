@@ -1,6 +1,6 @@
-﻿using FarmazonDemo.Models.Dto.ProductDto;
+﻿using Exodus.Models.Dto.ProductDto;
 
-namespace FarmazonDemo.Services.Products;
+namespace Exodus.Services.Products;
 
 public interface IProductService
 {

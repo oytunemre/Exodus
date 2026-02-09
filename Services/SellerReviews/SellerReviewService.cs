@@ -1,8 +1,8 @@
-using FarmazonDemo.Data;
-using FarmazonDemo.Models.Entities;
+using Exodus.Data;
+using Exodus.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace FarmazonDemo.Services.SellerReviews;
+namespace Exodus.Services.SellerReviews;
 
 public class SellerReviewService : ISellerReviewService
 {

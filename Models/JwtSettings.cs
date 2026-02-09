@@ -1,4 +1,4 @@
-namespace FarmazonDemo.Models
+namespace Exodus.Models
 {
     public class JwtSettings
     {

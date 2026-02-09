@@ -1,6 +1,6 @@
-using FarmazonDemo.Models.Dto.Campaign;
+using Exodus.Models.Dto.Campaign;
 
-namespace FarmazonDemo.Services.Campaigns;
+namespace Exodus.Services.Campaigns;
 
 public interface ICampaignService
 {

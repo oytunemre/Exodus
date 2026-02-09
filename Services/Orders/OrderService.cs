@@ -1,13 +1,13 @@
-using FarmazonDemo.Data;
-using FarmazonDemo.Models.Dto;
-using FarmazonDemo.Models.Dto.OrderDto;
-using FarmazonDemo.Models.Entities;
-using FarmazonDemo.Models.Enums;
-using FarmazonDemo.Services.Common;
-using FarmazonDemo.Services.Notifications;
+using Exodus.Data;
+using Exodus.Models.Dto;
+using Exodus.Models.Dto.OrderDto;
+using Exodus.Models.Entities;
+using Exodus.Models.Enums;
+using Exodus.Services.Common;
+using Exodus.Services.Notifications;
 using Microsoft.EntityFrameworkCore;
 
-namespace FarmazonDemo.Services.Orders
+namespace Exodus.Services.Orders
 {
     public class OrderService : IOrderService
     {

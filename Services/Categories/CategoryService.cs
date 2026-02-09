@@ -1,11 +1,11 @@
-using FarmazonDemo.Data;
-using FarmazonDemo.Models.Dto;
-using FarmazonDemo.Models.Entities;
-using FarmazonDemo.Services.Common;
+using Exodus.Data;
+using Exodus.Models.Dto;
+using Exodus.Models.Entities;
+using Exodus.Services.Common;
 using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
 
-namespace FarmazonDemo.Services.Categories
+namespace Exodus.Services.Categories
 {
     public class CategoryService : ICategoryService
     {

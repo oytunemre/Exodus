@@ -1,6 +1,6 @@
-using FarmazonDemo.Models.Entities;
+using Exodus.Models.Entities;
 
-namespace FarmazonDemo.Services.Loyalty;
+namespace Exodus.Services.Loyalty;
 
 public interface ILoyaltyService
 {

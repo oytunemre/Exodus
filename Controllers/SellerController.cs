@@ -1,12 +1,12 @@
-﻿using FarmazonDemo.Data;
-using FarmazonDemo.Models.Dto.SellerDto;
-using FarmazonDemo.Models.Enums;
-using FarmazonDemo.Services.Common;
+﻿using Exodus.Data;
+using Exodus.Models.Dto.SellerDto;
+using Exodus.Models.Enums;
+using Exodus.Services.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace FarmazonDemo.Controllers;
+namespace Exodus.Controllers;
 
 [ApiController]
 [Route("api/seller")]

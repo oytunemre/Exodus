@@ -1,11 +1,11 @@
-using FarmazonDemo.Data;
-using FarmazonDemo.Models.Dto;
-using FarmazonDemo.Models.Entities;
-using FarmazonDemo.Services.Common;
-using FarmazonDemo.Services.Files;
+using Exodus.Data;
+using Exodus.Models.Dto;
+using Exodus.Models.Entities;
+using Exodus.Services.Common;
+using Exodus.Services.Files;
 using Microsoft.EntityFrameworkCore;
 
-namespace FarmazonDemo.Services.Profile
+namespace Exodus.Services.Profile
 {
     public class ProfileService : IProfileService
     {
@@ -327,7 +327,7 @@ namespace FarmazonDemo.Services.Profile
 
         #region Mappers
 
-        private static UserProfileResponseDto MapToProfileDto(FarmazonDemo.Models.Entities.Users user)
+        private static UserProfileResponseDto MapToProfileDto(Exodus.Models.Entities.Users user)
         {
             return new UserProfileResponseDto
             {

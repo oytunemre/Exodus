@@ -1,9 +1,9 @@
-﻿using FarmazonDemo.Models.Dto.ListingDto;
-using FarmazonDemo.Services.Listings;
+﻿using Exodus.Models.Dto.ListingDto;
+using Exodus.Services.Listings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace FarmazonDemo.Controllers;
+namespace Exodus.Controllers;
 
 [Route("api/listings")]
 [ApiController]

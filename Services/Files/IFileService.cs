@@ -1,6 +1,6 @@
-using FarmazonDemo.Models.Dto;
+using Exodus.Models.Dto;
 
-namespace FarmazonDemo.Services.Files
+namespace Exodus.Services.Files
 {
     public interface IFileService
     {

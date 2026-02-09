@@ -1,6 +1,6 @@
-﻿using FarmazonDemo.Models.Dto.CartDto;
+﻿using Exodus.Models.Dto.CartDto;
 
-namespace FarmazonDemo.Services.Carts;
+namespace Exodus.Services.Carts;
 
 public interface ICartService
 {

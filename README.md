@@ -1,4 +1,4 @@
-# FarmazonDemo
+# Exodus
 
 Marketplace e-commerce platform built with ASP.NET Core 10, Entity Framework Core, and SQL Server.
 
@@ -44,7 +44,7 @@ Marketplace e-commerce platform built with ASP.NET Core 10, Entity Framework Cor
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd FarmazonDemo
+   cd Exodus
    ```
 
 2. **Configure Database Connection**
@@ -52,7 +52,7 @@ Marketplace e-commerce platform built with ASP.NET Core 10, Entity Framework Cor
    Update the connection string in `appsettings.json`:
    ```json
    "ConnectionStrings": {
-     "DefaultConnection": "Server=YOUR_SERVER;Database=FarmazonDemodb;..."
+     "DefaultConnection": "Server=YOUR_SERVER;Database=Exodusdb;..."
    }
    ```
 
@@ -62,8 +62,8 @@ Marketplace e-commerce platform built with ASP.NET Core 10, Entity Framework Cor
    ```json
    "JwtSettings": {
      "SecretKey": "YourSuperSecretKey_MinimumLength32Characters!",
-     "Issuer": "FarmazonDemo",
-     "Audience": "FarmazonDemoUsers",
+     "Issuer": "Exodus",
+     "Audience": "ExodusUsers",
      "ExpiryMinutes": 1440
    }
    ```

@@ -1,4 +1,4 @@
-﻿namespace FarmazonDemo.Models.Dto.CartDto
+﻿namespace Exodus.Models.Dto.CartDto
 {
     public class UpdateCartItemDto
     {

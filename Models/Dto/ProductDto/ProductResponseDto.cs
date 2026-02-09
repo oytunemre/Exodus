@@ -1,4 +1,4 @@
-﻿namespace FarmazonDemo.Models.Dto.ProductDto;
+﻿namespace Exodus.Models.Dto.ProductDto;
 
 public class ProductResponseDto
 {

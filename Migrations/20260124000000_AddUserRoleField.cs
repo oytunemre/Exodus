@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace FarmazonDemo.Migrations
+namespace Exodus.Migrations
 {
     /// <inheritdoc />
     public partial class AddUserRoleField : Migration

@@ -1,12 +1,12 @@
-using FarmazonDemo.Data;
-using FarmazonDemo.Models.Dto;
-using FarmazonDemo.Services.Common;
-using FarmazonDemo.Services.Files;
+using Exodus.Data;
+using Exodus.Models.Dto;
+using Exodus.Services.Common;
+using Exodus.Services.Files;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace FarmazonDemo.Controllers.Admin
+namespace Exodus.Controllers.Admin
 {
     [ApiController]
     [Route("api/admin/products")]

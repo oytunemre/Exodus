@@ -1,8 +1,8 @@
-using FarmazonDemo.Models.Dto;
-using FarmazonDemo.Services.Categories;
+using Exodus.Models.Dto;
+using Exodus.Services.Categories;
 using Microsoft.AspNetCore.Mvc;
 
-namespace FarmazonDemo.Controllers
+namespace Exodus.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

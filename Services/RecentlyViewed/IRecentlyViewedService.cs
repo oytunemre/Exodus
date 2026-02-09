@@ -1,4 +1,4 @@
-namespace FarmazonDemo.Services.RecentlyViewedProducts;
+namespace Exodus.Services.RecentlyViewedProducts;
 
 public interface IRecentlyViewedService
 {

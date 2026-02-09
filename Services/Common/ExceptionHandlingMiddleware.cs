@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace FarmazonDemo.Services.Common;
+namespace Exodus.Services.Common;
 
 public class ExceptionHandlingMiddleware
 {

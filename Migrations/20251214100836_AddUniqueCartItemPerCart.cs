@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace FarmazonDemo.Migrations
+namespace Exodus.Migrations
 {
     /// <inheritdoc />
     public partial class AddUniqueCartItemPerCart : Migration

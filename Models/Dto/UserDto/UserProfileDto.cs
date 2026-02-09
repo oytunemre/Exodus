@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using FarmazonDemo.Models.Enums;
+using Exodus.Models.Enums;
 
-namespace FarmazonDemo.Models.Dto
+namespace Exodus.Models.Dto
 {
     public class UserProfileResponseDto
     {

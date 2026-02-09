@@ -1,14 +1,14 @@
-using FarmazonDemo.Data;
-using FarmazonDemo.Models.Dto;
-using FarmazonDemo.Services.TwoFactor;
-using FarmazonDemo.Services.Common;
+using Exodus.Data;
+using Exodus.Models.Dto;
+using Exodus.Services.TwoFactor;
+using Exodus.Services.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
-namespace FarmazonDemo.Controllers
+namespace Exodus.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

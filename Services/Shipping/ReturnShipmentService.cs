@@ -1,9 +1,9 @@
-using FarmazonDemo.Data;
-using FarmazonDemo.Models.Entities;
-using FarmazonDemo.Services.Common;
+using Exodus.Data;
+using Exodus.Models.Entities;
+using Exodus.Services.Common;
 using Microsoft.EntityFrameworkCore;
 
-namespace FarmazonDemo.Services.Shipping;
+namespace Exodus.Services.Shipping;
 
 public interface IReturnShipmentService
 {

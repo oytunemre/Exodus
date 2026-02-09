@@ -1,6 +1,6 @@
-using FarmazonDemo.Models.Entities;
+using Exodus.Models.Entities;
 
-namespace FarmazonDemo.Services.ProductQA;
+namespace Exodus.Services.ProductQA;
 
 public interface IProductQAService
 {

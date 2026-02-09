@@ -1,10 +1,10 @@
-﻿using FarmazonDemo.Models.Dto.Shipment;
-using FarmazonDemo.Services.Shipments;
-using FarmazonDemo.Services.Common;
+﻿using Exodus.Models.Dto.Shipment;
+using Exodus.Services.Shipments;
+using Exodus.Services.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace FarmazonDemo.Controllers;
+namespace Exodus.Controllers;
 
 [ApiController]
 [Route("api/shipments")]

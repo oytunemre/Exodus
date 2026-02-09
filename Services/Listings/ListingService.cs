@@ -1,10 +1,10 @@
-﻿using FarmazonDemo.Data;
-using FarmazonDemo.Models.Dto.ListingDto;
-using FarmazonDemo.Models.Entities;
-using FarmazonDemo.Services.Common;
+﻿using Exodus.Data;
+using Exodus.Models.Dto.ListingDto;
+using Exodus.Models.Entities;
+using Exodus.Services.Common;
 using Microsoft.EntityFrameworkCore;
 
-namespace FarmazonDemo.Services.Listings;
+namespace Exodus.Services.Listings;
 
 public class ListingService : IListingService
 {

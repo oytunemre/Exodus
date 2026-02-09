@@ -1,6 +1,6 @@
-using FarmazonDemo.Models.Dto;
+using Exodus.Models.Dto;
 
-namespace FarmazonDemo.Services.Auth
+namespace Exodus.Services.Auth
 {
     public interface IAuthService
     {

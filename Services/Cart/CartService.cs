@@ -1,9 +1,9 @@
-﻿using FarmazonDemo.Data;
-using FarmazonDemo.Models.Dto.CartDto;
-using FarmazonDemo.Models.Entities;
+﻿using Exodus.Data;
+using Exodus.Models.Dto.CartDto;
+using Exodus.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace FarmazonDemo.Services.Carts;
+namespace Exodus.Services.Carts;
 
 public class CartService : ICartService
 {

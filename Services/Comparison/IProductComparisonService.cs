@@ -1,4 +1,4 @@
-namespace FarmazonDemo.Services.Comparison;
+namespace Exodus.Services.Comparison;
 
 public interface IProductComparisonService
 {

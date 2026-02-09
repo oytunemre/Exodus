@@ -1,10 +1,10 @@
 ﻿using System.Security.Claims;
-using FarmazonDemo.Models.Dto.CartDto;
-using FarmazonDemo.Services.Carts;
+using Exodus.Models.Dto.CartDto;
+using Exodus.Services.Carts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace FarmazonDemo.Controllers;
+namespace Exodus.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]

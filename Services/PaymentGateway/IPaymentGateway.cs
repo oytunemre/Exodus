@@ -1,6 +1,6 @@
-using FarmazonDemo.Models.Enums;
+using Exodus.Models.Enums;
 
-namespace FarmazonDemo.Services.PaymentGateway;
+namespace Exodus.Services.PaymentGateway;
 
 public interface IPaymentGateway
 {

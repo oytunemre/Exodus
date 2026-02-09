@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Options;
 
-namespace FarmazonDemo.Services.Email
+namespace Exodus.Services.Email
 {
     public class EmailSettings
     {

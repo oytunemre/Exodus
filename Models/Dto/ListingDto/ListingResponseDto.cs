@@ -1,6 +1,6 @@
-﻿using FarmazonDemo.Models.Enums;
+﻿using Exodus.Models.Enums;
 
-namespace FarmazonDemo.Models.Dto.ListingDto
+namespace Exodus.Models.Dto.ListingDto
 {
     public class ListingResponseDto
     {

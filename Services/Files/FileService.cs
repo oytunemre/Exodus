@@ -1,11 +1,11 @@
-using FarmazonDemo.Data;
-using FarmazonDemo.Models.Dto;
-using FarmazonDemo.Models.Entities;
-using FarmazonDemo.Services.Common;
-using FarmazonDemo.Services.Security;
+using Exodus.Data;
+using Exodus.Models.Dto;
+using Exodus.Models.Entities;
+using Exodus.Services.Common;
+using Exodus.Services.Security;
 using Microsoft.Extensions.Options;
 
-namespace FarmazonDemo.Services.Files
+namespace Exodus.Services.Files
 {
     public class FileService : IFileService
     {

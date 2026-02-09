@@ -1,5 +1,5 @@
 ﻿
-using FarmazonDemo.Models.Dto.CartDto;
+using Exodus.Models.Dto.CartDto;
 using FluentValidation;
 
 public class UpdateCartItemDtoValidator : AbstractValidator<UpdateCartItemDto>

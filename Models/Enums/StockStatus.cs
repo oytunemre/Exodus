@@ -1,4 +1,4 @@
-namespace FarmazonDemo.Models.Enums
+namespace Exodus.Models.Enums
 {
     public enum StockStatus
     {

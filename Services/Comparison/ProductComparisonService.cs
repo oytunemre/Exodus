@@ -1,8 +1,8 @@
-using FarmazonDemo.Data;
-using FarmazonDemo.Models.Entities;
+using Exodus.Data;
+using Exodus.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace FarmazonDemo.Services.Comparison;
+namespace Exodus.Services.Comparison;
 
 public class ProductComparisonService : IProductComparisonService
 {

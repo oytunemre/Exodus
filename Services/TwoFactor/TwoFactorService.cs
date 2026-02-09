@@ -1,14 +1,14 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace FarmazonDemo.Services.TwoFactor
+namespace Exodus.Services.TwoFactor
 {
     public class TwoFactorService : ITwoFactorService
     {
         private const int SecretKeyLength = 20;
         private const int CodeLength = 6;
         private const int TimeStepSeconds = 30;
-        private const string Issuer = "FarmazonDemo";
+        private const string Issuer = "Exodus";
 
         public string GenerateSecretKey()
         {

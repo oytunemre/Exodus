@@ -1,6 +1,6 @@
-using FarmazonDemo.Models.Entities;
+using Exodus.Models.Entities;
 
-namespace FarmazonDemo.Models.Dto
+namespace Exodus.Models.Dto
 {
     public class NotificationResponseDto
     {

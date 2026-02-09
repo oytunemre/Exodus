@@ -1,9 +1,9 @@
-using FarmazonDemo.Services.Addresses;
+using Exodus.Services.Addresses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace FarmazonDemo.Controllers;
+namespace Exodus.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

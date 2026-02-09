@@ -1,4 +1,4 @@
-﻿namespace FarmazonDemo.Services.Common;
+﻿namespace Exodus.Services.Common;
 
 public abstract class ApiException : Exception
 {

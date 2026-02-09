@@ -6,7 +6,7 @@
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
-      "program": "${workspaceFolder}/bin/Debug/net10.0/FarmazonDemo.dll",
+      "program": "${workspaceFolder}/bin/Debug/net10.0/Exodus.dll",
       "args": [],
       "cwd": "${workspaceFolder}",
       "stopAtEntry": false,

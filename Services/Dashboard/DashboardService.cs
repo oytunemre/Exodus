@@ -1,9 +1,9 @@
-using FarmazonDemo.Data;
-using FarmazonDemo.Models.Dto.DashboardDto;
-using FarmazonDemo.Models.Enums;
+using Exodus.Data;
+using Exodus.Models.Dto.DashboardDto;
+using Exodus.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 
-namespace FarmazonDemo.Services.Dashboard;
+namespace Exodus.Services.Dashboard;
 
 public class DashboardService : IDashboardService
 {
