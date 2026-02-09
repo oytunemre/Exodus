@@ -1,7 +1,6 @@
 using Exodus.Data;
 using Exodus.Models.Entities;
 using Microsoft.EntityFrameworkCore;
-using Users = Exodus.Models.Entities.Users;
 
 namespace Exodus.Services.Loyalty;
 
@@ -244,7 +243,7 @@ public class LoyaltyService : ILoyaltyService
         };
     }
 
-    private static LoyaltyPointDto MapToDto(LoyaltyPoint loyalty, Users? user)
+    private static LoyaltyPointDto MapToDto(LoyaltyPoint loyalty, Exodus.Models.Entities.Users? user)
     {
         return new LoyaltyPointDto
         {

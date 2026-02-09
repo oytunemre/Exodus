@@ -1,7 +1,6 @@
 using Exodus.Data;
 using Exodus.Models.Entities;
 using Microsoft.EntityFrameworkCore;
-using Users = Exodus.Models.Entities.Users;
 
 namespace Exodus.Services.ProductQA;
 
@@ -195,7 +194,7 @@ public class ProductQAService : IProductQAService
         };
     }
 
-    private static AnswerResponseDto MapAnswerToDto(ProductAnswer a, Users? user)
+    private static AnswerResponseDto MapAnswerToDto(ProductAnswer a, Exodus.Models.Entities.Users? user)
     {
         return new AnswerResponseDto
         {
