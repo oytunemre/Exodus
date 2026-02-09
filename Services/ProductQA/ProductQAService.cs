@@ -1,6 +1,7 @@
 using FarmazonDemo.Data;
 using FarmazonDemo.Models.Entities;
 using Microsoft.EntityFrameworkCore;
+using Users = FarmazonDemo.Models.Entities.Users;
 
 namespace FarmazonDemo.Services.ProductQA;
 
