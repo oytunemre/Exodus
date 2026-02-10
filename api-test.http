@@ -1,269 +1,1436 @@
-### Exodus API Test File
-### Use REST Client extension in VS Code or any HTTP client
+### ============================================
+### EXODUS MARKETPLACE - API TEST DOSYASI
+### Visual Studio 2022+ (.http dosya destegi)
+### ============================================
+### KULLANIM:
+### 1. Ilk olarak "Register Admin" calistir
+### 2. Sonra "Login Admin" calistir (token otomatik yakalanir)
+### 3. Diger endpointleri sirayla test et
+### ============================================
 
-@baseUrl = https://localhost:7193
-@token = your_token_here
+@baseUrl = http://localhost:5013
+@contentType = application/json
 
-### Health Check
-GET {{baseUrl}}/health
+### ============================================
+### 1. AUTH - Kimlik Dogrulama
+### ============================================
 
-### Health Ready
-GET {{baseUrl}}/health/ready
-
-###
-### AUTHENTICATION
-###
-
-### 1. Register new user (Customer)
+### 1.1 Admin Kayit
 POST {{baseUrl}}/api/auth/register
-Content-Type: application/json
+Content-Type: {{contentType}}
 
 {
-  "name": "Test Customer",
-  "email": "customer@test.com",
-  "username": "customer",
-  "password": "Customer123!",
-  "role": 0
+    "firstName": "Admin",
+    "lastName": "User",
+    "email": "admin@test.com",
+    "password": "Admin123!",
+    "confirmPassword": "Admin123!",
+    "role": "Admin"
 }
 
-### 2. Register new user (Seller)
+### 1.2 Seller Kayit
 POST {{baseUrl}}/api/auth/register
-Content-Type: application/json
+Content-Type: {{contentType}}
 
 {
-  "name": "Test Seller",
-  "email": "seller@test.com",
-  "username": "seller",
-  "password": "Seller123!",
-  "role": 1
+    "firstName": "Test",
+    "lastName": "Seller",
+    "email": "seller@test.com",
+    "password": "Seller123!",
+    "confirmPassword": "Seller123!",
+    "role": "Seller"
 }
 
-### 3. Register new user (Admin)
+### 1.3 Customer Kayit
 POST {{baseUrl}}/api/auth/register
-Content-Type: application/json
+Content-Type: {{contentType}}
 
 {
-  "name": "Admin User",
-  "email": "admin@test.com",
-  "username": "admin",
-  "password": "Admin123!",
-  "role": 2
+    "firstName": "Test",
+    "lastName": "Customer",
+    "email": "customer@test.com",
+    "password": "Customer123!",
+    "confirmPassword": "Customer123!",
+    "role": "Customer"
 }
 
-### 4. Login
+### 1.4 Admin Login
+# @name loginAdmin
 POST {{baseUrl}}/api/auth/login
-Content-Type: application/json
+Content-Type: {{contentType}}
 
 {
-  "emailOrUsername": "customer",
-  "password": "Customer123!"
+    "email": "admin@test.com",
+    "password": "Admin123!"
 }
 
-### 5. Get current user (requires authentication)
+### 1.5 Seller Login
+# @name loginSeller
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+    "email": "seller@test.com",
+    "password": "Seller123!"
+}
+
+### 1.6 Customer Login
+# @name loginCustomer
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+    "email": "customer@test.com",
+    "password": "Customer123!"
+}
+
+###  Token degiskenleri (login response'undan otomatik alinir)
+@adminToken = {{loginAdmin.response.body.$.token}}
+@sellerToken = {{loginSeller.response.body.$.token}}
+@customerToken = {{loginCustomer.response.body.$.token}}
+
+### 1.7 Mevcut Kullanici Bilgisi
 GET {{baseUrl}}/api/auth/me
-Authorization: Bearer {{token}}
+Authorization: Bearer {{adminToken}}
 
-###
-### PRODUCTS
-###
+### 1.8 Token Yenile
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: {{contentType}}
 
-### 1. Get all products (public)
+{
+    "refreshToken": "your-refresh-token-here"
+}
+
+### 1.9 Sifre Sifirlama Istegi
+POST {{baseUrl}}/api/auth/forgot-password
+Content-Type: {{contentType}}
+
+{
+    "email": "customer@test.com"
+}
+
+### ============================================
+### 2. PROFILE - Kullanici Profili
+### ============================================
+
+### 2.1 Profil Bilgilerini Getir
+GET {{baseUrl}}/api/profile
+Authorization: Bearer {{customerToken}}
+
+### 2.2 Profil Guncelle
+PUT {{baseUrl}}/api/profile
+Content-Type: {{contentType}}
+Authorization: Bearer {{customerToken}}
+
+{
+    "firstName": "Updated",
+    "lastName": "Customer",
+    "phone": "+905551234567"
+}
+
+### 2.3 Sifre Degistir
+POST {{baseUrl}}/api/profile/change-password
+Content-Type: {{contentType}}
+Authorization: Bearer {{customerToken}}
+
+{
+    "currentPassword": "Customer123!",
+    "newPassword": "NewCustomer456!"
+}
+
+### 2.4 Profil Istatistikleri
+GET {{baseUrl}}/api/profile/stats
+Authorization: Bearer {{customerToken}}
+
+### 2.5 Adresleri Listele
+GET {{baseUrl}}/api/profile/addresses
+Authorization: Bearer {{customerToken}}
+
+### 2.6 Yeni Adres Ekle
+# @name createAddress
+POST {{baseUrl}}/api/profile/addresses
+Content-Type: {{contentType}}
+Authorization: Bearer {{customerToken}}
+
+{
+    "title": "Ev",
+    "fullName": "Test Customer",
+    "phone": "+905551234567",
+    "city": "Istanbul",
+    "district": "Kadikoy",
+    "neighborhood": "Caferaga",
+    "addressLine": "Test Sokak No: 1 D: 5",
+    "postalCode": "34710",
+    "isDefault": true,
+    "type": 0
+}
+
+### 2.7 Adres Guncelle
+PUT {{baseUrl}}/api/profile/addresses/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{customerToken}}
+
+{
+    "title": "Is Yeri",
+    "fullName": "Test Customer",
+    "phone": "+905559876543",
+    "city": "Istanbul",
+    "district": "Besiktas",
+    "addressLine": "Yeni Adres Satiri No: 10",
+    "isDefault": false,
+    "type": 0
+}
+
+### 2.8 Adres Sil
+DELETE {{baseUrl}}/api/profile/addresses/2
+Authorization: Bearer {{customerToken}}
+
+### 2.9 Varsayilan Adres Yap
+PATCH {{baseUrl}}/api/profile/addresses/1/default
+Authorization: Bearer {{customerToken}}
+
+### 2.10 Bildirim Tercihlerini Getir
+GET {{baseUrl}}/api/profile/notification-preferences
+Authorization: Bearer {{customerToken}}
+
+### 2.11 Bildirim Tercihlerini Guncelle
+PUT {{baseUrl}}/api/profile/notification-preferences
+Content-Type: {{contentType}}
+Authorization: Bearer {{customerToken}}
+
+{
+    "emailOrderUpdates": true,
+    "emailPromotions": false,
+    "pushOrderUpdates": true,
+    "pushPromotions": false,
+    "smsOrderUpdates": false
+}
+
+### ============================================
+### 3. ADMIN - Kategori Yonetimi
+### ============================================
+
+### 3.1 Kategori Olustur
+# @name createCategory
+POST {{baseUrl}}/api/admin/categories
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "name": "Elektronik",
+    "description": "Elektronik urunler",
+    "slug": "elektronik",
+    "isActive": true
+}
+
+### 3.2 Alt Kategori Olustur
+POST {{baseUrl}}/api/admin/categories
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "name": "Telefonlar",
+    "description": "Cep telefonlari",
+    "slug": "telefonlar",
+    "parentCategoryId": 1,
+    "isActive": true
+}
+
+### 3.3 Tum Kategoriler (Public)
+GET {{baseUrl}}/api/category
+
+### 3.4 Kategori Agaci (Public)
+GET {{baseUrl}}/api/category/tree
+
+### 3.5 Kategori Detayi
+GET {{baseUrl}}/api/category/1
+
+### 3.6 Slug ile Kategori
+GET {{baseUrl}}/api/category/slug/elektronik
+
+### 3.7 Alt Kategoriler
+GET {{baseUrl}}/api/category/1/subcategories
+
+### 3.8 Kategori Guncelle (Admin)
+PUT {{baseUrl}}/api/admin/categories/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "name": "Elektronik & Teknoloji",
+    "description": "Elektronik ve teknoloji urunleri",
+    "slug": "elektronik-teknoloji",
+    "isActive": true
+}
+
+### 3.9 Kategori Aktif/Pasif Toggle
+PATCH {{baseUrl}}/api/admin/categories/2/toggle-active
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 4. PRODUCTS - Urunler
+### ============================================
+
+### 4.1 Urun Olustur (Seller/Admin)
+# @name createProduct
+POST {{baseUrl}}/api/product
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerToken}}
+
+{
+    "productName": "iPhone 15 Pro",
+    "description": "Apple iPhone 15 Pro 256GB",
+    "categoryId": 1
+}
+
+### 4.2 Ikinci Urun Olustur
+POST {{baseUrl}}/api/product
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerToken}}
+
+{
+    "productName": "Samsung Galaxy S24",
+    "description": "Samsung Galaxy S24 Ultra 512GB",
+    "categoryId": 1
+}
+
+### 4.3 Tum Urunleri Listele (Public)
 GET {{baseUrl}}/api/product
 
-### 2. Get product by ID (public)
+### 4.4 Urun Detayi (Public)
 GET {{baseUrl}}/api/product/1
 
-### 3. Create product (requires Admin/Seller)
-POST {{baseUrl}}/api/product
-Content-Type: application/json
-Authorization: Bearer {{token}}
-
-{
-  "productName": "Aspirin 500mg",
-  "productDescription": "Pain relief medication",
-  "barcodes": ["8690000123456", "8690000123457"]
-}
-
-### 4. Update product (requires Admin/Seller)
+### 4.5 Urun Guncelle
 PUT {{baseUrl}}/api/product/1
-Content-Type: application/json
-Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerToken}}
 
 {
-  "productName": "Aspirin 500mg Updated",
-  "productDescription": "Updated description"
+    "productName": "iPhone 15 Pro - Guncellendi",
+    "description": "Apple iPhone 15 Pro 256GB - Siyah"
 }
 
-###
-### LISTINGS
-###
+### 4.6 Urun Sil (Soft Delete)
+DELETE {{baseUrl}}/api/product/2
+Authorization: Bearer {{adminToken}}
 
-### 1. Get all listings (public)
+### ============================================
+### 5. LISTINGS - Satici Listingleri
+### ============================================
+
+### 5.1 Listing Olustur (Seller)
+# @name createListing
+POST {{baseUrl}}/api/listings
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerToken}}
+
+{
+    "productId": 1,
+    "price": 74999.99,
+    "stockQuantity": 50,
+    "sku": "IPH15P-256-BLK",
+    "condition": 0,
+    "isActive": true
+}
+
+### 5.2 Ikinci Listing
+POST {{baseUrl}}/api/listings
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerToken}}
+
+{
+    "productId": 2,
+    "price": 64999.99,
+    "stockQuantity": 30,
+    "sku": "SGS24U-512",
+    "condition": 0,
+    "isActive": true
+}
+
+### 5.3 Tum Listingleri Getir (Public)
 GET {{baseUrl}}/api/listings
 
-### 2. Get listing by ID (public)
+### 5.4 Listing Detayi (Public)
 GET {{baseUrl}}/api/listings/1
 
-### 3. Create listing (requires Admin/Seller)
-POST {{baseUrl}}/api/listings
-Content-Type: application/json
-Authorization: Bearer {{token}}
+### 5.5 Listing Guncelle
+PUT {{baseUrl}}/api/listings/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerToken}}
 
 {
-  "productId": 1,
-  "sellerId": 1,
-  "price": 29.99,
-  "stock": 100,
-  "condition": 0,
-  "isActive": true
+    "price": 69999.99,
+    "stockQuantity": 45,
+    "isActive": true
 }
 
-###
-### CART
-###
+### ============================================
+### 6. SELLER LISTING - Satici Paneli
+### ============================================
 
-### 1. Get user cart (requires authentication)
-GET {{baseUrl}}/api/cart/1
-Authorization: Bearer {{token}}
+### 6.1 Satici Listinglerini Getir
+GET {{baseUrl}}/api/seller/listings
+Authorization: Bearer {{sellerToken}}
 
-### 2. Add to cart (requires authentication)
+### 6.2 Seller Listing Olustur
+POST {{baseUrl}}/api/seller/listings
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerToken}}
+
+{
+    "productId": 1,
+    "price": 72999.99,
+    "stockQuantity": 20,
+    "lowStockThreshold": 5,
+    "trackInventory": true,
+    "sku": "IPH15P-256-WHT",
+    "condition": 0
+}
+
+### 6.3 Seller Listing Guncelle
+PUT {{baseUrl}}/api/seller/listings/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerToken}}
+
+{
+    "price": 71999.99,
+    "stockQuantity": 40,
+    "lowStockThreshold": 10,
+    "isActive": true
+}
+
+### 6.4 Stok Guncelle
+PATCH {{baseUrl}}/api/seller/listings/1/stock
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerToken}}
+
+{
+    "stockQuantity": 100
+}
+
+### 6.5 Dusuk Stoklu Urunler
+GET {{baseUrl}}/api/seller/listings/low-stock
+Authorization: Bearer {{sellerToken}}
+
+### 6.6 Stokta Olmayan Urunler
+GET {{baseUrl}}/api/seller/listings/out-of-stock
+Authorization: Bearer {{sellerToken}}
+
+### 6.7 Seller Listing Sil
+DELETE {{baseUrl}}/api/seller/listings/3
+Authorization: Bearer {{sellerToken}}
+
+### ============================================
+### 7. CART - Sepet
+### ============================================
+
+### 7.1 Sepete Urun Ekle
 POST {{baseUrl}}/api/cart/add
-Content-Type: application/json
-Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{customerToken}}
 
 {
-  "userId": 1,
-  "listingId": 1,
-  "quantity": 2
+    "listingId": 1,
+    "quantity": 2
 }
 
-### 3. Update cart item quantity (requires authentication)
-PUT {{baseUrl}}/api/cart/1/item/1
-Content-Type: application/json
-Authorization: Bearer {{token}}
+### 7.2 Sepete Ikinci Urun Ekle
+POST {{baseUrl}}/api/cart/add
+Content-Type: {{contentType}}
+Authorization: Bearer {{customerToken}}
 
 {
-  "quantity": 3
+    "listingId": 2,
+    "quantity": 1
 }
 
-### 4. Remove cart item (requires authentication)
-DELETE {{baseUrl}}/api/cart/1/item/1
-Authorization: Bearer {{token}}
+### 7.3 Kendi Sepetimi Getir
+GET {{baseUrl}}/api/cart/my
+Authorization: Bearer {{customerToken}}
 
-###
-### ORDERS
-###
-
-### 1. Checkout cart (requires authentication)
-POST {{baseUrl}}/api/orders/checkout
-Content-Type: application/json
-Authorization: Bearer {{token}}
+### 7.4 Sepet Urun Miktarini Guncelle
+PUT {{baseUrl}}/api/cart/3/item/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{customerToken}}
 
 {
-  "userId": 1
+    "quantity": 3
 }
 
-### 2. Get order by ID (requires authentication)
-GET {{baseUrl}}/api/orders/1
-Authorization: Bearer {{token}}
+### 7.5 Sepetten Urun Kaldir
+DELETE {{baseUrl}}/api/cart/3/item/2
+Authorization: Bearer {{customerToken}}
 
-### 3. Get user orders (requires authentication)
-GET {{baseUrl}}/api/orders/user/1
-Authorization: Bearer {{token}}
+### ============================================
+### 8. ORDERS - Siparisler
+### ============================================
 
-###
-### PAYMENTS
-###
-
-### 1. Create payment intent (requires authentication)
-POST {{baseUrl}}/api/payments/intents
-Content-Type: application/json
-Authorization: Bearer {{token}}
+### 8.1 Checkout - Siparis Olustur
+# @name checkout
+POST {{baseUrl}}/api/order/checkout
+Content-Type: {{contentType}}
+Authorization: Bearer {{customerToken}}
 
 {
-  "orderId": 1,
-  "method": 0,
-  "provider": "Manual"
+    "shippingAddressId": 1,
+    "billingAddressId": 1,
+    "customerNote": "Lutfen kapiya birakin"
 }
 
-### 2. Get payment by order (requires authentication)
-GET {{baseUrl}}/api/payments/order/1
-Authorization: Bearer {{token}}
+### 8.2 Siparislerimi Listele
+GET {{baseUrl}}/api/order?page=1&pageSize=10
+Authorization: Bearer {{customerToken}}
 
-### 3. Mark payment as received (requires authentication)
-POST {{baseUrl}}/api/payments/1/mark-received
-Content-Type: application/json
-Authorization: Bearer {{token}}
+### 8.3 Siparis Detayi
+GET {{baseUrl}}/api/order/1
+Authorization: Bearer {{customerToken}}
+
+### 8.4 Siparis Numarasiyla Sorgula
+GET {{baseUrl}}/api/order/number/ORD-20260210-ABCD1234
+Authorization: Bearer {{customerToken}}
+
+### 8.5 Siparis Iptal Et
+POST {{baseUrl}}/api/order/1/cancel
+Content-Type: {{contentType}}
+Authorization: Bearer {{customerToken}}
 
 {
-  "note": "Payment received via bank transfer"
+    "reason": "Vazgectim",
+    "note": "Baska bir urun almaya karar verdim"
 }
 
-### 4. Simulate payment success (requires authentication)
-POST {{baseUrl}}/api/payments/1/simulate-success
-Content-Type: application/json
-Authorization: Bearer {{token}}
+### 8.6 Iade Talebi Olustur
+POST {{baseUrl}}/api/order/1/refund
+Content-Type: {{contentType}}
+Authorization: Bearer {{customerToken}}
 
 {
-  "reason": "Test successful payment"
+    "reason": "Hasarli urun",
+    "description": "Paket acildiginda urun kirik cikti",
+    "amount": 74999.99
 }
 
-###
-### SELLER
-###
+### ============================================
+### 9. PAYMENTS - Odemeler
+### ============================================
 
-### 1. Get seller orders (requires Admin/Seller)
-GET {{baseUrl}}/api/seller/1/orders
-Authorization: Bearer {{token}}
-
-### 2. Ship order (requires Admin/Seller)
-PATCH {{baseUrl}}/api/seller/orders/1/ship
-Content-Type: application/json
-Authorization: Bearer {{token}}
+### 9.1 Odeme Intent Olustur
+# @name createPayment
+POST {{baseUrl}}/api/payment/intents
+Content-Type: {{contentType}}
+Authorization: Bearer {{customerToken}}
 
 {
-  "carrier": "DHL",
-  "trackingNumber": "DHL123456789"
+    "orderId": 1,
+    "currency": "TRY",
+    "method": "CreditCard"
 }
 
-### 3. Mark as delivered (requires Admin/Seller)
-PATCH {{baseUrl}}/api/seller/orders/1/deliver
-Authorization: Bearer {{token}}
+### 9.2 Odeme Intent Detayi
+GET {{baseUrl}}/api/payment/intents/1
+Authorization: Bearer {{customerToken}}
 
-###
-### SHIPMENTS
-###
+### 9.3 Siparise Gore Odeme
+GET {{baseUrl}}/api/payment/order/1
+Authorization: Bearer {{customerToken}}
 
-### 1. Get shipment details (requires Admin/Seller)
+### 9.4 Odemeyi Onayla (Authorize)
+POST {{baseUrl}}/api/payment/intents/1/authorize
+Authorization: Bearer {{customerToken}}
+
+### 9.5 Odemeyi Yakala (Capture)
+POST {{baseUrl}}/api/payment/intents/1/capture
+Content-Type: {{contentType}}
+Authorization: Bearer {{customerToken}}
+
+{
+    "note": "Odeme basariyla alindi"
+}
+
+### 9.6 Odemeyi Iptal Et
+POST {{baseUrl}}/api/payment/intents/1/cancel
+Content-Type: {{contentType}}
+Authorization: Bearer {{customerToken}}
+
+{
+    "reason": "Musteri vazgecti"
+}
+
+### 9.7 Odeme Iadesi
+POST {{baseUrl}}/api/payment/intents/1/refund
+Content-Type: {{contentType}}
+Authorization: Bearer {{customerToken}}
+
+{
+    "amount": 74999.99,
+    "reason": "Urun iade edildi"
+}
+
+### 9.8 Odeme Olaylari
+GET {{baseUrl}}/api/payment/intents/1/events
+Authorization: Bearer {{customerToken}}
+
+### 9.9 Odeme Alindi Isaretle (Admin)
+POST {{baseUrl}}/api/payment/intents/1/mark-received
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "note": "Banka transferi ile odeme alindi"
+}
+
+### 9.10 Odeme Simulasyonu - Basarili (Test)
+POST {{baseUrl}}/api/payment/intents/1/simulate-success
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "note": "Test basarili odeme"
+}
+
+### 9.11 Odeme Simulasyonu - Basarisiz (Test)
+POST {{baseUrl}}/api/payment/intents/1/simulate-fail
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "note": "Test basarisiz odeme"
+}
+
+### 9.12 BIN Kontrolu
+GET {{baseUrl}}/api/payment/gateway/bin/411111
+Authorization: Bearer {{customerToken}}
+
+### 9.13 Taksit Secenekleri
+GET {{baseUrl}}/api/payment/gateway/installments?binNumber=411111&price=74999.99
+Authorization: Bearer {{customerToken}}
+
+### ============================================
+### 10. SELLER ORDERS - Satici Siparis Yonetimi
+### ============================================
+
+### 10.1 Satici Siparislerini Listele
+GET {{baseUrl}}/api/seller/orders?page=1&pageSize=20
+Authorization: Bearer {{sellerToken}}
+
+### 10.2 Siparisi Onayla
+POST {{baseUrl}}/api/seller/orders/1/confirm
+Authorization: Bearer {{sellerToken}}
+
+### 10.3 Siparisi Kargola
+POST {{baseUrl}}/api/seller/orders/1/ship
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerToken}}
+
+{
+    "carrier": "Yurtici Kargo",
+    "trackingNumber": "YK1234567890"
+}
+
+### 10.4 Satici Siparis Durumu Guncelle
+PATCH {{baseUrl}}/api/seller/orders/1/status
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerToken}}
+
+{
+    "status": "Shipped"
+}
+
+### ============================================
+### 11. SHIPMENTS - Kargo Takibi
+### ============================================
+
+### 11.1 Kargo Bilgisi
 GET {{baseUrl}}/api/shipments/seller-orders/1
-Authorization: Bearer {{token}}
+Authorization: Bearer {{sellerToken}}
 
-### 2. Ship seller order (requires Admin/Seller)
+### 11.2 Kargoyu Gonder
 PATCH {{baseUrl}}/api/shipments/seller-orders/1/ship
-Content-Type: application/json
-Authorization: Bearer {{token}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerToken}}
 
 {
-  "carrier": "UPS",
-  "trackingNumber": "UPS987654321"
+    "carrier": "Aras Kargo",
+    "trackingNumber": "ARS9876543210"
 }
 
-### 3. Deliver seller order (requires Admin/Seller)
+### 11.3 Teslim Edildi Isaretle
 PATCH {{baseUrl}}/api/shipments/seller-orders/1/deliver
-Authorization: Bearer {{token}}
+Authorization: Bearer {{sellerToken}}
 
-### 4. Get shipment timeline (requires Admin/Seller)
+### 11.4 Kargo Timeline
 GET {{baseUrl}}/api/shipments/seller-orders/1/timeline
-Authorization: Bearer {{token}}
+Authorization: Bearer {{sellerToken}}
 
+### ============================================
+### 12. LOYALTY - Sadakat Programi
+### ============================================
+
+### 12.1 Puan ve Seviye Bilgisi
+GET {{baseUrl}}/api/loyalty/points
+Authorization: Bearer {{customerToken}}
+
+### 12.2 Puan Islem Gecmisi
+GET {{baseUrl}}/api/loyalty/transactions?page=1&pageSize=20
+Authorization: Bearer {{customerToken}}
+
+### 12.3 Puan Degerini Hesapla
+GET {{baseUrl}}/api/loyalty/calculate-value?points=500
+Authorization: Bearer {{customerToken}}
+
+### 12.4 Siparis Icin Kazanilacak Puan Tahmini
+GET {{baseUrl}}/api/loyalty/estimate-earn?orderAmount=74999.99
+Authorization: Bearer {{customerToken}}
+
+### 12.5 Puan Harca
+POST {{baseUrl}}/api/loyalty/spend
+Content-Type: {{contentType}}
+Authorization: Bearer {{customerToken}}
+
+{
+    "points": 100,
+    "orderId": 1
+}
+
+### ============================================
+### 13. CAMPAIGNS - Kampanyalar
+### ============================================
+
+### 13.1 Aktif Kampanyalari Listele (Public)
+GET {{baseUrl}}/api/campaign/active
+
+### 13.2 Kategoriye Gore Kampanyalar
+GET {{baseUrl}}/api/campaign/active?categoryId=1
+
+### 13.3 Kupon Kodu Dogrula
+GET {{baseUrl}}/api/campaign/validate-coupon?code=INDIRIM20
+Authorization: Bearer {{customerToken}}
+
+### 13.4 Uygulanabilir Kampanyalar
+GET {{baseUrl}}/api/campaign/applicable
+Authorization: Bearer {{customerToken}}
+
+### 13.5 Kampanya Hesapla
+POST {{baseUrl}}/api/campaign/calculate
+Content-Type: {{contentType}}
+Authorization: Bearer {{customerToken}}
+
+{
+    "couponCode": "INDIRIM20"
+}
+
+### ============================================
+### 14. SUPPORT - Destek Talepleri
+### ============================================
+
+### 14.1 Destek Talebi Olustur
+# @name createTicket
+POST {{baseUrl}}/api/support/tickets
+Content-Type: {{contentType}}
+Authorization: Bearer {{customerToken}}
+
+{
+    "subject": "Siparis Sorunu",
+    "message": "Siparisim hala kargoya verilmedi, 3 gundur bekliyorum.",
+    "category": "Order",
+    "priority": 1,
+    "orderId": 1
+}
+
+### 14.2 Destek Taleplerimi Listele
+GET {{baseUrl}}/api/support/tickets?page=1&pageSize=10
+Authorization: Bearer {{customerToken}}
+
+### 14.3 Talep Detayi
+GET {{baseUrl}}/api/support/tickets/1
+Authorization: Bearer {{customerToken}}
+
+### 14.4 Talebe Yanit Ver
+POST {{baseUrl}}/api/support/tickets/1/messages
+Content-Type: {{contentType}}
+Authorization: Bearer {{customerToken}}
+
+{
+    "message": "Kargo takip numarasi alabilir miyim?"
+}
+
+### 14.5 Talebi Kapat
+POST {{baseUrl}}/api/support/tickets/1/close
+Content-Type: {{contentType}}
+Authorization: Bearer {{customerToken}}
+
+{
+    "satisfactionRating": 4,
+    "satisfactionComment": "Sorun cozuldu, tesekkurler"
+}
+
+### 14.6 Talebi Yeniden Ac
+POST {{baseUrl}}/api/support/tickets/1/reopen
+Content-Type: {{contentType}}
+Authorization: Bearer {{customerToken}}
+
+{
+    "reason": "Sorun devam ediyor"
+}
+
+### ============================================
+### 15. NOTIFICATIONS - Bildirimler
+### ============================================
+
+### 15.1 Bildirimleri Listele
+GET {{baseUrl}}/api/notification?page=1&pageSize=20
+Authorization: Bearer {{customerToken}}
+
+### 15.2 Okunmamis Bildirim Sayisi
+GET {{baseUrl}}/api/notification/unread-count
+Authorization: Bearer {{customerToken}}
+
+### 15.3 Bildirimi Okundu Isaretle
+PATCH {{baseUrl}}/api/notification/1/read
+Authorization: Bearer {{customerToken}}
+
+### 15.4 Tum Bildirimleri Okundu Isaretle
+PATCH {{baseUrl}}/api/notification/read-all
+Authorization: Bearer {{customerToken}}
+
+### 15.5 Bildirim Sil
+DELETE {{baseUrl}}/api/notification/1
+Authorization: Bearer {{customerToken}}
+
+### 15.6 Okunan Tum Bildirimleri Sil
+DELETE {{baseUrl}}/api/notification/read
+Authorization: Bearer {{customerToken}}
+
+### ============================================
+### 16. WISHLIST - Favoriler
+### ============================================
+
+### 16.1 Favorilere Ekle
+POST {{baseUrl}}/api/wishlist
+Content-Type: {{contentType}}
+Authorization: Bearer {{customerToken}}
+
+{
+    "productId": 1
+}
+
+### 16.2 Favori Listesini Getir
+GET {{baseUrl}}/api/wishlist
+Authorization: Bearer {{customerToken}}
+
+### 16.3 Favorilerden Kaldir
+DELETE {{baseUrl}}/api/wishlist/1
+Authorization: Bearer {{customerToken}}
+
+### ============================================
+### 17. COMPARISON - Urun Karsilastirma
+### ============================================
+
+### 17.1 Karsilastirma Listesi Olustur
+# @name createComparison
+POST {{baseUrl}}/api/comparison
+Content-Type: {{contentType}}
+Authorization: Bearer {{customerToken}}
+
+{
+    "name": "Telefon Karsilastirma"
+}
+
+### 17.2 Karsilastirmaya Urun Ekle
+POST {{baseUrl}}/api/comparison/1/products/1
+Authorization: Bearer {{customerToken}}
+
+### 17.3 Karsilastirmaya Ikinci Urun Ekle
+POST {{baseUrl}}/api/comparison/1/products/2
+Authorization: Bearer {{customerToken}}
+
+### 17.4 Karsilastirma Detayi
+GET {{baseUrl}}/api/comparison/1
+Authorization: Bearer {{customerToken}}
+
+### 17.5 Detayli Karsilastirma
+GET {{baseUrl}}/api/comparison/1/detailed
+Authorization: Bearer {{customerToken}}
+
+### 17.6 Tum Karsilastirmalar
+GET {{baseUrl}}/api/comparison
+Authorization: Bearer {{customerToken}}
+
+### 17.7 Karsilastirmadan Urun Cikar
+DELETE {{baseUrl}}/api/comparison/1/products/2
+Authorization: Bearer {{customerToken}}
+
+### 17.8 Karsilastirma Sil
+DELETE {{baseUrl}}/api/comparison/1
+Authorization: Bearer {{customerToken}}
+
+### ============================================
+### 18. RECENTLY VIEWED - Son Goruntulenenler
+### ============================================
+
+### 18.1 Urun Goruntule (Kaydet)
+POST {{baseUrl}}/api/recentlyviewed/1
+Authorization: Bearer {{customerToken}}
+
+### 18.2 Ikinci Urun Goruntule
+POST {{baseUrl}}/api/recentlyviewed/2
+Authorization: Bearer {{customerToken}}
+
+### 18.3 Son Goruntulenen Urunler
+GET {{baseUrl}}/api/recentlyviewed?count=20
+Authorization: Bearer {{customerToken}}
+
+### 18.4 Tek Urun Gecmisini Sil
+DELETE {{baseUrl}}/api/recentlyviewed/1
+Authorization: Bearer {{customerToken}}
+
+### 18.5 Tum Gecmisi Temizle
+DELETE {{baseUrl}}/api/recentlyviewed
+Authorization: Bearer {{customerToken}}
+
+### ============================================
+### 19. PRODUCT Q&A - Urun Soru-Cevap
+### ============================================
+
+### 19.1 Soru Sor
+POST {{baseUrl}}/api/products/1/questions
+Content-Type: {{contentType}}
+Authorization: Bearer {{customerToken}}
+
+{
+    "question": "Bu telefonun batarya omru ne kadar?"
+}
+
+### 19.2 Urun Sorularini Listele (Public)
+GET {{baseUrl}}/api/products/1/questions?page=1&pageSize=20
+
+### 19.3 Soru Detayi (Public)
+GET {{baseUrl}}/api/products/1/questions/1
+
+### 19.4 Soruyu Oyla
+POST {{baseUrl}}/api/products/1/questions/1/upvote
+Authorization: Bearer {{customerToken}}
+
+### 19.5 Soruyu Yanitla (Seller/Admin)
+POST {{baseUrl}}/api/products/1/questions/1/answers
+Content-Type: {{contentType}}
+Authorization: Bearer {{sellerToken}}
+
+{
+    "answer": "Normal kullanimda 1.5-2 gun batarya omru sunmaktadir."
+}
+
+### 19.6 Yaniti Kabul Et
+PATCH {{baseUrl}}/api/products/1/questions/1/answers/1/accept
+Authorization: Bearer {{customerToken}}
+
+### 19.7 Yaniti Oyla
+POST {{baseUrl}}/api/products/1/questions/1/answers/1/upvote
+Authorization: Bearer {{customerToken}}
+
+### ============================================
+### 20. ADMIN - Dashboard & Raporlar
+### ============================================
+
+### 20.1 Dashboard Genel
+GET {{baseUrl}}/api/admin/dashboard
+Authorization: Bearer {{adminToken}}
+
+### 20.2 Dashboard Ozeti
+GET {{baseUrl}}/api/admin/dashboard/overview
+Authorization: Bearer {{adminToken}}
+
+### 20.3 Satis Istatistikleri
+GET {{baseUrl}}/api/admin/dashboard/sales?fromDate=2026-01-01&toDate=2026-12-31
+Authorization: Bearer {{adminToken}}
+
+### 20.4 Siparis Istatistikleri
+GET {{baseUrl}}/api/admin/dashboard/orders?fromDate=2026-01-01&toDate=2026-12-31
+Authorization: Bearer {{adminToken}}
+
+### 20.5 Kullanici Istatistikleri
+GET {{baseUrl}}/api/admin/dashboard/users
+Authorization: Bearer {{adminToken}}
+
+### 20.6 Urun Istatistikleri
+GET {{baseUrl}}/api/admin/dashboard/products
+Authorization: Bearer {{adminToken}}
+
+### 20.7 Son Aktiviteler
+GET {{baseUrl}}/api/admin/dashboard/activities?count=10
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 21. ADMIN - Raporlar
+### ============================================
+
+### 21.1 Satis Raporu
+GET {{baseUrl}}/api/admin/reports/sales?fromDate=2026-01-01&toDate=2026-12-31&groupBy=month
+Authorization: Bearer {{adminToken}}
+
+### 21.2 Urun Raporu
+GET {{baseUrl}}/api/admin/reports/products?fromDate=2026-01-01&toDate=2026-12-31&limit=50
+Authorization: Bearer {{adminToken}}
+
+### 21.3 Satici Raporu
+GET {{baseUrl}}/api/admin/reports/sellers?fromDate=2026-01-01&toDate=2026-12-31&limit=50
+Authorization: Bearer {{adminToken}}
+
+### 21.4 Musteri Raporu
+GET {{baseUrl}}/api/admin/reports/customers?fromDate=2026-01-01&toDate=2026-12-31&limit=50
+Authorization: Bearer {{adminToken}}
+
+### 21.5 Kategori Raporu
+GET {{baseUrl}}/api/admin/reports/categories?fromDate=2026-01-01&toDate=2026-12-31
+Authorization: Bearer {{adminToken}}
+
+### 21.6 Iade Raporu
+GET {{baseUrl}}/api/admin/reports/refunds?fromDate=2026-01-01&toDate=2026-12-31
+Authorization: Bearer {{adminToken}}
+
+### 21.7 Dashboard Raporu
+GET {{baseUrl}}/api/admin/reports/dashboard
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 22. ADMIN - Siparis Yonetimi
+### ============================================
+
+### 22.1 Tum Siparisleri Listele
+GET {{baseUrl}}/api/admin/orders?page=1&pageSize=20
+Authorization: Bearer {{adminToken}}
+
+### 22.2 Filtreleme ile Siparisler
+GET {{baseUrl}}/api/admin/orders?status=Pending&fromDate=2026-01-01&toDate=2026-12-31&page=1&pageSize=20
+Authorization: Bearer {{adminToken}}
+
+### 22.3 Siparis Detayi (Admin)
+GET {{baseUrl}}/api/admin/orders/1
+Authorization: Bearer {{adminToken}}
+
+### 22.4 Siparis Durumu Guncelle
+PATCH {{baseUrl}}/api/admin/orders/1/status
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "status": "Processing",
+    "note": "Siparis hazirlaniyor"
+}
+
+### 22.5 Iade Taleplerini Listele
+GET {{baseUrl}}/api/admin/orders/refunds?page=1&pageSize=20
+Authorization: Bearer {{adminToken}}
+
+### 22.6 Iade Talebini Onayla
+POST {{baseUrl}}/api/admin/orders/refunds/1/process
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "approve": true,
+    "note": "Iade onaylandi, tutar iade edilecek"
+}
+
+### 22.7 Iade Talebini Reddet
+POST {{baseUrl}}/api/admin/orders/refunds/2/process
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "approve": false,
+    "note": "Iade sartlari karsilanmadi"
+}
+
+### 22.8 Siparis Istatistikleri
+GET {{baseUrl}}/api/admin/orders/statistics?fromDate=2026-01-01&toDate=2026-12-31
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 23. ADMIN - Kampanya Yonetimi
+### ============================================
+
+### 23.1 Kampanya Olustur
+# @name createCampaign
+POST {{baseUrl}}/api/admin/campaigns
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "name": "Yaz Indirimi",
+    "description": "Tum urunlerde %20 indirim",
+    "discountType": "Percentage",
+    "discountValue": 20,
+    "startDate": "2026-06-01T00:00:00Z",
+    "endDate": "2026-08-31T23:59:59Z",
+    "isActive": true,
+    "minOrderAmount": 100,
+    "maxUsageCount": 1000
+}
+
+### 23.2 Kupon Kodlu Kampanya Olustur
+POST {{baseUrl}}/api/admin/campaigns
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "name": "Hosgeldin Kuponu",
+    "description": "Yeni uyeler icin 50 TL indirim",
+    "discountType": "FixedAmount",
+    "discountValue": 50,
+    "couponCode": "HOSGELDIN50",
+    "startDate": "2026-01-01T00:00:00Z",
+    "endDate": "2026-12-31T23:59:59Z",
+    "isActive": true,
+    "minOrderAmount": 200,
+    "maxUsageCount": 5000,
+    "maxUsagePerUser": 1
+}
+
+### 23.3 Kampanyalari Listele
+GET {{baseUrl}}/api/admin/campaigns?page=1&pageSize=20
+Authorization: Bearer {{adminToken}}
+
+### 23.4 Kampanya Detayi
+GET {{baseUrl}}/api/admin/campaigns/1
+Authorization: Bearer {{adminToken}}
+
+### 23.5 Kampanya Guncelle
+PUT {{baseUrl}}/api/admin/campaigns/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "name": "Yaz Indirimi - Uzatildi",
+    "endDate": "2026-09-30T23:59:59Z",
+    "discountValue": 25
+}
+
+### 23.6 Kampanya Aktif/Pasif
+PATCH {{baseUrl}}/api/admin/campaigns/1/toggle-active
+Authorization: Bearer {{adminToken}}
+
+### 23.7 Kampanya Istatistikleri
+GET {{baseUrl}}/api/admin/campaigns/statistics
+Authorization: Bearer {{adminToken}}
+
+### 23.8 Kupon Dogrula (Admin)
+GET {{baseUrl}}/api/admin/campaigns/validate-coupon/HOSGELDIN50
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 24. ADMIN - Hediye Karti Yonetimi
+### ============================================
+
+### 24.1 Hediye Karti Olustur
+POST {{baseUrl}}/api/admin/gift-cards
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "initialBalance": 500.00,
+    "currency": "TRY",
+    "expiresAt": "2027-12-31T23:59:59Z",
+    "recipientEmail": "customer@test.com",
+    "recipientName": "Test Customer",
+    "personalMessage": "Dogum gunun kutlu olsun!",
+    "adminNotes": "Kampanya hediyesi"
+}
+
+### 24.2 Toplu Hediye Karti Olustur
+POST {{baseUrl}}/api/admin/gift-cards/bulk
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "count": 5,
+    "initialBalance": 100.00,
+    "currency": "TRY",
+    "expiresAt": "2027-06-30T23:59:59Z",
+    "adminNotes": "Promosyon kampanyasi"
+}
+
+### 24.3 Hediye Kartlarini Listele
+GET {{baseUrl}}/api/admin/gift-cards?page=1&pageSize=20
+Authorization: Bearer {{adminToken}}
+
+### 24.4 Hediye Karti Detayi
+GET {{baseUrl}}/api/admin/gift-cards/1
+Authorization: Bearer {{adminToken}}
+
+### 24.5 Hediye Karti Bakiye Ayarla
+PATCH {{baseUrl}}/api/admin/gift-cards/1/balance
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "amount": 100.00,
+    "description": "Bonus bakiye yukleme"
+}
+
+### 24.6 Hediye Karti Sure Uzat
+PATCH {{baseUrl}}/api/admin/gift-cards/1/extend
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "newExpiresAt": "2028-12-31T23:59:59Z"
+}
+
+### 24.7 Hediye Karti Istatistikleri
+GET {{baseUrl}}/api/admin/gift-cards/statistics
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 25. ADMIN - Banner Yonetimi
+### ============================================
+
+### 25.1 Banner Olustur
+POST {{baseUrl}}/api/admin/banners
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "title": "Yaz Kampanyasi",
+    "description": "Tum urunlerde buyuk indirim!",
+    "imageUrl": "https://example.com/banner-summer.jpg",
+    "mobileImageUrl": "https://example.com/banner-summer-mobile.jpg",
+    "targetUrl": "/kampanyalar/yaz-indirimi",
+    "position": "Hero",
+    "displayOrder": 1,
+    "isActive": true,
+    "startDate": "2026-06-01T00:00:00Z",
+    "endDate": "2026-08-31T23:59:59Z"
+}
+
+### 25.2 Bannerlari Listele
+GET {{baseUrl}}/api/admin/banners?isActive=true
+Authorization: Bearer {{adminToken}}
+
+### 25.3 Banner Guncelle
+PUT {{baseUrl}}/api/admin/banners/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "title": "Yaz Kampanyasi - Guncellendi",
+    "isActive": true
+}
+
+### 25.4 Banner Aktif/Pasif
+PATCH {{baseUrl}}/api/admin/banners/1/toggle-active
+Authorization: Bearer {{adminToken}}
+
+### 25.5 Banner Istatistikleri
+GET {{baseUrl}}/api/admin/banners/statistics
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 26. ADMIN - Satici Yonetimi
+### ============================================
+
+### 26.1 Saticilari Listele
+GET {{baseUrl}}/api/admin/sellers?page=1&pageSize=20
+Authorization: Bearer {{adminToken}}
+
+### 26.2 Satici Detayi
+GET {{baseUrl}}/api/admin/sellers/2
+Authorization: Bearer {{adminToken}}
+
+### 26.3 Satici Basvurulari
+GET {{baseUrl}}/api/admin/sellers/applications?page=1&pageSize=20
+Authorization: Bearer {{adminToken}}
+
+### 26.4 Satici Basvuru Onayla
+POST {{baseUrl}}/api/admin/sellers/2/review
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "approve": true
+}
+
+### 26.5 Satici Komisyon Orani Guncelle
+PATCH {{baseUrl}}/api/admin/sellers/2/commission
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "commissionRate": 12.5
+}
+
+### 26.6 Saticiyi Askiya Al
+POST {{baseUrl}}/api/admin/sellers/2/suspend
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "reason": "Politika ihlali",
+    "durationDays": 30,
+    "isPermanent": false
+}
+
+### 26.7 Satici Askiyi Kaldir
+POST {{baseUrl}}/api/admin/sellers/2/unsuspend
+Authorization: Bearer {{adminToken}}
+
+### 26.8 Satici Istatistikleri
+GET {{baseUrl}}/api/admin/sellers/statistics
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 27. ADMIN - Yorum Moderasyonu
+### ============================================
+
+### 27.1 Yorumlari Listele
+GET {{baseUrl}}/api/admin/reviews?page=1&pageSize=20
+Authorization: Bearer {{adminToken}}
+
+### 27.2 Yorum Onayla
+POST {{baseUrl}}/api/admin/reviews/1/approve
+Authorization: Bearer {{adminToken}}
+
+### 27.3 Yorum Reddet
+POST {{baseUrl}}/api/admin/reviews/1/reject
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "reason": "Uygunsuz icerik"
+}
+
+### 27.4 Yorum Istatistikleri
+GET {{baseUrl}}/api/admin/reviews/statistics
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 28. ADMIN - Site Ayarlari
+### ============================================
+
+### 28.1 Tum Ayarlari Getir
+GET {{baseUrl}}/api/admin/settings
+Authorization: Bearer {{adminToken}}
+
+### 28.2 Kategoriye Gore Ayarlar
+GET {{baseUrl}}/api/admin/settings?category=payment
+Authorization: Bearer {{adminToken}}
+
+### 28.3 Tek Ayar Getir
+GET {{baseUrl}}/api/admin/settings/site_name
+Authorization: Bearer {{adminToken}}
+
+### 28.4 Ayar Olustur
+POST {{baseUrl}}/api/admin/settings
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "key": "min_order_amount",
+    "value": "50",
+    "description": "Minimum siparis tutari (TL)",
+    "category": "order",
+    "isPublic": true
+}
+
+### 28.5 Ayar Guncelle
+PUT {{baseUrl}}/api/admin/settings/min_order_amount
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "value": "75",
+    "description": "Minimum siparis tutari guncellendi"
+}
+
+### 28.6 Kargo Ayarlari
+GET {{baseUrl}}/api/admin/settings/shipping
+Authorization: Bearer {{adminToken}}
+
+### 28.7 Kargo Ayarlarini Guncelle
+PUT {{baseUrl}}/api/admin/settings/shipping
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "defaultShippingCost": 29.99,
+    "freeShippingThreshold": 500.00
+}
+
+### 28.8 Komisyon Ayarlari
+GET {{baseUrl}}/api/admin/settings/commission
+Authorization: Bearer {{adminToken}}
+
+### 28.9 Komisyon Ayarlarini Guncelle
+PUT {{baseUrl}}/api/admin/settings/commission
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "defaultCommissionRate": 15.0
+}
+
+### 28.10 Genel Ayarlar
+PUT {{baseUrl}}/api/admin/settings/general
+Content-Type: {{contentType}}
+Authorization: Bearer {{adminToken}}
+
+{
+    "siteName": "Exodus Marketplace",
+    "siteDescription": "Turkiye'nin en buyuk online pazaryeri",
+    "contactEmail": "info@exodus.com",
+    "contactPhone": "+902121234567"
+}
+
+### ============================================
+### 29. ADMIN - Audit Log
+### ============================================
+
+### 29.1 Audit Loglarini Getir
+GET {{baseUrl}}/api/admin/audit?page=1&pageSize=50
+Authorization: Bearer {{adminToken}}
+
+### ============================================
+### 30. HEALTH CHECK
+### ============================================
+
+### 30.1 Health Check
+GET {{baseUrl}}/health
+
+### 30.2 Ready Check
+GET {{baseUrl}}/health/ready
+
+### ============================================
+### TEST AKISI REHBERI
+### ============================================
 ###
-### USERS (Admin only)
+### ADIM 1 - HAZIRLIK:
+### 1.1 → Admin Kayit
+### 1.2 → Seller Kayit
+### 1.3 → Customer Kayit
+### 1.4 → Admin Login
+### 1.5 → Seller Login
+### 1.6 → Customer Login
 ###
-
-### 1. Get all users (requires Admin)
-GET {{baseUrl}}/api/user
-Authorization: Bearer {{token}}
-
-### 2. Get user by ID (requires Admin)
-GET {{baseUrl}}/api/user/1
-Authorization: Bearer {{token}}
+### ADIM 2 - KATALOG (Admin Token):
+### 3.1 → Kategori Olustur
+### 3.2 → Alt Kategori Olustur
+###
+### ADIM 3 - URUN (Seller Token):
+### 4.1 → Urun Olustur
+### 5.1 → Listing Olustur
+###
+### ADIM 4 - ALISVERIS (Customer Token):
+### 7.1 → Sepete Ekle
+### 8.1 → Checkout
+### 9.1 → Odeme Olustur
+### 9.10 → Odeme Simule Et (Basarili)
+###
+### ADIM 5 - KARGO (Seller Token):
+### 10.2 → Siparisi Onayla
+### 10.3 → Kargola
+### 11.3 → Teslim Edildi
+###
+### ADIM 6 - SADAKAT (Customer Token):
+### 12.1 → Puan Sorgula
+### 12.2 → Islem Gecmisi
+###
