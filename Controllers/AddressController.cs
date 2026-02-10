@@ -1,3 +1,4 @@
+using Exodus.Models.Dto;
 using Exodus.Services.Addresses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

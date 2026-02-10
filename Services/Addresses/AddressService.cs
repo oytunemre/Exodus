@@ -1,4 +1,5 @@
 using Exodus.Data;
+using Exodus.Models.Dto;
 using Exodus.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,9 +16,6 @@ public class AddressService : IAddressService
 
     public async Task<AddressResponseDto> CreateAsync(int userId, CreateAddressDto dto, CancellationToken ct = default)
     {
-        if (!Enum.TryParse<AddressType>(dto.Type, true, out var addressType))
-            addressType = AddressType.Shipping;
-
         // Eger default olarak isaretlenmisse diger adreslerin default'unu kaldir
         if (dto.IsDefault)
         {
@@ -39,7 +37,7 @@ public class AddressService : IAddressService
             Neighborhood = dto.Neighborhood,
             AddressLine = dto.AddressLine,
             PostalCode = dto.PostalCode,
-            Type = addressType,
+            Type = dto.Type,
             IsDefault = dto.IsDefault
         };
 
@@ -63,8 +61,7 @@ public class AddressService : IAddressService
         if (dto.Neighborhood != null) address.Neighborhood = dto.Neighborhood;
         if (dto.AddressLine != null) address.AddressLine = dto.AddressLine;
         if (dto.PostalCode != null) address.PostalCode = dto.PostalCode;
-        if (dto.Type != null && Enum.TryParse<AddressType>(dto.Type, true, out var addressType))
-            address.Type = addressType;
+        if (dto.Type != null) address.Type = dto.Type.Value;
 
         if (dto.IsDefault == true)
         {
@@ -145,10 +142,8 @@ public class AddressService : IAddressService
             Neighborhood = address.Neighborhood,
             AddressLine = address.AddressLine,
             PostalCode = address.PostalCode,
-            Type = address.Type.ToString(),
-            IsDefault = address.IsDefault,
-            CreatedAt = address.CreatedAt,
-            UpdatedAt = address.UpdatedAt
+            Type = address.Type,
+            IsDefault = address.IsDefault
         };
     }
 }
