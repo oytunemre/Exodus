@@ -1,5 +1,6 @@
 ﻿using Exodus.Data;
 using Exodus.Models.Dto.SellerDto;
+using Exodus.Models.Dto.Shipment;
 using Exodus.Models.Enums;
 using Exodus.Services.Common;
 using Microsoft.AspNetCore.Authorization;

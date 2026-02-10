@@ -274,12 +274,4 @@ public class Confirm3DSecureDto
     public required string AuthenticationResult { get; set; }
 }
 
-public class MarkPaymentReceivedDto
-{
-    public string? Note { get; set; }
-}
 
-public class SimulatePaymentDto
-{
-    public string? Reason { get; set; }
-}

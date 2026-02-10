@@ -1,4 +1,4 @@
-﻿using Exodus.Models.Enums;
+using Exodus.Models.Enums;
 
 namespace Exodus.Models.Dto.ListingDto
 {

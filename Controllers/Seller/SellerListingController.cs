@@ -98,7 +98,7 @@ namespace Exodus.Controllers.Seller
         /// Create a new listing
         /// </summary>
         [HttpPost]
-        public async Task<ActionResult> CreateListing([FromBody] CreateListingDto dto)
+        public async Task<ActionResult> CreateListing([FromBody] SellerCreateListingDto dto)
         {
             var sellerId = GetCurrentUserId();
 
@@ -138,7 +138,7 @@ namespace Exodus.Controllers.Seller
         /// Update listing
         /// </summary>
         [HttpPut("{id}")]
-        public async Task<ActionResult> UpdateListing(int id, [FromBody] UpdateListingDto dto)
+        public async Task<ActionResult> UpdateListing(int id, [FromBody] SellerUpdateListingDto dto)
         {
             var sellerId = GetCurrentUserId();
             var listing = await _context.Listings
@@ -179,7 +179,7 @@ namespace Exodus.Controllers.Seller
         /// Update stock quantity
         /// </summary>
         [HttpPatch("{id}/stock")]
-        public async Task<ActionResult> UpdateStock(int id, [FromBody] UpdateStockDto dto)
+        public async Task<ActionResult> UpdateStock(int id, [FromBody] SellerUpdateStockDto dto)
         {
             var sellerId = GetCurrentUserId();
             var listing = await _context.Listings
@@ -285,7 +285,7 @@ namespace Exodus.Controllers.Seller
         }
     }
 
-    public class CreateListingDto
+    public class SellerSellerCreateListingDto
     {
         public int ProductId { get; set; }
         public decimal Price { get; set; }
@@ -296,7 +296,7 @@ namespace Exodus.Controllers.Seller
         public ListingCondition Condition { get; set; } = ListingCondition.New;
     }
 
-    public class UpdateListingDto
+    public class SellerSellerUpdateListingDto
     {
         public decimal? Price { get; set; }
         public int? StockQuantity { get; set; }
@@ -307,7 +307,7 @@ namespace Exodus.Controllers.Seller
         public bool? IsActive { get; set; }
     }
 
-    public class UpdateStockDto
+    public class SellerSellerUpdateStockDto
     {
         public int StockQuantity { get; set; }
     }

@@ -42,7 +42,7 @@ public class CreateCampaignDto
 {
     [Required]
     [StringLength(200)]
-    public string Name { get; set; } = string.Empty;
+    public required string Name { get; set; }
 
     [StringLength(1000)]
     public string? Description { get; set; }
@@ -50,41 +50,44 @@ public class CreateCampaignDto
     [Required]
     public CampaignType Type { get; set; }
 
+    public int? SellerId { get; set; }
+
     [Required]
     public DateTime StartDate { get; set; }
 
     [Required]
     public DateTime EndDate { get; set; }
 
+    public bool IsActive { get; set; } = true;
+
     public int? MaxUsageCount { get; set; }
     public int? MaxUsagePerUser { get; set; }
 
+    [Range(0, 1000000)]
     public decimal? MinimumOrderAmount { get; set; }
     public int? MinimumQuantity { get; set; }
 
-    // For PercentageDiscount
     [Range(0, 100)]
     public decimal? DiscountPercentage { get; set; }
 
-    // For FixedAmountDiscount
+    [Range(0, 1000000)]
     public decimal? DiscountAmount { get; set; }
 
+    [Range(0, 1000000)]
     public decimal? MaxDiscountAmount { get; set; }
 
-    // For BuyXGetYFree (e.g., Buy 1 Get 1 Free: BuyQuantity=1, GetQuantity=1)
     public int? BuyQuantity { get; set; }
     public int? GetQuantity { get; set; }
 
     [StringLength(50)]
     public string? CouponCode { get; set; }
-    public bool RequiresCouponCode { get; set; }
+    public bool RequiresCouponCode { get; set; } = false;
 
     public CampaignScope Scope { get; set; } = CampaignScope.AllProducts;
 
     public int Priority { get; set; } = 0;
     public bool IsStackable { get; set; } = false;
 
-    // Target products/listings/categories
     public List<int>? ProductIds { get; set; }
     public List<int>? ListingIds { get; set; }
     public List<int>? CategoryIds { get; set; }
@@ -98,6 +101,7 @@ public class UpdateCampaignDto
     [StringLength(1000)]
     public string? Description { get; set; }
 
+    public CampaignType? Type { get; set; }
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
     public bool? IsActive { get; set; }
@@ -120,6 +124,7 @@ public class UpdateCampaignDto
     public string? CouponCode { get; set; }
     public bool? RequiresCouponCode { get; set; }
 
+    public CampaignScope? Scope { get; set; }
     public int? Priority { get; set; }
     public bool? IsStackable { get; set; }
 

@@ -1,4 +1,5 @@
 using Exodus.Data;
+using Exodus.Models.Dto.Campaign;
 using Exodus.Models.Entities;
 using Exodus.Services.Common;
 using Microsoft.AspNetCore.Authorization;
@@ -602,88 +603,6 @@ public class AdminCampaignController : ControllerBase
             }
         });
     }
-}
-
-public class CreateCampaignDto
-{
-    [Required]
-    [StringLength(200)]
-    public required string Name { get; set; }
-
-    [StringLength(1000)]
-    public string? Description { get; set; }
-
-    [Required]
-    public CampaignType Type { get; set; }
-
-    public int? SellerId { get; set; }
-
-    [Required]
-    public DateTime StartDate { get; set; }
-
-    [Required]
-    public DateTime EndDate { get; set; }
-
-    public bool IsActive { get; set; } = true;
-
-    public int? MaxUsageCount { get; set; }
-    public int? MaxUsagePerUser { get; set; }
-
-    [Range(0, 1000000)]
-    public decimal? MinimumOrderAmount { get; set; }
-
-    public int? MinimumQuantity { get; set; }
-
-    [Range(0, 100)]
-    public decimal? DiscountPercentage { get; set; }
-
-    [Range(0, 1000000)]
-    public decimal? DiscountAmount { get; set; }
-
-    [Range(0, 1000000)]
-    public decimal? MaxDiscountAmount { get; set; }
-
-    public int? BuyQuantity { get; set; }
-    public int? GetQuantity { get; set; }
-
-    [StringLength(50)]
-    public string? CouponCode { get; set; }
-
-    public bool RequiresCouponCode { get; set; } = false;
-
-    public CampaignScope Scope { get; set; } = CampaignScope.AllProducts;
-
-    public int Priority { get; set; } = 0;
-    public bool IsStackable { get; set; } = false;
-
-    public List<int>? ProductIds { get; set; }
-    public List<int>? CategoryIds { get; set; }
-}
-
-public class UpdateCampaignDto
-{
-    [StringLength(200)]
-    public string? Name { get; set; }
-
-    [StringLength(1000)]
-    public string? Description { get; set; }
-
-    public CampaignType? Type { get; set; }
-    public DateTime? StartDate { get; set; }
-    public DateTime? EndDate { get; set; }
-    public bool? IsActive { get; set; }
-    public int? MaxUsageCount { get; set; }
-    public int? MaxUsagePerUser { get; set; }
-    public decimal? MinimumOrderAmount { get; set; }
-    public int? MinimumQuantity { get; set; }
-    public decimal? DiscountPercentage { get; set; }
-    public decimal? DiscountAmount { get; set; }
-    public decimal? MaxDiscountAmount { get; set; }
-    public string? CouponCode { get; set; }
-    public bool? RequiresCouponCode { get; set; }
-    public CampaignScope? Scope { get; set; }
-    public int? Priority { get; set; }
-    public bool? IsStackable { get; set; }
 }
 
 public class UpdateCampaignProductsDto
