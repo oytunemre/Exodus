@@ -285,7 +285,7 @@ namespace Exodus.Controllers.Seller
         }
     }
 
-    public class SellerSellerCreateListingDto
+    public class SellerCreateListingDto
     {
         public int ProductId { get; set; }
         public decimal Price { get; set; }
@@ -296,7 +296,7 @@ namespace Exodus.Controllers.Seller
         public ListingCondition Condition { get; set; } = ListingCondition.New;
     }
 
-    public class SellerSellerUpdateListingDto
+    public class SellerUpdateListingDto
     {
         public decimal? Price { get; set; }
         public int? StockQuantity { get; set; }
@@ -307,7 +307,7 @@ namespace Exodus.Controllers.Seller
         public bool? IsActive { get; set; }
     }
 
-    public class SellerSellerUpdateStockDto
+    public class SellerUpdateStockDto
     {
         public int StockQuantity { get; set; }
     }
