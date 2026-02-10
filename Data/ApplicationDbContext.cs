@@ -132,6 +132,20 @@ namespace Exodus.Data
                 .HasIndex(pb => pb.Barcode)
                 .IsUnique()
                 .HasFilter("[IsDeleted] = 0");
+            // Listing -> Product
+            modelBuilder.Entity<Listing>()
+                .HasOne(l => l.Product)
+                .WithMany()
+                .HasForeignKey(l => l.ProductId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Listing -> Seller (Users)
+            modelBuilder.Entity<Listing>()
+                .HasOne(l => l.Seller)
+                .WithMany()
+                .HasForeignKey(l => l.SellerId)
+                .OnDelete(DeleteBehavior.NoAction);
+
             // Listing Condition enum to string
             modelBuilder.Entity<Listing>()
                .Property(l => l.Condition)
@@ -429,12 +443,12 @@ namespace Exodus.Data
                 b.HasOne(cp => cp.Product)
                     .WithMany()
                     .HasForeignKey(cp => cp.ProductId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .OnDelete(DeleteBehavior.NoAction);
 
                 b.HasOne(cp => cp.Listing)
                     .WithMany()
                     .HasForeignKey(cp => cp.ListingId)
-                    .OnDelete(DeleteBehavior.Cascade);
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
             // CampaignCategory
