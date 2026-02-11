@@ -20,12 +20,11 @@ POST {{baseUrl}}/api/auth/register
 Content-Type: {{contentType}}
 
 {
-    "firstName": "Admin",
-    "lastName": "User",
+    "name": "Admin User",
     "email": "admin@test.com",
+    "username": "admin",
     "password": "Admin123!",
-    "confirmPassword": "Admin123!",
-    "role": "Admin"
+    "role": 2
 }
 
 ### 1.2 Seller Kayit
@@ -33,12 +32,11 @@ POST {{baseUrl}}/api/auth/register
 Content-Type: {{contentType}}
 
 {
-    "firstName": "Test",
-    "lastName": "Seller",
+    "name": "Test Seller",
     "email": "seller@test.com",
+    "username": "seller",
     "password": "Seller123!",
-    "confirmPassword": "Seller123!",
-    "role": "Seller"
+    "role": 1
 }
 
 ### 1.3 Customer Kayit
@@ -46,12 +44,11 @@ POST {{baseUrl}}/api/auth/register
 Content-Type: {{contentType}}
 
 {
-    "firstName": "Test",
-    "lastName": "Customer",
+    "name": "Test Customer",
     "email": "customer@test.com",
+    "username": "customer",
     "password": "Customer123!",
-    "confirmPassword": "Customer123!",
-    "role": "Customer"
+    "role": 0
 }
 
 ### 1.4 Admin Login
@@ -60,7 +57,7 @@ POST {{baseUrl}}/api/auth/login
 Content-Type: {{contentType}}
 
 {
-    "email": "admin@test.com",
+    "emailOrUsername": "admin@test.com",
     "password": "Admin123!"
 }
 
@@ -70,7 +67,7 @@ POST {{baseUrl}}/api/auth/login
 Content-Type: {{contentType}}
 
 {
-    "email": "seller@test.com",
+    "emailOrUsername": "seller@test.com",
     "password": "Seller123!"
 }
 
@@ -80,7 +77,7 @@ POST {{baseUrl}}/api/auth/login
 Content-Type: {{contentType}}
 
 {
-    "email": "customer@test.com",
+    "emailOrUsername": "customer@test.com",
     "password": "Customer123!"
 }
 
@@ -123,8 +120,8 @@ Content-Type: {{contentType}}
 Authorization: Bearer {{customerToken}}
 
 {
-    "firstName": "Updated",
-    "lastName": "Customer",
+    "name": "Updated Customer",
+    "username": "customer_updated",
     "phone": "+905551234567"
 }
 
@@ -135,7 +132,8 @@ Authorization: Bearer {{customerToken}}
 
 {
     "currentPassword": "Customer123!",
-    "newPassword": "NewCustomer456!"
+    "newPassword": "NewCustomer456!",
+    "confirmPassword": "NewCustomer456!"
 }
 
 ### 2.4 Profil Istatistikleri
@@ -219,8 +217,7 @@ Authorization: Bearer {{adminToken}}
 {
     "name": "Elektronik",
     "description": "Elektronik urunler",
-    "slug": "elektronik",
-    "isActive": true
+    "displayOrder": 1
 }
 
 ### 3.2 Alt Kategori Olustur
@@ -231,9 +228,8 @@ Authorization: Bearer {{adminToken}}
 {
     "name": "Telefonlar",
     "description": "Cep telefonlari",
-    "slug": "telefonlar",
     "parentCategoryId": 1,
-    "isActive": true
+    "displayOrder": 1
 }
 
 ### 3.3 Tum Kategoriler (Public)
@@ -259,8 +255,8 @@ Authorization: Bearer {{adminToken}}
 {
     "name": "Elektronik & Teknoloji",
     "description": "Elektronik ve teknoloji urunleri",
-    "slug": "elektronik-teknoloji",
-    "isActive": true
+    "isActive": true,
+    "displayOrder": 1
 }
 
 ### 3.9 Kategori Aktif/Pasif Toggle
@@ -279,8 +275,8 @@ Authorization: Bearer {{sellerToken}}
 
 {
     "productName": "iPhone 15 Pro",
-    "description": "Apple iPhone 15 Pro 256GB",
-    "categoryId": 1
+    "productDescription": "Apple iPhone 15 Pro 256GB",
+    "barcodes": ["8901234567890"]
 }
 
 ### 4.2 Ikinci Urun Olustur
@@ -290,8 +286,8 @@ Authorization: Bearer {{sellerToken}}
 
 {
     "productName": "Samsung Galaxy S24",
-    "description": "Samsung Galaxy S24 Ultra 512GB",
-    "categoryId": 1
+    "productDescription": "Samsung Galaxy S24 Ultra 512GB",
+    "barcodes": ["8901234567891"]
 }
 
 ### 4.3 Tum Urunleri Listele (Public)
@@ -307,7 +303,8 @@ Authorization: Bearer {{sellerToken}}
 
 {
     "productName": "iPhone 15 Pro - Guncellendi",
-    "description": "Apple iPhone 15 Pro 256GB - Siyah"
+    "productDescription": "Apple iPhone 15 Pro 256GB - Siyah",
+    "barcodes": ["8901234567890"]
 }
 
 ### 4.6 Urun Sil (Soft Delete)
@@ -319,6 +316,7 @@ Authorization: Bearer {{adminToken}}
 ### ============================================
 
 ### 5.1 Listing Olustur (Seller)
+### NOT: sellerId login olan kullanicinin ID'si olmali
 # @name createListing
 POST {{baseUrl}}/api/listings
 Content-Type: {{contentType}}
@@ -326,11 +324,10 @@ Authorization: Bearer {{sellerToken}}
 
 {
     "productId": 1,
+    "sellerId": 2,
     "price": 74999.99,
-    "stockQuantity": 50,
-    "sku": "IPH15P-256-BLK",
-    "condition": 0,
-    "isActive": true
+    "stock": 50,
+    "condition": 0
 }
 
 ### 5.2 Ikinci Listing
@@ -340,11 +337,10 @@ Authorization: Bearer {{sellerToken}}
 
 {
     "productId": 2,
+    "sellerId": 2,
     "price": 64999.99,
-    "stockQuantity": 30,
-    "sku": "SGS24U-512",
-    "condition": 0,
-    "isActive": true
+    "stock": 30,
+    "condition": 0
 }
 
 ### 5.3 Tum Listingleri Getir (Public)
@@ -360,7 +356,7 @@ Authorization: Bearer {{sellerToken}}
 
 {
     "price": 69999.99,
-    "stockQuantity": 45,
+    "stock": 45,
     "isActive": true
 }
 
@@ -425,11 +421,13 @@ Authorization: Bearer {{sellerToken}}
 ### ============================================
 
 ### 7.1 Sepete Urun Ekle
+### NOT: userId login olan customer'in ID'si olmali (ornegin 3)
 POST {{baseUrl}}/api/cart/add
 Content-Type: {{contentType}}
 Authorization: Bearer {{customerToken}}
 
 {
+    "userId": 3,
     "listingId": 1,
     "quantity": 2
 }
@@ -440,6 +438,7 @@ Content-Type: {{contentType}}
 Authorization: Bearer {{customerToken}}
 
 {
+    "userId": 3,
     "listingId": 2,
     "quantity": 1
 }
@@ -490,12 +489,13 @@ GET {{baseUrl}}/api/order/number/ORD-20260210-ABCD1234
 Authorization: Bearer {{customerToken}}
 
 ### 8.5 Siparis Iptal Et
+### reason enum: 0=CustomerRequest, 1=OutOfStock, 2=PaymentFailed, 3=FraudSuspected, 4=SellerCancelled, 5=DeliveryIssue, 6=Other
 POST {{baseUrl}}/api/order/1/cancel
 Content-Type: {{contentType}}
 Authorization: Bearer {{customerToken}}
 
 {
-    "reason": "Vazgectim",
+    "reason": 0,
     "note": "Baska bir urun almaya karar verdim"
 }
 
@@ -515,6 +515,7 @@ Authorization: Bearer {{customerToken}}
 ### ============================================
 
 ### 9.1 Odeme Intent Olustur
+### method enum: 1=CashOnDelivery, 2=BankTransfer, 3=CreditCard, 4=DebitCard, 5=Wallet, 6=Installment, 7=BuyNowPayLater
 # @name createPayment
 POST {{baseUrl}}/api/payment/intents
 Content-Type: {{contentType}}
@@ -522,8 +523,8 @@ Authorization: Bearer {{customerToken}}
 
 {
     "orderId": 1,
-    "currency": "TRY",
-    "method": "CreditCard"
+    "method": 3,
+    "currency": "TRY"
 }
 
 ### 9.2 Odeme Intent Detayi
@@ -585,7 +586,7 @@ Content-Type: {{contentType}}
 Authorization: Bearer {{adminToken}}
 
 {
-    "note": "Test basarili odeme"
+    "reason": "Test basarili odeme"
 }
 
 ### 9.11 Odeme Simulasyonu - Basarisiz (Test)
@@ -594,7 +595,7 @@ Content-Type: {{contentType}}
 Authorization: Bearer {{adminToken}}
 
 {
-    "note": "Test basarisiz odeme"
+    "reason": "Test basarisiz odeme"
 }
 
 ### 9.12 BIN Kontrolu
@@ -628,12 +629,13 @@ Authorization: Bearer {{sellerToken}}
 }
 
 ### 10.4 Satici Siparis Durumu Guncelle
+### status enum: 0=Placed, 1=Confirmed, 2=Packed, 3=Shipped, 4=Delivered, 5=Cancelled
 PATCH {{baseUrl}}/api/seller/orders/1/status
 Content-Type: {{contentType}}
 Authorization: Bearer {{sellerToken}}
 
 {
-    "status": "Shipped"
+    "status": 3
 }
 
 ### ============================================
@@ -724,6 +726,8 @@ Authorization: Bearer {{customerToken}}
 ### ============================================
 
 ### 14.1 Destek Talebi Olustur
+### category enum: 0=General, 1=Order, 2=Shipping, 3=Product, 4=Payment, 5=Refund, 6=Seller, 7=Technical, 8=Other
+### priority enum: 0=Low, 1=Normal, 2=High, 3=Urgent
 # @name createTicket
 POST {{baseUrl}}/api/support/tickets
 Content-Type: {{contentType}}
@@ -732,7 +736,7 @@ Authorization: Bearer {{customerToken}}
 {
     "subject": "Siparis Sorunu",
     "message": "Siparisim hala kargoya verilmedi, 3 gundur bekliyorum.",
-    "category": "Order",
+    "category": 1,
     "priority": 1,
     "orderId": 1
 }
@@ -898,7 +902,8 @@ Content-Type: {{contentType}}
 Authorization: Bearer {{customerToken}}
 
 {
-    "question": "Bu telefonun batarya omru ne kadar?"
+    "productId": 1,
+    "questionText": "Bu telefonun batarya omru ne kadar?"
 }
 
 ### 19.2 Urun Sorularini Listele (Public)
@@ -917,7 +922,7 @@ Content-Type: {{contentType}}
 Authorization: Bearer {{sellerToken}}
 
 {
-    "answer": "Normal kullanimda 1.5-2 gun batarya omru sunmaktadir."
+    "answerText": "Normal kullanimda 1.5-2 gun batarya omru sunmaktadir."
 }
 
 ### 19.6 Yaniti Kabul Et
@@ -1009,12 +1014,13 @@ GET {{baseUrl}}/api/admin/orders/1
 Authorization: Bearer {{adminToken}}
 
 ### 22.4 Siparis Durumu Guncelle
+### status enum: 0=Pending, 1=Processing, 2=Confirmed, 3=Shipped, 4=Delivered, 5=Completed, 6=Cancelled, 7=Refunded
 PATCH {{baseUrl}}/api/admin/orders/1/status
 Content-Type: {{contentType}}
 Authorization: Bearer {{adminToken}}
 
 {
-    "status": "Processing",
+    "status": 1,
     "note": "Siparis hazirlaniyor"
 }
 
@@ -1051,6 +1057,8 @@ Authorization: Bearer {{adminToken}}
 ### ============================================
 
 ### 23.1 Kampanya Olustur
+### type enum: 0=PercentageDiscount, 1=FixedAmountDiscount, 2=BuyXGetYFree, 3=BuyXPayY, 4=FreeShipping, 5=MinimumAmountDiscount
+### scope enum: 0=AllProducts, 1=SpecificProducts, 2=SpecificCategories, 3=SpecificListings
 # @name createCampaign
 POST {{baseUrl}}/api/admin/campaigns
 Content-Type: {{contentType}}
@@ -1059,13 +1067,14 @@ Authorization: Bearer {{adminToken}}
 {
     "name": "Yaz Indirimi",
     "description": "Tum urunlerde %20 indirim",
-    "discountType": "Percentage",
-    "discountValue": 20,
+    "type": 0,
     "startDate": "2026-06-01T00:00:00Z",
     "endDate": "2026-08-31T23:59:59Z",
     "isActive": true,
-    "minOrderAmount": 100,
-    "maxUsageCount": 1000
+    "discountPercentage": 20,
+    "minimumOrderAmount": 100,
+    "maxUsageCount": 1000,
+    "scope": 0
 }
 
 ### 23.2 Kupon Kodlu Kampanya Olustur
@@ -1076,15 +1085,17 @@ Authorization: Bearer {{adminToken}}
 {
     "name": "Hosgeldin Kuponu",
     "description": "Yeni uyeler icin 50 TL indirim",
-    "discountType": "FixedAmount",
-    "discountValue": 50,
-    "couponCode": "HOSGELDIN50",
+    "type": 1,
     "startDate": "2026-01-01T00:00:00Z",
     "endDate": "2026-12-31T23:59:59Z",
     "isActive": true,
-    "minOrderAmount": 200,
+    "discountAmount": 50,
+    "couponCode": "HOSGELDIN50",
+    "requiresCouponCode": true,
+    "minimumOrderAmount": 200,
     "maxUsageCount": 5000,
-    "maxUsagePerUser": 1
+    "maxUsagePerUser": 1,
+    "scope": 0
 }
 
 ### 23.3 Kampanyalari Listele
@@ -1103,7 +1114,7 @@ Authorization: Bearer {{adminToken}}
 {
     "name": "Yaz Indirimi - Uzatildi",
     "endDate": "2026-09-30T23:59:59Z",
-    "discountValue": 25
+    "discountPercentage": 25
 }
 
 ### 23.6 Kampanya Aktif/Pasif
@@ -1186,6 +1197,7 @@ Authorization: Bearer {{adminToken}}
 ### ============================================
 
 ### 25.1 Banner Olustur
+### position enum: 0=HomeSlider, 1=HomeBanner, 2=CategoryBanner, 3=ProductBanner, 4=CheckoutBanner
 POST {{baseUrl}}/api/admin/banners
 Content-Type: {{contentType}}
 Authorization: Bearer {{adminToken}}
@@ -1196,7 +1208,7 @@ Authorization: Bearer {{adminToken}}
     "imageUrl": "https://example.com/banner-summer.jpg",
     "mobileImageUrl": "https://example.com/banner-summer-mobile.jpg",
     "targetUrl": "/kampanyalar/yaz-indirimi",
-    "position": "Hero",
+    "position": 0,
     "displayOrder": 1,
     "isActive": true,
     "startDate": "2026-06-01T00:00:00Z",
