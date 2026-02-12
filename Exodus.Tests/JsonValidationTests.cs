@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using FluentAssertions;
+using Xunit;
 
 namespace Exodus.Tests;
 
