@@ -4,6 +4,7 @@ using Exodus.Services.Common;
 using Exodus.Services.Users;
 using Exodus.Tests.Helpers;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace Exodus.Tests.Services;
