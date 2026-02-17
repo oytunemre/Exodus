@@ -99,11 +99,14 @@ public class AuthEndpointTests : IClassFixture<CustomWebApplicationFactory>
     {
         var client = _client;
 
-        await TestHelper.RegisterUserAsync(client,
+        var auth = await TestHelper.RegisterUserAsync(client,
             name: "Login User",
             email: "loginuser@example.com",
             username: "loginuser",
             password: "LoginPass123!");
+
+        // Login requires verified email
+        await _factory.VerifyUserEmailAsync(auth.UserId);
 
         var loginDto = new LoginDto
         {
@@ -126,11 +129,13 @@ public class AuthEndpointTests : IClassFixture<CustomWebApplicationFactory>
     {
         var client = _client;
 
-        await TestHelper.RegisterUserAsync(client,
+        var auth = await TestHelper.RegisterUserAsync(client,
             name: "Username Login",
             email: "usernamelogin@example.com",
             username: "usernamelogin",
             password: "LoginPass123!");
+
+        await _factory.VerifyUserEmailAsync(auth.UserId);
 
         var loginDto = new LoginDto
         {
@@ -150,11 +155,14 @@ public class AuthEndpointTests : IClassFixture<CustomWebApplicationFactory>
     {
         var client = _client;
 
-        await TestHelper.RegisterUserAsync(client,
+        var auth = await TestHelper.RegisterUserAsync(client,
             name: "Bad Pass User",
             email: "badpass@example.com",
             username: "badpassuser",
             password: "CorrectPass123!");
+
+        // Verify email so password check is reached (not blocked by email verification)
+        await _factory.VerifyUserEmailAsync(auth.UserId);
 
         var loginDto = new LoginDto
         {
@@ -164,7 +172,9 @@ public class AuthEndpointTests : IClassFixture<CustomWebApplicationFactory>
 
         var response = await client.PostAsJsonAsync("/api/auth/login", loginDto, TestHelper.JsonOptions);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        // API returns 404 (NotFoundException) for invalid credentials
+        // to avoid revealing whether the user exists
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]

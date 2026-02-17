@@ -13,6 +13,22 @@ namespace Exodus.Tests.E2E;
 
 public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
+    /// <summary>
+    /// Verifies a user's email directly in the DB (bypassing the email verification flow).
+    /// Required for tests that call the login endpoint, since login requires EmailVerified = true.
+    /// </summary>
+    public async Task VerifyUserEmailAsync(int userId)
+    {
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var user = await db.Users.FindAsync(userId);
+        if (user != null)
+        {
+            user.EmailVerified = true;
+            await db.SaveChangesAsync();
+        }
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development");
@@ -33,10 +49,12 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             // Remove the DB-based health check (it fails with dual-provider)
             services.RemoveAll(typeof(IHealthCheck));
 
-            // Add InMemory database
+            // Add InMemory database (name must be generated OUTSIDE the lambda
+            // so all DbContext instances share the same in-memory store)
+            var dbName = "ExodusTestDb_" + Guid.NewGuid().ToString("N");
             services.AddDbContext<ApplicationDbContext>(options =>
             {
-                options.UseInMemoryDatabase("ExodusTestDb_" + Guid.NewGuid().ToString("N"));
+                options.UseInMemoryDatabase(dbName);
             });
 
             // Re-add a simple health check (without DB check)

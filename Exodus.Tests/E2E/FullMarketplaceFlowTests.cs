@@ -143,7 +143,7 @@ public class FullMarketplaceFlowTests : IClassFixture<CustomWebApplicationFactor
         {
             ProductName = "Samsung Galaxy S24",
             ProductDescription = "Samsung Galaxy S24 Ultra",
-            Barcodes = new List<string>()
+            Barcodes = new List<string> { Guid.NewGuid().ToString("N") }
         };
         var prod1Resp = await client.PostAsJsonAsync("/api/product", product1, TestHelper.JsonOptions);
         var prod1 = await prod1Resp.Content.ReadFromJsonAsync<ProductResponseDto>(TestHelper.JsonOptions);
@@ -172,7 +172,7 @@ public class FullMarketplaceFlowTests : IClassFixture<CustomWebApplicationFactor
         {
             ProductName = "AirPods Pro",
             ProductDescription = "Apple AirPods Pro 2nd Generation",
-            Barcodes = new List<string>()
+            Barcodes = new List<string> { Guid.NewGuid().ToString("N") }
         };
         var prod2Resp = await client.PostAsJsonAsync("/api/product", product2, TestHelper.JsonOptions);
         var prod2 = await prod2Resp.Content.ReadFromJsonAsync<ProductResponseDto>(TestHelper.JsonOptions);
@@ -232,7 +232,7 @@ public class FullMarketplaceFlowTests : IClassFixture<CustomWebApplicationFactor
         {
             ProductName = "Price Test Product",
             ProductDescription = "For price update testing",
-            Barcodes = new List<string>()
+            Barcodes = new List<string> { Guid.NewGuid().ToString("N") }
         };
         var prodResp = await client.PostAsJsonAsync("/api/product", product, TestHelper.JsonOptions);
         var prod = await prodResp.Content.ReadFromJsonAsync<ProductResponseDto>(TestHelper.JsonOptions);
@@ -357,7 +357,7 @@ public class FullMarketplaceFlowTests : IClassFixture<CustomWebApplicationFactor
         {
             ProductName = "Isolation Product",
             ProductDescription = "Product for isolation test",
-            Barcodes = new List<string>()
+            Barcodes = new List<string> { Guid.NewGuid().ToString("N") }
         };
         var prodResp = await client.PostAsJsonAsync("/api/product", prodDto, TestHelper.JsonOptions);
         var prod = await prodResp.Content.ReadFromJsonAsync<ProductResponseDto>(TestHelper.JsonOptions);

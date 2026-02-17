@@ -29,7 +29,7 @@ public class CartEndpointTests : IClassFixture<CustomWebApplicationFactory>
         {
             ProductName = "Cart Test Product " + suffix,
             ProductDescription = "Product for cart tests",
-            Barcodes = new List<string>()
+            Barcodes = new List<string> { Guid.NewGuid().ToString("N") }
         };
         var productResp = await client.PostAsJsonAsync("/api/product", productDto, TestHelper.JsonOptions);
         var product = await productResp.Content.ReadFromJsonAsync<ProductResponseDto>(TestHelper.JsonOptions);
@@ -137,7 +137,7 @@ public class CartEndpointTests : IClassFixture<CustomWebApplicationFactory>
         {
             ProductName = "Multi Cart Product 1",
             ProductDescription = "First product",
-            Barcodes = new List<string>()
+            Barcodes = new List<string> { Guid.NewGuid().ToString("N") }
         };
         var prod1Resp = await client.PostAsJsonAsync("/api/product", product1, TestHelper.JsonOptions);
         var prod1 = await prod1Resp.Content.ReadFromJsonAsync<ProductResponseDto>(TestHelper.JsonOptions);
@@ -146,7 +146,7 @@ public class CartEndpointTests : IClassFixture<CustomWebApplicationFactory>
         {
             ProductName = "Multi Cart Product 2",
             ProductDescription = "Second product",
-            Barcodes = new List<string>()
+            Barcodes = new List<string> { Guid.NewGuid().ToString("N") }
         };
         var prod2Resp = await client.PostAsJsonAsync("/api/product", product2, TestHelper.JsonOptions);
         var prod2 = await prod2Resp.Content.ReadFromJsonAsync<ProductResponseDto>(TestHelper.JsonOptions);

@@ -23,7 +23,7 @@ public class ListingEndpointTests : IClassFixture<CustomWebApplicationFactory>
         {
             ProductName = "Listing Product " + Guid.NewGuid().ToString("N")[..8],
             ProductDescription = "Product for listing tests",
-            Barcodes = new List<string>()
+            Barcodes = new List<string> { Guid.NewGuid().ToString("N") }
         };
 
         var response = await client.PostAsJsonAsync("/api/product", dto, TestHelper.JsonOptions);

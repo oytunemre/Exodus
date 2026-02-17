@@ -137,7 +137,7 @@ public class ProductEndpointTests : IClassFixture<CustomWebApplicationFactory>
         {
             ProductName = "Original Name",
             ProductDescription = "Original description",
-            Barcodes = new List<string>()
+            Barcodes = new List<string> { Guid.NewGuid().ToString("N") }
         };
 
         var createResponse = await client.PostAsJsonAsync("/api/product", createDto, TestHelper.JsonOptions);
@@ -167,7 +167,7 @@ public class ProductEndpointTests : IClassFixture<CustomWebApplicationFactory>
         {
             ProductName = "To Be Deleted",
             ProductDescription = "Will be deleted",
-            Barcodes = new List<string>()
+            Barcodes = new List<string> { Guid.NewGuid().ToString("N") }
         };
 
         var createResponse = await client.PostAsJsonAsync("/api/product", createDto, TestHelper.JsonOptions);
@@ -189,7 +189,7 @@ public class ProductEndpointTests : IClassFixture<CustomWebApplicationFactory>
         {
             ProductName = "Cannot Delete",
             ProductDescription = "Customer cannot delete",
-            Barcodes = new List<string>()
+            Barcodes = new List<string> { Guid.NewGuid().ToString("N") }
         };
         var createResponse = await client.PostAsJsonAsync("/api/product", createDto, TestHelper.JsonOptions);
         var created = await createResponse.Content.ReadFromJsonAsync<ProductResponseDto>(TestHelper.JsonOptions);
