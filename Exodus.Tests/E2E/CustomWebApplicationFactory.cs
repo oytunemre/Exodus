@@ -1,3 +1,4 @@
+using System.Threading.RateLimiting;
 using Exodus.Data;
 using Exodus.Services.Email;
 using Exodus.Services.PaymentGateway;
@@ -5,6 +6,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace Exodus.Tests.E2E;
 
@@ -16,30 +19,56 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 
         builder.ConfigureServices(services =>
         {
-            // Remove the existing DbContext registration
-            var dbDescriptor = services.SingleOrDefault(
-                d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-            if (dbDescriptor != null)
-                services.Remove(dbDescriptor);
+            // Remove ALL DbContext-related registrations to avoid dual-provider conflict
+            // (SqlServer + InMemory cannot coexist in the same service provider)
+            var dbContextDescriptors = services
+                .Where(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>)
+                         || d.ServiceType == typeof(DbContextOptions)
+                         || d.ServiceType.FullName?.Contains("EntityFrameworkCore") == true)
+                .ToList();
 
-            // Add InMemory database with a unique name per factory instance
+            foreach (var descriptor in dbContextDescriptors)
+                services.Remove(descriptor);
+
+            // Remove the DB-based health check (it fails with dual-provider)
+            services.RemoveAll(typeof(IHealthCheck));
+
+            // Add InMemory database
             services.AddDbContext<ApplicationDbContext>(options =>
             {
                 options.UseInMemoryDatabase("ExodusTestDb_" + Guid.NewGuid().ToString("N"));
             });
 
+            // Re-add a simple health check (without DB check)
+            services.AddHealthChecks();
+
+            // Disable rate limiting for tests by removing all rate limiter config
+            // and re-adding with no-limit policies
+            var rateLimiterDescriptors = services
+                .Where(d => d.ServiceType.IsGenericType &&
+                            d.ServiceType.GetGenericArguments()
+                                .Any(a => a.FullName?.Contains("RateLimiterOptions") == true))
+                .ToList();
+            foreach (var d in rateLimiterDescriptors)
+                services.Remove(d);
+
+            services.AddRateLimiter(options =>
+            {
+                options.RejectionStatusCode = 429;
+                options.AddPolicy("fixed", _ =>
+                    RateLimitPartition.GetNoLimiter("test"));
+                options.AddPolicy("auth", _ =>
+                    RateLimitPartition.GetNoLimiter("test"));
+                options.AddPolicy("sensitive", _ =>
+                    RateLimitPartition.GetNoLimiter("test"));
+            });
+
             // Replace email service with a no-op implementation
-            var emailDescriptor = services.SingleOrDefault(
-                d => d.ServiceType == typeof(IEmailService));
-            if (emailDescriptor != null)
-                services.Remove(emailDescriptor);
+            services.RemoveAll(typeof(IEmailService));
             services.AddScoped<IEmailService, FakeEmailService>();
 
             // Replace payment gateway with a fake implementation
-            var paymentDescriptor = services.SingleOrDefault(
-                d => d.ServiceType == typeof(IPaymentGateway));
-            if (paymentDescriptor != null)
-                services.Remove(paymentDescriptor);
+            services.RemoveAll(typeof(IPaymentGateway));
             services.AddScoped<IPaymentGateway, FakePaymentGateway>();
         });
     }
