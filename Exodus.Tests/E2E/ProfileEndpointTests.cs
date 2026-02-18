@@ -155,7 +155,7 @@ public class ProfileEndpointTests : IClassFixture<CustomWebApplicationFactory>
             Type = Exodus.Models.Entities.AddressType.Shipping
         };
         var createResp = await client.PostAsJsonAsync("/api/profile/addresses", createDto, TestHelper.JsonOptions);
-        createResp.StatusCode.Should().Be(HttpStatusCode.OK);
+        createResp.StatusCode.Should().Be(HttpStatusCode.Created);
         var created = await createResp.Content.ReadFromJsonAsync<AddressResponseDto>(TestHelper.JsonOptions);
         created.Should().NotBeNull();
 

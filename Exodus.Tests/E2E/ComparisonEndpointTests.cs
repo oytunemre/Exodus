@@ -135,7 +135,7 @@ public class ComparisonEndpointTests : IClassFixture<CustomWebApplicationFactory
 
         var response = await client.DeleteAsync($"/api/comparison/{comparisonId}");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
     [Fact]

@@ -88,7 +88,7 @@ public class RecentlyViewedEndpointTests : IClassFixture<CustomWebApplicationFac
 
         var response = await client.DeleteAsync("/api/recentlyviewed");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
     [Fact]
@@ -105,6 +105,6 @@ public class RecentlyViewedEndpointTests : IClassFixture<CustomWebApplicationFac
         // Remove specific
         var response = await client.DeleteAsync($"/api/recentlyviewed/{productId}");
 
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 }

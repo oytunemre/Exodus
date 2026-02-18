@@ -88,7 +88,7 @@ public class SupportEndpointTests : IClassFixture<CustomWebApplicationFactory>
         createResp.StatusCode.Should().Be(HttpStatusCode.Created);
         var content = await createResp.Content.ReadAsStringAsync();
         var created = JsonDocument.Parse(content).RootElement;
-        var ticketId = created.GetProperty("id").GetInt32();
+        var ticketId = created.GetProperty("ticketId").GetInt32();
 
         var response = await client.GetAsync($"/api/support/tickets/{ticketId}");
 
@@ -111,7 +111,7 @@ public class SupportEndpointTests : IClassFixture<CustomWebApplicationFactory>
         var createResp = await client.PostAsJsonAsync("/api/support/tickets", createDto, TestHelper.JsonOptions);
         var content = await createResp.Content.ReadAsStringAsync();
         var created = JsonDocument.Parse(content).RootElement;
-        var ticketId = created.GetProperty("id").GetInt32();
+        var ticketId = created.GetProperty("ticketId").GetInt32();
 
         // Reply
         var replyDto = new { Message = "Follow-up message" };
@@ -136,7 +136,7 @@ public class SupportEndpointTests : IClassFixture<CustomWebApplicationFactory>
         var createResp = await client.PostAsJsonAsync("/api/support/tickets", createDto, TestHelper.JsonOptions);
         var content = await createResp.Content.ReadAsStringAsync();
         var created = JsonDocument.Parse(content).RootElement;
-        var ticketId = created.GetProperty("id").GetInt32();
+        var ticketId = created.GetProperty("ticketId").GetInt32();
 
         // Close
         var closeDto = new { SatisfactionRating = 5, SatisfactionComment = "Great support!" };
