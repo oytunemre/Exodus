@@ -134,8 +134,8 @@ public class AdminPaymentEndpointTests : IClassFixture<CustomWebApplicationFacto
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var content = await response.Content.ReadAsStringAsync();
-        content.Should().Contain("Items");
-        content.Should().Contain("TotalCount");
+        content.Should().Contain("items");
+        content.Should().Contain("totalCount");
     }
 
     [Fact]
@@ -178,8 +178,8 @@ public class AdminPaymentEndpointTests : IClassFixture<CustomWebApplicationFacto
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var content = await response.Content.ReadAsStringAsync();
-        content.Should().Contain("Payment");
-        content.Should().Contain("Events");
+        content.Should().Contain("payment");
+        content.Should().Contain("events");
     }
 
     // ==========================================
@@ -227,7 +227,7 @@ public class AdminPaymentEndpointTests : IClassFixture<CustomWebApplicationFacto
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var content = await response.Content.ReadAsStringAsync();
-        content.Should().Contain("Items");
+        content.Should().Contain("items");
     }
 
     // ==========================================
@@ -244,9 +244,9 @@ public class AdminPaymentEndpointTests : IClassFixture<CustomWebApplicationFacto
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var content = await response.Content.ReadAsStringAsync();
-        content.Should().Contain("Total");
-        content.Should().Contain("Successful");
-        content.Should().Contain("Failed");
+        content.Should().Contain("total");
+        content.Should().Contain("successful");
+        content.Should().Contain("failed");
     }
 
     [Fact]

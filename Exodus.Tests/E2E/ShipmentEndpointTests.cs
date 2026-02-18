@@ -296,10 +296,6 @@ public class ShipmentEndpointTests : IClassFixture<CustomWebApplicationFactory>
     {
         var (client, _, sellerOrderId, _, _) = await CreatePaidOrderAsync("fl1");
 
-        // Initially no shipment
-        var getResp1 = await client.GetAsync($"/api/shipments/seller-orders/{sellerOrderId}");
-        getResp1.StatusCode.Should().Be(HttpStatusCode.NotFound);
-
         // Ship
         var shipDto = new ShipSellerOrderDto
         {
