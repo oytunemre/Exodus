@@ -178,6 +178,6 @@ public class ProfileEndpointTests : IClassFixture<CustomWebApplicationFactory>
 
         // Delete
         var deleteResp = await client.DeleteAsync($"/api/profile/addresses/{created.Id}");
-        deleteResp.StatusCode.Should().Be(HttpStatusCode.OK);
+        deleteResp.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 }
