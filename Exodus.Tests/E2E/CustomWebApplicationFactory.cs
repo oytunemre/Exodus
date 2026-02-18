@@ -5,6 +5,7 @@ using Exodus.Services.PaymentGateway;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -55,6 +56,8 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             services.AddDbContext<ApplicationDbContext>(options =>
             {
                 options.UseInMemoryDatabase(dbName);
+                options.ConfigureWarnings(w =>
+                    w.Ignore(InMemoryEventId.TransactionIgnoredWarning));
             });
 
             // Re-add a simple health check (without DB check)

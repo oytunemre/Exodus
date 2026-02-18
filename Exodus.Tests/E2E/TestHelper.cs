@@ -61,12 +61,14 @@ public static class TestHelper
             new AuthenticationHeaderValue("Bearer", token);
     }
 
-    public static async Task<AuthResponseDto> RegisterAndLoginAsAdminAsync(HttpClient client)
+    public static async Task<AuthResponseDto> RegisterAndLoginAsAdminAsync(
+        HttpClient client,
+        string suffix = "")
     {
         var auth = await RegisterUserAsync(client,
-            name: "Admin User",
-            email: "admin@example.com",
-            username: "adminuser",
+            name: "Admin User" + suffix,
+            email: $"admin{suffix}@example.com",
+            username: $"adminuser{suffix}",
             password: "Admin123!@#",
             role: UserRole.Admin);
         SetAuthToken(client, auth.Token!);

@@ -39,7 +39,7 @@ public class CategoryEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task AdminCreateCategory_WithValidData_ReturnsCreated()
     {
         var client = _factory.CreateClient();
-        await TestHelper.RegisterAndLoginAsAdminAsync(client);
+        await TestHelper.RegisterAndLoginAsAdminAsync(client, "cat1");
 
         var dto = new CreateCategoryDto
         {
@@ -92,7 +92,7 @@ public class CategoryEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task AdminCreateSubCategory_WithParent_ReturnsCreatedWithParent()
     {
         var client = _factory.CreateClient();
-        await TestHelper.RegisterAndLoginAsAdminAsync(client);
+        await TestHelper.RegisterAndLoginAsAdminAsync(client, "catsub");
 
         // Create parent category
         var parentDto = new CreateCategoryDto
@@ -121,7 +121,7 @@ public class CategoryEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task GetCategoryById_WithValidId_ReturnsCategory()
     {
         var client = _factory.CreateClient();
-        await TestHelper.RegisterAndLoginAsAdminAsync(client);
+        await TestHelper.RegisterAndLoginAsAdminAsync(client, "catget");
 
         var dto = new CreateCategoryDto
         {
@@ -144,7 +144,7 @@ public class CategoryEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task AdminUpdateCategory_WithValidData_ReturnsUpdated()
     {
         var client = _factory.CreateClient();
-        await TestHelper.RegisterAndLoginAsAdminAsync(client);
+        await TestHelper.RegisterAndLoginAsAdminAsync(client, "catupd");
 
         var createDto = new CreateCategoryDto
         {
@@ -171,7 +171,7 @@ public class CategoryEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task AdminDeleteCategory_ReturnsNoContent()
     {
         var client = _factory.CreateClient();
-        await TestHelper.RegisterAndLoginAsAdminAsync(client);
+        await TestHelper.RegisterAndLoginAsAdminAsync(client, "catdel");
 
         var dto = new CreateCategoryDto
         {
@@ -189,7 +189,7 @@ public class CategoryEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task AdminToggleCategoryActive_TogglesStatus()
     {
         var client = _factory.CreateClient();
-        await TestHelper.RegisterAndLoginAsAdminAsync(client);
+        await TestHelper.RegisterAndLoginAsAdminAsync(client, "cattog");
 
         var dto = new CreateCategoryDto
         {
@@ -210,7 +210,7 @@ public class CategoryEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task GetSubCategories_ReturnsChildCategories()
     {
         var client = _factory.CreateClient();
-        await TestHelper.RegisterAndLoginAsAdminAsync(client);
+        await TestHelper.RegisterAndLoginAsAdminAsync(client, "catsubs");
 
         // Create parent
         var parentDto = new CreateCategoryDto { Name = "SubCat Parent" };
