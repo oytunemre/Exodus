@@ -550,7 +550,7 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var events = await response.Content.ReadFromJsonAsync<List<PaymentEventDto>>(TestHelper.JsonOptions);
         events.Should().NotBeNull();
-        events!.Count.Should().BeGreaterOrEqualTo(2);
+        events!.Count.Should().BeGreaterThanOrEqualTo(2);
     }
 
     [Fact]
@@ -819,7 +819,7 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
         // Verify events logged
         var eventsResp = await client.GetAsync($"/api/payment/intents/{created.Id}/events");
         var events = await eventsResp.Content.ReadFromJsonAsync<List<PaymentEventDto>>(TestHelper.JsonOptions);
-        events!.Count.Should().BeGreaterOrEqualTo(3); // created, authorized, captured
+        events!.Count.Should().BeGreaterThanOrEqualTo(3); // created, authorized, captured
     }
 
     [Fact]
