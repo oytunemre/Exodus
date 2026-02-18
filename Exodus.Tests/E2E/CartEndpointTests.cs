@@ -244,7 +244,11 @@ public class CartEndpointTests : IClassFixture<CustomWebApplicationFactory>
             $"/api/cart/{customer.UserId}/item/{cartItemId}");
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var updatedCart = await response.Content.ReadFromJsonAsync<CartResponseDto>(TestHelper.JsonOptions);
+
+        // Verify via a fresh GET request (new DbContext scope avoids
+        // change-tracker including the soft-deleted entity)
+        var getResp = await client.GetAsync($"/api/cart/{customer.UserId}");
+        var updatedCart = await getResp.Content.ReadFromJsonAsync<CartResponseDto>(TestHelper.JsonOptions);
         updatedCart!.Items.Should().BeEmpty();
         updatedCart.CartTotal.Should().Be(0);
     }
