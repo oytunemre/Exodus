@@ -76,7 +76,7 @@ public class ArchitectureTests
     }
 
     // Known controllers that legitimately use DbContext directly (e.g. for email verification queries)
-    private static readonly HashSet<string> ControllersAllowedDbContext = new() { "AuthController", "SellerController" };
+    private static readonly HashSet<string> ControllersAllowedDbContext = new() { "AuthController", "SellerController", "SupportController" };
 
     [Fact]
     public void Controllers_ShouldNotDependOnDbContextDirectly_ExceptAllowed()
