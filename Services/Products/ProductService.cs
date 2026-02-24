@@ -54,6 +54,9 @@ public class ProductService : IProductService
         {
             ProductName = dto.ProductName,
             ProductDescription = dto.ProductDescription,
+            Brand = dto.Brand,
+            Manufacturer = dto.Manufacturer,
+            CategoryId = dto.CategoryId,
             Barcodes = barcodes.Select(b => new ProductBarcode { Barcode = b }).ToList()
         };
 
@@ -86,6 +89,9 @@ public class ProductService : IProductService
 
         product.ProductName = dto.ProductName;
         product.ProductDescription = dto.ProductDescription;
+        product.Brand = dto.Brand;
+        product.Manufacturer = dto.Manufacturer;
+        product.CategoryId = dto.CategoryId;
 
         // 1) listede olmayan aktif barkodları soft delete
         var keep = barcodes.ToHashSet(StringComparer.OrdinalIgnoreCase);
@@ -154,6 +160,9 @@ public class ProductService : IProductService
             Id = p.Id,
             ProductName = p.ProductName,
             ProductDescription = p.ProductDescription,
+            Brand = p.Brand,
+            Manufacturer = p.Manufacturer,
+            CategoryId = p.CategoryId,
             Barcodes = p.Barcodes.Select(b => b.Barcode).ToList()
         };
     }
