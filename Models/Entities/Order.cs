@@ -7,7 +7,7 @@ namespace Exodus.Models.Entities
     public class Order : BaseEntity
     {
         [Required]
-        [StringLength(20)]
+        [StringLength(25)]
         public required string OrderNumber { get; set; }
 
         public int BuyerId { get; set; }
