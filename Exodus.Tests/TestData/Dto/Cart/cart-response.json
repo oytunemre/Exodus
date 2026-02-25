@@ -1,0 +1,18 @@
+{
+  "cartId": 1,
+  "userId": 1,
+  "cartTotal": 109999.98,
+  "items": [
+    {
+      "cartItemId": 1,
+      "listingId": 1,
+      "productId": 1,
+      "productName": "iPhone 15 Pro",
+      "categoryId": null,
+      "sellerId": 1,
+      "unitPrice": 54999.99,
+      "quantity": 2,
+      "lineTotal": 109999.98
+    }
+  ]
+}

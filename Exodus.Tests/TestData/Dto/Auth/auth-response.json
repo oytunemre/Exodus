@@ -1,0 +1,12 @@
+{
+  "userId": 1,
+  "name": "Test User",
+  "email": "test@example.com",
+  "username": "testuser",
+  "role": 0,
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.sample",
+  "expiresAt": "2026-02-25T12:00:00Z",
+  "refreshToken": "sample-refresh-token-here",
+  "refreshTokenExpiresAt": "2026-03-25T12:00:00Z",
+  "twoFactorRequired": false
+}

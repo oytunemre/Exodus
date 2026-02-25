@@ -1,0 +1,12 @@
+{
+  "title": "Home",
+  "fullName": "Test User",
+  "phone": "+905551234567",
+  "city": "Istanbul",
+  "district": "Kadikoy",
+  "neighborhood": "Moda",
+  "addressLine": "Test Sokak No: 1",
+  "postalCode": "34710",
+  "isDefault": true,
+  "type": 0
+}
