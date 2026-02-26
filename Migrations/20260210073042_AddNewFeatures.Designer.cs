@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Exodus.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260210073042_AddNewFeatures")]
     partial class AddNewFeatures
     {
         /// <inheritdoc />

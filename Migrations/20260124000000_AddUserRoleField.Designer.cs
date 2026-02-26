@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Exodus.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260124000000_AddUserRoleField")]
     partial class AddUserRoleField
     {
         /// <inheritdoc />

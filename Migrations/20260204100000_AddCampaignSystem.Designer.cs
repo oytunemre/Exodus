@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Exodus.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260204100000_AddCampaignSystem")]
     partial class AddCampaignSystem
     {
         /// <inheritdoc />

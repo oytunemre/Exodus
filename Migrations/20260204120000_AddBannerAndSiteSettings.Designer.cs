@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Exodus.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260204120000_AddBannerAndSiteSettings")]
     partial class AddBannerAndSiteSettings
     {
         /// <inheritdoc />

@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Exodus.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260226000001_AddOrderNumberAndMissingOrderFields")]
     partial class AddOrderNumberAndMissingOrderFields
     {
         /// <inheritdoc />
