@@ -409,15 +409,34 @@ public class PaymentService : IPaymentService
         var order = await _db.Orders.FindAsync(new object[] { orderId }, ct);
         if (order == null) return;
 
+        OrderStatus newStatus;
+        string eventTitle;
+        string eventDescription;
+
         if (success)
         {
             order.Status = OrderStatus.Processing;
             order.PaidAt = DateTime.UtcNow;
+            newStatus = OrderStatus.Processing;
+            eventTitle = "Ödeme Alındı";
+            eventDescription = "Ödemeniz başarıyla alındı. Siparişiniz işleme alındı.";
         }
         else
         {
             order.Status = OrderStatus.Failed;
+            newStatus = OrderStatus.Failed;
+            eventTitle = "Ödeme Başarısız";
+            eventDescription = "Ödeme işlemi gerçekleştirilemedi.";
         }
+
+        _db.OrderEvents.Add(new OrderEvent
+        {
+            OrderId = orderId,
+            Status = newStatus,
+            Title = eventTitle,
+            Description = eventDescription,
+            UserType = "System"
+        });
 
         await _db.SaveChangesAsync(ct);
     }
