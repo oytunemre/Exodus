@@ -117,40 +117,34 @@ namespace Exodus.Migrations
                     CREATE UNIQUE INDEX IX_Orders_OrderNumber ON Orders(OrderNumber)
                 END");
 
-            // Create OrderEvents table
-            migrationBuilder.CreateTable(
-                name: "OrderEvents",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    OrderId = table.Column<int>(type: "int", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
-                    Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
-                    UserId = table.Column<int>(type: "int", nullable: true),
-                    UserType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    Metadata = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    DeletedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_OrderEvents", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_OrderEvents_Orders_OrderId",
-                        column: x => x.OrderId,
-                        principalTable: "Orders",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+            // Create OrderEvents table - conditional
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE object_id = OBJECT_ID(N'OrderEvents') AND type = N'U')
+                BEGIN
+                    CREATE TABLE OrderEvents (
+                        Id int IDENTITY(1,1) NOT NULL,
+                        OrderId int NOT NULL,
+                        Status nvarchar(30) NOT NULL,
+                        Title nvarchar(200) NOT NULL,
+                        Description nvarchar(1000) NULL,
+                        UserId int NULL,
+                        UserType nvarchar(50) NULL,
+                        Metadata nvarchar(2000) NULL,
+                        IsDeleted bit NOT NULL,
+                        DeletedDate datetime2 NULL,
+                        CreatedAt datetime2 NOT NULL,
+                        UpdatedAt datetime2 NOT NULL,
+                        CONSTRAINT PK_OrderEvents PRIMARY KEY (Id),
+                        CONSTRAINT FK_OrderEvents_Orders_OrderId FOREIGN KEY (OrderId)
+                            REFERENCES Orders(Id) ON DELETE CASCADE
+                    )
+                END");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_OrderEvents_OrderId",
-                table: "OrderEvents",
-                column: "OrderId");
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_OrderEvents_OrderId' AND object_id = OBJECT_ID('OrderEvents'))
+                BEGIN
+                    CREATE INDEX IX_OrderEvents_OrderId ON OrderEvents(OrderId)
+                END");
         }
 
         /// <inheritdoc />
