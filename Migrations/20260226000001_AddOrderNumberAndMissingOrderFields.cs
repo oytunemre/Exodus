@@ -12,157 +12,110 @@ namespace Exodus.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Drop old Total column (replaced by TotalAmount)
-            migrationBuilder.DropColumn(
-                name: "Total",
-                table: "Orders");
+            // Drop old Total column (replaced by TotalAmount) - conditional in case it was already removed
+            migrationBuilder.Sql(@"
+                IF EXISTS (
+                    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_NAME = 'Orders' AND COLUMN_NAME = 'Total'
+                )
+                BEGIN
+                    ALTER TABLE Orders DROP COLUMN Total
+                END");
 
-            // Add OrderNumber (nvarchar(50))
-            migrationBuilder.AddColumn<string>(
-                name: "OrderNumber",
-                table: "Orders",
-                type: "nvarchar(50)",
-                maxLength: 50,
-                nullable: false,
-                defaultValue: "LEGACY-0");
+            // Add OrderNumber (nvarchar(50)) - conditional
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Orders' AND COLUMN_NAME = 'OrderNumber')
+                BEGIN
+                    ALTER TABLE Orders ADD OrderNumber nvarchar(50) NOT NULL DEFAULT 'LEGACY-0'
+                END");
 
-            // Add financial columns
-            migrationBuilder.AddColumn<decimal>(
-                name: "SubTotal",
-                table: "Orders",
-                type: "decimal(18,2)",
-                nullable: false,
-                defaultValue: 0m);
+            // Add financial columns - conditional
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Orders' AND COLUMN_NAME = 'SubTotal')
+                BEGIN ALTER TABLE Orders ADD SubTotal decimal(18,2) NOT NULL DEFAULT 0 END");
 
-            migrationBuilder.AddColumn<decimal>(
-                name: "ShippingCost",
-                table: "Orders",
-                type: "decimal(18,2)",
-                nullable: false,
-                defaultValue: 0m);
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Orders' AND COLUMN_NAME = 'ShippingCost')
+                BEGIN ALTER TABLE Orders ADD ShippingCost decimal(18,2) NOT NULL DEFAULT 0 END");
 
-            migrationBuilder.AddColumn<decimal>(
-                name: "TaxAmount",
-                table: "Orders",
-                type: "decimal(18,2)",
-                nullable: false,
-                defaultValue: 0m);
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Orders' AND COLUMN_NAME = 'TaxAmount')
+                BEGIN ALTER TABLE Orders ADD TaxAmount decimal(18,2) NOT NULL DEFAULT 0 END");
 
-            migrationBuilder.AddColumn<decimal>(
-                name: "DiscountAmount",
-                table: "Orders",
-                type: "decimal(18,2)",
-                nullable: false,
-                defaultValue: 0m);
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Orders' AND COLUMN_NAME = 'DiscountAmount')
+                BEGIN ALTER TABLE Orders ADD DiscountAmount decimal(18,2) NOT NULL DEFAULT 0 END");
 
-            migrationBuilder.AddColumn<decimal>(
-                name: "TotalAmount",
-                table: "Orders",
-                type: "decimal(18,2)",
-                nullable: false,
-                defaultValue: 0m);
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Orders' AND COLUMN_NAME = 'TotalAmount')
+                BEGIN ALTER TABLE Orders ADD TotalAmount decimal(18,2) NOT NULL DEFAULT 0 END");
 
-            migrationBuilder.AddColumn<string>(
-                name: "Currency",
-                table: "Orders",
-                type: "nvarchar(3)",
-                maxLength: 3,
-                nullable: false,
-                defaultValue: "TRY");
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Orders' AND COLUMN_NAME = 'Currency')
+                BEGIN ALTER TABLE Orders ADD Currency nvarchar(3) NOT NULL DEFAULT 'TRY' END");
 
-            // Add address snapshot columns
-            migrationBuilder.AddColumn<int>(
-                name: "ShippingAddressId",
-                table: "Orders",
-                type: "int",
-                nullable: true);
+            // Add address snapshot columns - conditional
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Orders' AND COLUMN_NAME = 'ShippingAddressId')
+                BEGIN ALTER TABLE Orders ADD ShippingAddressId int NULL END");
 
-            migrationBuilder.AddColumn<string>(
-                name: "ShippingAddressSnapshot",
-                table: "Orders",
-                type: "nvarchar(500)",
-                maxLength: 500,
-                nullable: true);
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Orders' AND COLUMN_NAME = 'ShippingAddressSnapshot')
+                BEGIN ALTER TABLE Orders ADD ShippingAddressSnapshot nvarchar(500) NULL END");
 
-            migrationBuilder.AddColumn<int>(
-                name: "BillingAddressId",
-                table: "Orders",
-                type: "int",
-                nullable: true);
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Orders' AND COLUMN_NAME = 'BillingAddressId')
+                BEGIN ALTER TABLE Orders ADD BillingAddressId int NULL END");
 
-            migrationBuilder.AddColumn<string>(
-                name: "BillingAddressSnapshot",
-                table: "Orders",
-                type: "nvarchar(500)",
-                maxLength: 500,
-                nullable: true);
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Orders' AND COLUMN_NAME = 'BillingAddressSnapshot')
+                BEGIN ALTER TABLE Orders ADD BillingAddressSnapshot nvarchar(500) NULL END");
 
-            // Add note columns
-            migrationBuilder.AddColumn<string>(
-                name: "CustomerNote",
-                table: "Orders",
-                type: "nvarchar(1000)",
-                maxLength: 1000,
-                nullable: true);
+            // Add note columns - conditional
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Orders' AND COLUMN_NAME = 'CustomerNote')
+                BEGIN ALTER TABLE Orders ADD CustomerNote nvarchar(1000) NULL END");
 
-            migrationBuilder.AddColumn<string>(
-                name: "AdminNote",
-                table: "Orders",
-                type: "nvarchar(1000)",
-                maxLength: 1000,
-                nullable: true);
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Orders' AND COLUMN_NAME = 'AdminNote')
+                BEGIN ALTER TABLE Orders ADD AdminNote nvarchar(1000) NULL END");
 
-            // Add cancellation columns
-            migrationBuilder.AddColumn<int>(
-                name: "CancellationReason",
-                table: "Orders",
-                type: "int",
-                nullable: true);
+            // Add cancellation columns - conditional
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Orders' AND COLUMN_NAME = 'CancellationReason')
+                BEGIN ALTER TABLE Orders ADD CancellationReason int NULL END");
 
-            migrationBuilder.AddColumn<string>(
-                name: "CancellationNote",
-                table: "Orders",
-                type: "nvarchar(500)",
-                maxLength: 500,
-                nullable: true);
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Orders' AND COLUMN_NAME = 'CancellationNote')
+                BEGIN ALTER TABLE Orders ADD CancellationNote nvarchar(500) NULL END");
 
-            migrationBuilder.AddColumn<DateTime>(
-                name: "CancelledAt",
-                table: "Orders",
-                type: "datetime2",
-                nullable: true);
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Orders' AND COLUMN_NAME = 'CancelledAt')
+                BEGIN ALTER TABLE Orders ADD CancelledAt datetime2 NULL END");
 
-            // Add timestamp columns
-            migrationBuilder.AddColumn<DateTime>(
-                name: "PaidAt",
-                table: "Orders",
-                type: "datetime2",
-                nullable: true);
+            // Add timestamp columns - conditional
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Orders' AND COLUMN_NAME = 'PaidAt')
+                BEGIN ALTER TABLE Orders ADD PaidAt datetime2 NULL END");
 
-            migrationBuilder.AddColumn<DateTime>(
-                name: "ShippedAt",
-                table: "Orders",
-                type: "datetime2",
-                nullable: true);
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Orders' AND COLUMN_NAME = 'ShippedAt')
+                BEGIN ALTER TABLE Orders ADD ShippedAt datetime2 NULL END");
 
-            migrationBuilder.AddColumn<DateTime>(
-                name: "DeliveredAt",
-                table: "Orders",
-                type: "datetime2",
-                nullable: true);
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Orders' AND COLUMN_NAME = 'DeliveredAt')
+                BEGIN ALTER TABLE Orders ADD DeliveredAt datetime2 NULL END");
 
-            migrationBuilder.AddColumn<DateTime>(
-                name: "CompletedAt",
-                table: "Orders",
-                type: "datetime2",
-                nullable: true);
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Orders' AND COLUMN_NAME = 'CompletedAt')
+                BEGIN ALTER TABLE Orders ADD CompletedAt datetime2 NULL END");
 
-            // Add unique index on OrderNumber
-            migrationBuilder.CreateIndex(
-                name: "IX_Orders_OrderNumber",
-                table: "Orders",
-                column: "OrderNumber",
-                unique: true);
+            // Add unique index on OrderNumber - conditional
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Orders_OrderNumber' AND object_id = OBJECT_ID('Orders'))
+                BEGIN
+                    CREATE UNIQUE INDEX IX_Orders_OrderNumber ON Orders(OrderNumber)
+                END");
 
             // Create OrderEvents table
             migrationBuilder.CreateTable(
