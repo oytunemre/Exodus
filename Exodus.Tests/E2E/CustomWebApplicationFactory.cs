@@ -57,7 +57,10 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             {
                 options.UseInMemoryDatabase(dbName);
                 options.ConfigureWarnings(w =>
-                    w.Ignore(InMemoryEventId.TransactionIgnoredWarning));
+                {
+                    w.Ignore(InMemoryEventId.TransactionIgnoredWarning);
+                    w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning);
+                });
             });
 
             // Re-add a simple health check (without DB check)
