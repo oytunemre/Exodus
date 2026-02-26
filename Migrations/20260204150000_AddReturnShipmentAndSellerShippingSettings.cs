@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Exodus.Migrations
 {
     /// <inheritdoc />
+    [Migration("20260204150000_AddReturnShipmentAndSellerShippingSettings")]
     public partial class AddReturnShipmentAndSellerShippingSettings : Migration
     {
         /// <inheritdoc />

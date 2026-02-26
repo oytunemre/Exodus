@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Exodus.Migrations
 {
     /// <inheritdoc />
+    [Migration("20260124000000_AddUserRoleField")]
     public partial class AddUserRoleField : Migration
     {
         /// <inheritdoc />

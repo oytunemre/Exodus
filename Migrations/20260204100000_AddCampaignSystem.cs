@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Exodus.Migrations
 {
     /// <inheritdoc />
+    [Migration("20260204100000_AddCampaignSystem")]
     public partial class AddCampaignSystem : Migration
     {
         /// <inheritdoc />

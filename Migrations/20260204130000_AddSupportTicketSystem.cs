@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Exodus.Migrations
 {
     /// <inheritdoc />
+    [Migration("20260204130000_AddSupportTicketSystem")]
     public partial class AddSupportTicketSystem : Migration
     {
         /// <inheritdoc />

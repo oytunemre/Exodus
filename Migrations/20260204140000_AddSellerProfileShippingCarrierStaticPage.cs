@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Exodus.Migrations
 {
     /// <inheritdoc />
+    [Migration("20260204140000_AddSellerProfileShippingCarrierStaticPage")]
     public partial class AddSellerProfileShippingCarrierStaticPage : Migration
     {
         /// <inheritdoc />

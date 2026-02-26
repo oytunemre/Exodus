@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Exodus.Migrations
 {
     /// <inheritdoc />
+    [Migration("20260204120000_AddBannerAndSiteSettings")]
     public partial class AddBannerAndSiteSettings : Migration
     {
         /// <inheritdoc />

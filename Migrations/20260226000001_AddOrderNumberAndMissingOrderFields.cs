@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Exodus.Migrations
 {
     /// <inheritdoc />
+    [Migration("20260226000001_AddOrderNumberAndMissingOrderFields")]
     public partial class AddOrderNumberAndMissingOrderFields : Migration
     {
         /// <inheritdoc />
