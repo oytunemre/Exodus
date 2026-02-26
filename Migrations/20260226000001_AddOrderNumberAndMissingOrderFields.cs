@@ -29,6 +29,17 @@ namespace Exodus.Migrations
                     ALTER TABLE Orders ADD OrderNumber nvarchar(50) NOT NULL DEFAULT 'LEGACY-0'
                 END");
 
+            // Ensure OrderNumber column is at least nvarchar(50) in case it existed with a smaller length
+            migrationBuilder.Sql(@"
+                IF EXISTS (
+                    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_NAME = 'Orders' AND COLUMN_NAME = 'OrderNumber'
+                    AND (CHARACTER_MAXIMUM_LENGTH IS NULL OR CHARACTER_MAXIMUM_LENGTH < 50)
+                )
+                BEGIN
+                    ALTER TABLE Orders ALTER COLUMN OrderNumber nvarchar(50) NOT NULL
+                END");
+
             // Add financial columns - conditional
             migrationBuilder.Sql(@"
                 IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Orders' AND COLUMN_NAME = 'SubTotal')
