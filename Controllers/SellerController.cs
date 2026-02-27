@@ -25,14 +25,17 @@ public class SellerController : ControllerBase
         User.IsInRole("Admin") || GetCurrentUserId() == sellerId;
 
     // 1) Satıcı siparişleri
+    // Admin: sellerId path param'ını kullanır. Seller: kendi JWT userId'sini kullanır.
     [HttpGet("{sellerId:int}/orders")]
     public async Task<IActionResult> GetSellerOrders(int sellerId)
     {
-        if (!IsAdminOrOwner(sellerId))
+        var effectiveSellerId = User.IsInRole("Admin") ? sellerId : GetCurrentUserId();
+
+        if (!IsAdminOrOwner(effectiveSellerId))
             return Forbid();
 
         var list = await _db.SellerOrders
-            .Where(x => x.SellerId == sellerId)
+            .Where(x => x.SellerId == effectiveSellerId)
             .Include(x => x.Items)
             .Include(x => x.Shipment)
             .OrderByDescending(x => x.CreatedAt)
