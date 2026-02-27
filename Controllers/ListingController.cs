@@ -1,4 +1,5 @@
-﻿using Exodus.Models.Dto.ListingDto;
+﻿using System.Security.Claims;
+using Exodus.Models.Dto.ListingDto;
 using Exodus.Services.Listings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -28,8 +29,15 @@ public class ListingController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "Admin,Seller")]
-    public async Task<IActionResult> Create([FromBody] AddListingDto dto) // <-- AddListingDto
-        => Ok(await _service.CreateAsync(dto));
+    public async Task<IActionResult> Create([FromBody] AddListingDto dto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
+        dto.SellerId = userId;
+        return Ok(await _service.CreateAsync(dto));
+    }
 
     [HttpPut("{id:int}")]
     [Authorize(Roles = "Admin,Seller")]
