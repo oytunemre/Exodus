@@ -287,14 +287,6 @@ app.MapHealthChecks("/health/ready");
 app.MapControllers();
 
 // --------------------
-// SEED (Build'den sonra, Run'dan önce)
-// --------------------
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    // await DbSeeder.SeedAsync(db);
-}
-
 app.Run();
 
 // Required for WebApplicationFactory in integration tests
