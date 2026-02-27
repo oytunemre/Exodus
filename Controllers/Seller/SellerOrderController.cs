@@ -57,19 +57,6 @@ namespace Exodus.Controllers.Seller
             return Ok(new { Message = "Order confirmed successfully" });
         }
 
-        /// <summary>
-        /// Mark seller order as shipped
-        /// </summary>
-        [HttpPost("{sellerOrderId:int}/ship")]
-        public async Task<ActionResult> ShipOrder(int sellerOrderId, [FromBody] ShipOrderDto dto)
-        {
-            var sellerId = GetCurrentUserId();
-            // First update status
-            await _orderService.UpdateSellerOrderStatusAsync(sellerId, sellerOrderId, OrderStatus.Shipped);
-            // TODO: Create shipment with tracking info
-            return Ok(new { Message = "Order marked as shipped" });
-        }
-
         private int GetCurrentUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -82,11 +69,5 @@ namespace Exodus.Controllers.Seller
     public class UpdateSellerOrderStatusDto
     {
         public OrderStatus Status { get; set; }
-    }
-
-    public class ShipOrderDto
-    {
-        public string? Carrier { get; set; }
-        public string? TrackingNumber { get; set; }
     }
 }
