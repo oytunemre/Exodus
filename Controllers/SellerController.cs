@@ -24,14 +24,6 @@ public class SellerController : ControllerBase
     private bool IsAdminOrOwner(int sellerId) =>
         User.IsInRole("Admin") || GetCurrentUserId() == sellerId;
 
-    // DEBUG - JWT claim doğrulama (geçici)
-    [HttpGet("debug/me")]
-    public IActionResult DebugMe()
-    {
-        var claims = User.Claims.Select(c => new { c.Type, c.Value });
-        return Ok(new { currentUserId = GetCurrentUserId(), claims });
-    }
-
     // 1) Satıcı siparişleri
     // Admin: sellerId path param'ını kullanır. Seller: kendi JWT userId'sini kullanır.
     [HttpGet("{sellerId:int}/orders")]
