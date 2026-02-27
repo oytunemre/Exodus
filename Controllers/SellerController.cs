@@ -6,6 +6,7 @@ using Exodus.Services.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Exodus.Controllers;
 
@@ -17,10 +18,19 @@ public class SellerController : ControllerBase
     private readonly ApplicationDbContext _db;
     public SellerController(ApplicationDbContext db) => _db = db;
 
+    private int GetCurrentUserId() =>
+        int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+    private bool IsAdminOrOwner(int sellerId) =>
+        User.IsInRole("Admin") || GetCurrentUserId() == sellerId;
+
     // 1) Satıcı siparişleri
     [HttpGet("{sellerId:int}/orders")]
     public async Task<IActionResult> GetSellerOrders(int sellerId)
     {
+        if (!IsAdminOrOwner(sellerId))
+            return Forbid();
+
         var list = await _db.SellerOrders
             .Where(x => x.SellerId == sellerId)
             .Include(x => x.Items)
@@ -71,6 +81,9 @@ public class SellerController : ControllerBase
 
         if (so is null) throw new NotFoundException("SellerOrder not found.");
 
+        if (!IsAdminOrOwner(so.SellerId))
+            return Forbid();
+
         // Eğer shipment yoksa oluştur
         so.Shipment ??= new Models.Entities.Shipment { SellerOrderId = so.Id };
 
@@ -98,6 +111,10 @@ public class SellerController : ControllerBase
             .FirstOrDefaultAsync(x => x.Id == sellerOrderId);
 
         if (so is null) throw new NotFoundException("SellerOrder not found.");
+
+        if (!IsAdminOrOwner(so.SellerId))
+            return Forbid();
+
         if (so.Shipment is null) throw new BadRequestException("Shipment yok. Önce ship yap.");
 
         if (so.Shipment.Status != ShipmentStatus.Shipped)
