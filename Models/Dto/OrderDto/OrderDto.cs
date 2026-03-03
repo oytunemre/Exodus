@@ -42,7 +42,8 @@ namespace Exodus.Models.Dto
 
     public class SellerOrderDto
     {
-        public int Id { get; set; }
+        public int Id { get; set; }         // SellerOrder.Id — endpoint'lerde bunu kullan
+        public int OrderId { get; set; }    // parent Order.Id
         public int SellerId { get; set; }
         public string SellerName { get; set; } = string.Empty;
         public OrderStatus Status { get; set; }

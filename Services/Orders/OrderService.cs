@@ -465,6 +465,7 @@ namespace Exodus.Services.Orders
             return sellerOrders.Select(so => new SellerOrderDto
             {
                 Id = so.Id,
+                OrderId = so.OrderId,
                 SellerId = so.SellerId,
                 SellerName = so.Seller?.Name ?? "Unknown Seller",
                 Status = MapSellerStatusToOrderStatus(so.Status),
@@ -590,6 +591,7 @@ namespace Exodus.Services.Orders
                 SellerOrders = order.SellerOrders.Select(so => new SellerOrderDto
                 {
                     Id = so.Id,
+                    OrderId = so.OrderId,
                     SellerId = so.SellerId,
                     SellerName = so.Seller?.Name ?? "",
                     Status = MapSellerStatusToOrderStatus(so.Status),
