@@ -16,6 +16,7 @@ namespace Exodus.Services.Orders
 
         // Order Status
         Task<OrderDetailResponseDto> UpdateStatusAsync(int orderId, OrderStatus newStatus, int? userId = null, string? note = null);
+        Task<OrderDetailResponseDto> CompleteOrderAsync(int userId, int orderId);
         Task<OrderDetailResponseDto> CancelOrderAsync(int userId, int orderId, CancelOrderDto dto);
 
         // Refunds

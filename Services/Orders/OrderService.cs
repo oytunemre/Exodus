@@ -290,6 +290,32 @@ namespace Exodus.Services.Orders
             return await GetByIdAsync(order.BuyerId, orderId);
         }
 
+        public async Task<OrderDetailResponseDto> CompleteOrderAsync(int userId, int orderId)
+        {
+            var order = await _db.Orders
+                .Include(o => o.OrderEvents)
+                .FirstOrDefaultAsync(o => o.Id == orderId && o.BuyerId == userId);
+
+            if (order == null)
+                throw new NotFoundException("Sipariş bulunamadı.");
+
+            if (order.Status != OrderStatus.Delivered)
+                throw new BadRequestException("Yalnızca teslim edilmiş siparişler tamamlanabilir.");
+
+            order.Status = OrderStatus.Completed;
+            order.CompletedAt = DateTime.UtcNow;
+
+            await AddOrderEventAsync(orderId, OrderStatus.Completed, "Sipariş Tamamlandı", "Alıcı siparişi tamamladı.", userId, "Buyer");
+            await _db.SaveChangesAsync();
+
+            await _notificationService.SendOrderUpdateAsync(
+                order.BuyerId, orderId,
+                "Sipariş Tamamlandı",
+                $"#{order.OrderNumber} numaralı siparişiniz tamamlandı.");
+
+            return await GetByIdAsync(userId, orderId);
+        }
+
         public async Task<OrderDetailResponseDto> CancelOrderAsync(int userId, int orderId, CancelOrderDto dto)
         {
             var order = await _db.Orders

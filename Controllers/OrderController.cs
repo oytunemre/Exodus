@@ -69,6 +69,17 @@ namespace Exodus.Controllers
         }
 
         /// <summary>
+        /// Complete order (buyer confirms receipt)
+        /// </summary>
+        [HttpPost("{id:int}/complete")]
+        public async Task<ActionResult<OrderDetailResponseDto>> CompleteOrder(int id)
+        {
+            var userId = GetCurrentUserId();
+            var order = await _orderService.CompleteOrderAsync(userId, id);
+            return Ok(order);
+        }
+
+        /// <summary>
         /// Cancel order
         /// </summary>
         [HttpPost("{id:int}/cancel")]
