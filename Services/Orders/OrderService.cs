@@ -468,7 +468,7 @@ namespace Exodus.Services.Orders
                 OrderId = so.OrderId,
                 SellerId = so.SellerId,
                 SellerName = so.Seller?.Name ?? "Unknown Seller",
-                Status = MapSellerStatusToOrderStatus(so.Status),
+                Status = so.Status,
                 Total = so.SubTotal,
                 Items = so.Items.Select(i => new OrderItemDto
                 {
@@ -555,19 +555,6 @@ namespace Exodus.Services.Orders
             };
         }
 
-        private static OrderStatus MapSellerStatusToOrderStatus(SellerOrderStatus status)
-        {
-            return status switch
-            {
-                SellerOrderStatus.Placed => OrderStatus.Pending,
-                SellerOrderStatus.Confirmed => OrderStatus.Processing,
-                SellerOrderStatus.Shipped => OrderStatus.Shipped,
-                SellerOrderStatus.Delivered => OrderStatus.Delivered,
-                SellerOrderStatus.Cancelled => OrderStatus.Cancelled,
-                _ => OrderStatus.Pending
-            };
-        }
-
         private static OrderDetailResponseDto MapToDetailDto(Order order)
         {
             return new OrderDetailResponseDto
@@ -594,7 +581,7 @@ namespace Exodus.Services.Orders
                     OrderId = so.OrderId,
                     SellerId = so.SellerId,
                     SellerName = so.Seller?.Name ?? "",
-                    Status = MapSellerStatusToOrderStatus(so.Status),
+                    Status = so.Status,
                     Total = so.SubTotal,
                     Items = so.Items.Select(i => new OrderItemDto
                     {

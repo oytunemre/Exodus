@@ -46,7 +46,7 @@ namespace Exodus.Models.Dto
         public int OrderId { get; set; }    // parent Order.Id
         public int SellerId { get; set; }
         public string SellerName { get; set; } = string.Empty;
-        public OrderStatus Status { get; set; }
+        public SellerOrderStatus Status { get; set; }
         public decimal Total { get; set; }
         public List<OrderItemDto> Items { get; set; } = new();
         public ShipmentInfoDto? Shipment { get; set; }
