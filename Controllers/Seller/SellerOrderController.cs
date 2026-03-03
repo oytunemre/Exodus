@@ -2,6 +2,7 @@ using Exodus.Models.Dto;
 using Exodus.Models.Dto.OrderDto;
 using Exodus.Models.Enums;
 using Exodus.Services.Orders;
+
 using Exodus.Services.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -46,6 +47,7 @@ namespace Exodus.Controllers.Seller
             return Ok(new { Message = "Order status updated successfully" });
         }
 
+
         /// <summary>
         /// Confirm seller order
         /// </summary>
@@ -53,7 +55,7 @@ namespace Exodus.Controllers.Seller
         public async Task<ActionResult> ConfirmOrder(int sellerOrderId)
         {
             var sellerId = GetCurrentUserId();
-            await _orderService.UpdateSellerOrderStatusAsync(sellerId, sellerOrderId, OrderStatus.Confirmed);
+            await _orderService.UpdateSellerOrderStatusAsync(sellerId, sellerOrderId, SellerOrderStatus.Confirmed);
             return Ok(new { Message = "Order confirmed successfully" });
         }
 
@@ -68,6 +70,6 @@ namespace Exodus.Controllers.Seller
 
     public class UpdateSellerOrderStatusDto
     {
-        public OrderStatus Status { get; set; }
+        public SellerOrderStatus Status { get; set; }
     }
 }

@@ -481,7 +481,7 @@ namespace Exodus.Services.Orders
             }).ToList();
         }
 
-        public async Task UpdateSellerOrderStatusAsync(int sellerId, int sellerOrderId, OrderStatus newStatus)
+        public async Task UpdateSellerOrderStatusAsync(int sellerId, int sellerOrderId, SellerOrderStatus newStatus)
         {
             var sellerOrder = await _db.SellerOrders
                 .Include(so => so.Order)
@@ -490,7 +490,7 @@ namespace Exodus.Services.Orders
             if (sellerOrder == null)
                 throw new NotFoundException("Satıcı siparişi bulunamadı.");
 
-            sellerOrder.Status = MapOrderStatusToSellerStatus(newStatus);
+            sellerOrder.Status = newStatus;
             await _db.SaveChangesAsync();
         }
 
