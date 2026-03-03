@@ -27,7 +27,7 @@ namespace Exodus.Models.Enums
 
     public enum RefundStatus
     {
-        Pending,
+        Pending, 
         Approved,
         Processing,
         Completed,
