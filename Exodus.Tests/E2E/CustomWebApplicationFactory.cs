@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Threading.RateLimiting;
 using Exodus.Data;
 using Exodus.Services.Email;
@@ -28,6 +29,13 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             user.EmailVerified = true;
             await db.SaveChangesAsync();
         }
+    }
+
+    protected override HttpClient CreateDefaultClient(params DelegatingHandler[] handlers)
+    {
+        var timingHandler = new TimingLoggingHandler();
+        var allHandlers = new DelegatingHandler[] { timingHandler }.Concat(handlers).ToArray();
+        return base.CreateDefaultClient(allHandlers);
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -92,6 +100,20 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             services.RemoveAll(typeof(IPaymentGateway));
             services.AddScoped<IPaymentGateway, FakePaymentGateway>();
         });
+    }
+}
+
+public class TimingLoggingHandler : DelegatingHandler
+{
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var sw = Stopwatch.StartNew();
+        var response = await base.SendAsync(request, cancellationToken);
+        sw.Stop();
+
+        Console.WriteLine($"[{(int)response.StatusCode} {response.StatusCode}] {request.Method,-6} {request.RequestUri?.PathAndQuery,-60} {sw.ElapsedMilliseconds,6}ms");
+
+        return response;
     }
 }
 
