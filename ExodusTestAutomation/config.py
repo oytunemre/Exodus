@@ -1,7 +1,8 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(Path(__file__).parent / ".env")
 
 BASE_URL = os.getenv("BASE_URL", "http://localhost:5013")
 TIMEOUT = int(os.getenv("TIMEOUT", "30"))
