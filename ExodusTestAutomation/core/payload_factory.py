@@ -84,6 +84,8 @@ class PayloadFactory:
             (r"\{attributeId\}", str(session_state.get("created_attribute_id") or "1")),
             (r"\{valueId\}", str(session_state.get("created_value_id") or "1")),
             (r"\{notificationId\}", str(session_state.get("created_notification_id") or "1")),
+            (r"\{referralId\}", str(session_state.get("created_affiliate_id") or "1")),
+            (r"\{payoutId\}", str(session_state.get("created_affiliate_id") or "1")),
         ]
 
         for pattern, value in replacements:
@@ -103,30 +105,29 @@ class PayloadFactory:
         return result
 
     def _custom_payload(self, path: str, method: str) -> Optional[Dict]:
-        """Endpoint'e özel önceden tanımlanmış payload'lar."""
+        """Endpoint'e özel payload'lar — doğrudan DTO sınıflarından türetildi."""
         path_lower = path.lower()
 
-        # Auth
+        # ── Auth ──────────────────────────────────────────────────────────────
+        # RegisterDto: name, email, username, password, role
         if "/auth/register" in path_lower:
             return {
-                "email": CUSTOMER["email"],
-                "password": CUSTOMER["password"],
                 "name": f"{CUSTOMER['firstName']} {CUSTOMER['lastName']}",
+                "email": CUSTOMER["email"],
                 "username": CUSTOMER["email"].split("@")[0],
-                "firstName": CUSTOMER["firstName"],
-                "lastName": CUSTOMER["lastName"],
+                "password": CUSTOMER["password"],
                 "role": CUSTOMER["role"],
-                "phoneNumber": CUSTOMER.get("phoneNumber", "+905559876543"),
             }
+
+        # 2FA check önce (daha spesifik)
+        if "/auth/login/2fa" in path_lower:
+            return {"twoFactorCode": "000000"}
 
         if "/auth/login" in path_lower:
             return {
                 "emailOrUsername": ADMIN["email"],
                 "password": ADMIN["password"],
             }
-
-        if "/auth/login/2fa" in path_lower:
-            return {"twoFactorCode": "000000"}
 
         if "/auth/refresh" in path_lower:
             return {"refreshToken": "test-refresh-token"}
@@ -138,271 +139,349 @@ class PayloadFactory:
                 "confirmPassword": "NewAdmin1234!",
             }
 
-        # Attributes
+        # ── Attributes ────────────────────────────────────────────────────────
+        # CreateAttributeValueDto: value, code, colorHex(opt), imageUrl(opt), displayOrder
         if "/attributes" in path_lower and "/values" in path_lower and method == "POST":
-            return {
-                "value": f"Kırmızı_{_ts()}",
-                "code": f"red-{_ts()}",
-                "isActive": True,
-            }
-
-        if "/attributes" in path_lower and method == "POST":
-            return {
-                "name": f"Renk_{_ts()}",
-                "code": f"color-{_ts()}",
-                "type": "Select",
-                "isActive": True,
-            }
-
-        if "/attributes" in path_lower and method in ("PUT", "PATCH"):
-            return {
-                "name": "Renk (Güncellendi)",
-                "isActive": True,
-            }
-
-        # Banners
-        if "/banners" in path_lower and method == "POST":
             ts = _ts()
             return {
-                "title": f"Kampanya Banner {ts}",
-                "subtitle": "Kaçırılmayacak fırsatlar",
+                "value": f"Kirmizi {ts}",
+                "code": f"red-{ts}",
+                "displayOrder": 0,
+            }
+
+        # UpdateAttributeValueDto: value, code, colorHex, isActive, displayOrder
+        if "/attributes" in path_lower and "/values" in path_lower and method in ("PUT", "PATCH"):
+            return {"value": "Guncellenen Deger", "isActive": True}
+
+        # CreateAttributeDto: name, code, type(enum), isRequired, isFilterable, isVisibleOnProduct, displayOrder
+        if "/attributes" in path_lower and method == "POST":
+            ts = _ts()
+            return {
+                "name": f"Renk {ts}",
+                "code": f"color-{ts}",
+                "type": "Select",
+                "isRequired": False,
+                "isFilterable": True,
+                "isVisibleOnProduct": True,
+                "displayOrder": 0,
+            }
+
+        # UpdateAttributeDto: name, code, type, isFilterable, isActive, displayOrder
+        if "/attributes" in path_lower and method in ("PUT", "PATCH"):
+            return {"name": "Renk (Guncellendi)", "isActive": True, "isFilterable": True}
+
+        # ── Banners ───────────────────────────────────────────────────────────
+        # CreateBannerDto: title, description, imageUrl(required), mobileImageUrl,
+        #                  targetUrl, position(enum), displayOrder, isActive, startDate, endDate
+        # NOT: slug, linkUrl, subtitle, order alanları YOK
+        if "/banners/reorder" in path_lower and method == "POST":
+            banner_id = session_state.get("created_banner_id") or 1
+            return {"bannerOrders": [{"id": banner_id, "order": 1}]}
+
+        if "/banners" in path_lower and "/order" in path_lower and method in ("PATCH", "PUT"):
+            return {"displayOrder": 1}
+
+        if "/banners" in path_lower and method == "POST":
+            return {
+                "title": f"Kampanya Banner {_ts()}",
+                "description": "Kacirılmayacak firsatlar",
                 "imageUrl": "https://via.placeholder.com/1920x600",
-                "linkUrl": f"/kampanya-{ts}",
-                "slug": f"banner-{ts}",
+                "targetUrl": "/kampanyalar",
+                "position": "HomeSlider",
+                "displayOrder": 1,
                 "isActive": True,
-                "order": 1,
             }
 
         if "/banners" in path_lower and method in ("PUT", "PATCH"):
+            return {"title": "Guncellenen Banner", "isActive": True}
+
+        # ── Content / Static Pages ────────────────────────────────────────────
+        # CreatePageDto: title, slug(opt-auto), content(required), metaTitle, metaDescription,
+        #                metaKeywords, isPublished, showInFooter, showInHeader, displayOrder,
+        #                pageType(enum: General|Legal|Help|About|Landing)
+        # NOT: isActive alanı YOK — sadece isPublished var
+        if "/content/pages/reorder" in path_lower and method == "POST":
+            page_id = session_state.get("created_page_id") or 1
+            return {"pageOrders": [{"id": page_id, "order": 1}]}
+
+        if "/content/pages" in path_lower and method == "POST":
             return {
-                "title": "Güncellenen Banner",
-                "isActive": True,
+                "title": f"Test Sayfasi {_ts()}",
+                "content": "<p>Bu bir test icerigidir.</p>",
+                "metaTitle": "Test Meta",
+                "metaDescription": "Test meta aciklamasi",
+                "isPublished": True,
+                "showInFooter": False,
+                "showInHeader": False,
+                "displayOrder": 0,
+                "pageType": "General",
             }
 
-        # Content / Pages
-        if "/pages" in path_lower and method == "POST":
-            ts = _ts()
+        if "/content/pages" in path_lower and method in ("PUT", "PATCH"):
             return {
-                "title": f"Test Sayfası {ts}",
-                "slug": f"test-sayfa-{ts}",
-                "content": "<p>Bu bir test içeriğidir.</p>",
-                "metaTitle": f"Test Sayfası {ts}",
-                "metaDescription": "Test meta açıklaması",
-                "isActive": True,
+                "title": "Guncellenen Sayfa",
+                "content": "<p>Guncellennis icerik.</p>",
                 "isPublished": True,
             }
 
-        if "/pages" in path_lower and method in ("PUT", "PATCH"):
+        if "/content/seo" in path_lower and method == "PUT":
             return {
-                "title": "Güncellenen Sayfa",
-                "content": "<p>Güncellenmiş içerik.</p>",
-                "isActive": True,
+                "metaTitle": "Exodus Marketplace",
+                "metaDescription": "En iyi alısveris deneyimi",
             }
 
-        # Affiliates
-        if "/affiliates" in path_lower and method == "POST":
-            ts = _ts()
+        # ── Affiliates ────────────────────────────────────────────────────────
+        # Admin: sadece PATCH endpointleri var (POST ile create yok)
+        # UpdateAffiliateStatusDto: status(enum: Pending|Approved|Rejected|Suspended)
+        if "/affiliates" in path_lower and "/status" in path_lower:
+            return {"status": "Approved"}
+
+        # UpdateAffiliateCommissionDto: commissionRate, minPayoutAmount
+        if "/affiliates" in path_lower and "/commission" in path_lower:
+            return {"commissionRate": 7.5, "minPayoutAmount": 100.0}
+
+        # UpdateAffiliateBankInfoDto: bankName, iban, accountHolderName
+        if "/affiliates" in path_lower and "/bank-info" in path_lower:
             return {
-                "name": f"Affiliate Partner {ts}",
-                "email": f"affiliate{ts}@test.com",
-                "commissionRate": 5.0,
-                "isActive": True,
+                "bankName": "Ziraat Bankasi",
+                "iban": "TR000000000000000000000000",
+                "accountHolderName": "Test Kullanici",
             }
 
-        if "/affiliates" in path_lower and method in ("PUT", "PATCH"):
-            return {
-                "name": "Güncellenen Partner",
-                "commissionRate": 7.5,
-                "isActive": True,
-            }
+        # CreateAffiliatePayoutDto: amount, notes
+        if "/affiliates" in path_lower and "/payouts" in path_lower and method == "POST":
+            return {"amount": 250.0, "notes": "Test odemesi"}
 
-        # Categories
+        # ProcessAffiliatePayoutDto: status, transferReference, notes
+        if "/affiliates" in path_lower and "/payouts" in path_lower and method == "PATCH":
+            return {"status": "Paid", "transferReference": "TRF-001", "notes": "Islem tamamlandi"}
+
+        # UpdateReferralStatusDto: status(enum: Pending|Qualified|Approved|Paid|Cancelled)
+        if "/affiliates/referrals" in path_lower and method == "PATCH":
+            return {"status": "Approved"}
+
+        # ── Categories ────────────────────────────────────────────────────────
+        # CreateCategoryDto: name(required), description, imageUrl, parentCategoryId, displayOrder
+        # NOT: isActive alanı create'de YOK
         if "/categories" in path_lower and method == "POST":
             return {
                 "name": CATEGORIES[0]["name"],
                 "description": CATEGORIES[0]["description"],
-                "isActive": True,
+                "displayOrder": 0,
             }
 
+        # UpdateCategoryDto: name, description, imageUrl, parentCategoryId, displayOrder, isActive
         if "/categories" in path_lower and method in ("PUT", "PATCH"):
             return {
-                "name": "Elektronik Ürünler",
-                "description": "Güncel elektronik ürünler ve aksesuarlar",
+                "name": "Elektronik Urunler",
+                "description": "Guncel elektronik urunler",
                 "isActive": True,
             }
 
-        # Brands
+        # ── Brands ────────────────────────────────────────────────────────────
+        # CreateBrandDto: name(required), slug(opt-auto), description, logoUrl, bannerUrl,
+        #                 website, isActive, isFeatured, displayOrder, metaTitle, metaDescription
+        if "/brands/reorder" in path_lower and method == "POST":
+            brand_id = session_state.get("created_brand_id") or 1
+            return {"brandOrders": [{"id": brand_id, "order": 1}]}
+
         if "/brands" in path_lower and method == "POST":
             return {
-                "name": f"TechBrand_{_ts()}",
-                "description": "Premium teknoloji markası",
+                "name": f"TechBrand {_ts()}",
+                "description": "Premium teknoloji markasi",
                 "isActive": True,
+                "isFeatured": False,
+                "displayOrder": 0,
             }
 
-        # Products
-        if "/products" in path_lower and method == "POST":
-            product = PRODUCTS[0]
+        # UpdateBrandDto: tüm opsiyonel
+        if "/brands" in path_lower and method in ("PUT", "PATCH"):
+            return {"name": "TechBrand (Guncellendi)", "isActive": True}
+
+        # ── Products ──────────────────────────────────────────────────────────
+        # AddProductDto: productName, productDescription, barcodes[]
+        # NOT: name, description, price, stock, sku, brand, categoryId alanları YOK
+        if "/products" in path_lower and "/listings" not in path_lower and method == "POST":
             return {
-                "name": product["name"],
-                "description": product["description"],
-                "price": product["price"],
-                "stock": product["stock"],
-                "sku": f"{product['sku']}-{_ts()}",
-                "brand": product["brand"],
-                "categoryId": session_state.get("created_category_id") or 1,
-                "isActive": True,
+                "productName": PRODUCTS[0]["name"],
+                "productDescription": PRODUCTS[0]["description"],
+                "barcodes": [f"BAR{_ts()}"],
             }
 
-        if "/products" in path_lower and method in ("PUT", "PATCH"):
+        # ProductUpdateDto: productName(required), productDescription(required), barcodes[]
+        if "/products" in path_lower and "/listings" not in path_lower and method in ("PUT", "PATCH"):
             return {
-                "name": PRODUCTS[0]["name"] + " (Güncellendi)",
-                "description": PRODUCTS[0]["description"],
-                "price": PRODUCTS[0]["price"] * 0.9,
-                "stock": PRODUCTS[0]["stock"],
-                "isActive": True,
+                "productName": PRODUCTS[0]["name"] + " (Guncellendi)",
+                "productDescription": PRODUCTS[0]["description"],
+                "barcodes": [],
             }
 
-        # Listings
+        # ── Listings ──────────────────────────────────────────────────────────
+        # AddListingDto: productId, sellerId, price, stock, condition(enum)
+        # NOT: isActive alanı create'de YOK
         if "/listings" in path_lower and method == "POST":
+            seller_id = (
+                session_state.get("seller_user_id")
+                or session_state.get("seller_id")
+                or 1
+            )
             return {
                 "productId": session_state.get("created_product_id") or 1,
+                "sellerId": seller_id,
                 "price": PRODUCTS[0]["price"],
                 "stock": 10,
+                "condition": "New",
+            }
+
+        # UpdateListingDto: price, stock, condition, isActive
+        if "/listings/bulk" in path_lower and method == "POST":
+            return {
+                "listingIds": [session_state.get("created_listing_id") or 1],
                 "isActive": True,
             }
 
-        # Cart
-        if "/cart/add" in path_lower or ("/cart" in path_lower and "/items" in path_lower and method == "POST"):
-            payload = {
+        if "/listings" in path_lower and method in ("PUT", "PATCH"):
+            return {
+                "price": round(PRODUCTS[0]["price"] * 0.9, 2),
+                "stock": 8,
+                "condition": "New",
+                "isActive": True,
+            }
+
+        # ── Cart ──────────────────────────────────────────────────────────────
+        # AddToCartDto: userId(required), listingId(required), quantity(required)
+        if "/cart" in path_lower and method == "POST":
+            return {
+                "userId": session_state.get("customer_id") or 1,
                 "listingId": session_state.get("created_listing_id") or 1,
                 "quantity": 1,
             }
-            customer_id = session_state.get("customer_id")
-            if customer_id:
-                payload["userId"] = customer_id
-            return payload
 
-        if "/cart/coupon" in path_lower or "/coupon" in path_lower:
-            return {"couponCode": "EXODUS10"}
+        # UpdateCartItemDto: quantity
+        if "/cart" in path_lower and method in ("PUT", "PATCH"):
+            return {"quantity": 2}
 
-        # Orders
-        if "/orders/checkout" in path_lower or ("/orders" in path_lower and method == "POST"):
+        if "/cart/coupon" in path_lower or ("/coupon" in path_lower and "/cart" in path_lower):
+            return {"couponCode": "TEST10"}
+
+        # ── Orders ────────────────────────────────────────────────────────────
+        # CheckoutOrderDto: userId
+        if "/orders/checkout" in path_lower and method == "POST":
+            return {"userId": session_state.get("customer_id") or 1}
+
+        # CreateOrderDto: shippingAddressId, billingAddressId(opt), customerNote(opt), couponCode(opt)
+        # NOT: addressId, paymentMethod alanları YOK
+        if "/orders" in path_lower and method == "POST":
             return {
-                "addressId": session_state.get("created_address_id") or 1,
-                "paymentMethod": "CreditCard",
-                "note": "Lütfen kapı zili çalışmadığı için telefon edin.",
+                "shippingAddressId": session_state.get("created_address_id") or 1,
+                "customerNote": "Lutfen kapi zili calismadigi icin telefon edin.",
             }
 
         if "/orders" in path_lower and "/status" in path_lower:
             return {"status": "Processing"}
 
+        if "/orders" in path_lower and "/cancel" in path_lower:
+            return {"reason": "CustomerRequest", "note": "Test iptali"}
+
         if "/orders" in path_lower and "/cargo" in path_lower:
+            return {"cargoCompany": "Yurtici Kargo", "trackingNumber": "YK123456789TR"}
+
+        if "/orders" in path_lower and "/refund" in path_lower:
             return {
-                "cargoCompany": "Yurtiçi Kargo",
-                "trackingNumber": "YK123456789TR",
+                "reason": "Urun hasarli geldi",
+                "description": "Kargo sirasinda zarar gormis",
             }
 
-        # Addresses
-        if "/addresses" in path_lower and method == "POST":
+        # ── Addresses ─────────────────────────────────────────────────────────
+        # CreateAddressDto: title, fullName, phone, city, district,
+        #                   neighborhood(opt), addressLine, postalCode(opt), isDefault, type(enum)
+        # NOT: firstName, lastName, street, buildingNo, zipCode alanları YOK
+        if "/address" in path_lower and method == "POST":
             addr = ADDRESSES[0]
-            # /api/Profile/addresses farklı DTO kullanıyor
-            if "/profile/" in path_lower:
-                return {
-                    "fullName": f"{addr['firstName']} {addr['lastName']}",
-                    "addressLine": f"{addr['street']} No:{addr['buildingNo']} Daire:{addr['apartmentNo']}",
-                    "city": addr["city"],
-                    "district": addr["district"],
-                    "zipCode": addr["zipCode"],
-                    "phone": addr["phone"],
-                    "title": addr["title"],
-                    "isDefault": addr["isDefault"],
-                }
             return {
                 "title": addr["title"],
-                "firstName": addr["firstName"],
-                "lastName": addr["lastName"],
+                "fullName": f"{addr['firstName']} {addr['lastName']}",
                 "phone": addr["phone"],
                 "city": addr["city"],
                 "district": addr["district"],
                 "neighborhood": addr.get("neighborhood", ""),
-                "street": addr["street"],
-                "buildingNo": addr["buildingNo"],
-                "zipCode": addr["zipCode"],
+                "addressLine": f"{addr['street']} No:{addr.get('buildingNo', '')}",
+                "postalCode": addr.get("zipCode", "34710"),
                 "isDefault": addr["isDefault"],
+                "type": "Shipping",
             }
 
-        # Reviews
+        # UpdateAddressDto: tüm opsiyonel, aynı alanlar
+        if "/address" in path_lower and method in ("PUT", "PATCH"):
+            return {"title": "Ev (Guncellendi)", "isDefault": True}
+
+        # ── Reviews ───────────────────────────────────────────────────────────
         if "/reviews" in path_lower and method == "POST":
             return {
                 "productId": session_state.get("created_product_id") or 1,
                 "orderId": session_state.get("created_order_id") or 1,
                 "rating": 5,
-                "comment": "Harika bir ürün, kesinlikle tavsiye ederim!",
+                "comment": "Harika bir urun, kesinlikle tavsiye ederim!",
             }
 
-        # Seller Campaigns (farklı DTO)
-        if "/seller/campaigns" in path_lower and method == "POST":
-            return {
-                "name": f"Satici Kampanya {_ts()}",
-                "description": "Seçili ürünlerde indirim",
-                "discountType": "Percentage",
-                "discountPercent": 15,
-                "startDate": "2026-01-01T00:00:00",
-                "endDate": "2026-12-31T23:59:59",
-                "isActive": True,
-            }
+        if "/reviews" in path_lower and method in ("PUT", "PATCH"):
+            return {"rating": 4, "comment": "Iyi urun"}
 
-        # Admin Campaigns - SellerId gönderilmemeli (null/FK ihlali önlenir)
-        if "/campaigns" in path_lower and method == "POST":
-            payload = {
-                "name": f"Bahar İndirimi {_ts()}",
-                "description": "Seçili ürünlerde %20 indirim",
-                "discountType": "Percentage",
-                "discountPercent": 20,
-                "startDate": "2026-01-01T00:00:00",
-                "endDate": "2026-12-31T23:59:59",
-                "isActive": True,
-            }
-            seller_user_id = session_state.get("seller_user_id")
-            if seller_user_id:
-                payload["sellerId"] = seller_user_id
-            return payload
-
-        # Campaign products/categories update
+        # ── Campaigns ─────────────────────────────────────────────────────────
+        # CreateCampaignDto: name(required), description, type(enum: PercentageDiscount|...|FreeShipping),
+        #   sellerId(opt-int), startDate, endDate, isActive, discountPercentage(opt 0-100),
+        #   discountAmount(opt), scope(enum: AllProducts|SpecificProducts|...), priority, isStackable
+        # NOT: discountType, discountPercent alanları YOK
         if "/campaigns" in path_lower and "/products" in path_lower and method == "PUT":
             return {"productIds": [session_state.get("created_product_id") or 1]}
 
         if "/campaigns" in path_lower and "/categories" in path_lower and method == "PUT":
             return {"categoryIds": [session_state.get("created_category_id") or 1]}
 
-        # Coupons
-        if "/coupons" in path_lower and method == "POST":
-            return {
-                "code": f"EXODUS{_ts()}",
-                "discountPercent": 10,
-                "minOrderAmount": 100,
-                "maxUsage": 100,
-                "expiryDate": "2026-12-31T23:59:59",
+        if "/campaigns" in path_lower and method == "POST":
+            payload = {
+                "name": f"Bahar Indirimi {_ts()}",
+                "description": "Secili urunlerde %20 indirim",
+                "type": "PercentageDiscount",
+                "discountPercentage": 20.0,
+                "startDate": "2026-01-01T00:00:00",
+                "endDate": "2026-12-31T23:59:59",
                 "isActive": True,
+                "scope": "AllProducts",
+                "priority": 0,
+                "isStackable": False,
+            }
+            seller_uid = session_state.get("seller_user_id")
+            if seller_uid:
+                payload["sellerId"] = seller_uid
+            return payload
+
+        # UpdateCampaignDto: tüm opsiyonel
+        if "/campaigns" in path_lower and method in ("PUT", "PATCH"):
+            return {"name": "Guncellenen Kampanya", "isActive": True}
+
+        # ── Coupons ───────────────────────────────────────────────────────────
+        # Coupon = Campaign with couponCode + requiresCouponCode
+        if "/coupons" in path_lower and method == "POST":
+            ts = _ts()
+            return {
+                "name": f"Indirim Kuponu {ts}",
+                "type": "PercentageDiscount",
+                "discountPercentage": 10.0,
+                "couponCode": f"EXODUS{ts}",
+                "requiresCouponCode": True,
+                "startDate": "2026-01-01T00:00:00",
+                "endDate": "2026-12-31T23:59:59",
+                "isActive": True,
+                "scope": "AllProducts",
+                "maxUsageCount": 100,
             }
 
-        # Wishlist
+        # ── Wishlist ──────────────────────────────────────────────────────────
         if "/wishlist" in path_lower and method == "POST":
-            return {
-                "productId": session_state.get("created_product_id") or 1,
-            }
+            return {"productId": session_state.get("created_product_id") or 1}
 
-        # Notifications
-        if "/notifications/send" in path_lower and method == "POST":
-            return {
-                "title": "Test Bildirimi",
-                "message": "Bu bir test bildirimidir.",
-                "userId": session_state.get("customer_id") or 1,
-            }
-
-        if "/notifications/delete-bulk" in path_lower and method == "POST":
-            return {"notificationIds": [1]}
-
+        # ── Notifications ─────────────────────────────────────────────────────
         if "/notifications/send-bulk" in path_lower and method == "POST":
             return {
                 "title": "Toplu Bildirim",
@@ -410,75 +489,63 @@ class PayloadFactory:
                 "userIds": [session_state.get("customer_id") or 1],
             }
 
-        # Settings
-        if "/settings/bulk-update" in path_lower and method == "POST":
-            return {"settings": [{"key": "test_key", "value": "test_value"}]}
+        if "/notifications/delete-bulk" in path_lower and method == "POST":
+            nid = session_state.get("created_notification_id") or 1
+            return {"notificationIds": [nid]}
 
-        if "/settings" in path_lower and "/settings/" in path_lower and method == "PUT":
-            return {"value": "test_value"}
-
-        if "/settings" in path_lower and method in ("PUT", "PATCH"):
-            return {
-                "siteName": "Exodus Marketplace",
-                "supportEmail": "destek@exodus.com",
-            }
-
-        # Payment
-        if "/payment/intents" in path_lower and method == "POST":
-            return {
-                "orderId": session_state.get("created_order_id") or 1,
-                "amount": 100.0,
-                "currency": "TRY",
-                "paymentMethod": "CreditCard",
-            }
-
-        if "/payment/gateway/process" in path_lower and method == "POST":
-            return {
-                "orderId": session_state.get("created_order_id") or 1,
-                "amount": 100.0,
-                "currency": "TRY",
-                "card": {
-                    "cardNumber": "4111111111111111",
-                    "cardHolderName": "Test User",
-                    "expireMonth": "12",
-                    "expireYear": "2030",
-                    "cvc": "123",
-                },
-            }
-
-        if "/payment/gateway/3ds/initialize" in path_lower and method == "POST":
-            return {
-                "orderId": session_state.get("created_order_id") or 1,
-                "amount": 100.0,
-                "currency": "TRY",
-                "card": {
-                    "cardNumber": "4111111111111111",
-                    "cardHolderName": "Test User",
-                    "expireMonth": "12",
-                    "expireYear": "2030",
-                    "cvc": "123",
-                },
-                "callbackUrl": "https://localhost/callback",
-            }
-
-        # TwoFactor
-        if "/twofactor/verify" in path_lower or "/twofactor/disable" in path_lower or "/twofactor/backup-codes" in path_lower:
-            return {"code": "000000"}
-
-        # Listings bulk update
-        if "/listings/bulk-update" in path_lower and method == "POST":
-            return {
-                "listingIds": [session_state.get("created_listing_id") or 1],
-                "isActive": True,
-            }
-
-        # Admin notifications send
-        if "/admin/notifications/send" in path_lower and not "bulk" in path_lower and method == "POST":
+        if "/notifications" in path_lower and method == "POST":
             return {
                 "userId": session_state.get("customer_id") or 1,
                 "title": "Test Bildirimi",
                 "message": "Bu bir test bildirimidir.",
             }
+
+        # ── Settings ──────────────────────────────────────────────────────────
+        if "/settings/bulk-update" in path_lower and method == "POST":
+            return {"settings": [{"key": "test_key", "value": "test_value"}]}
+
+        if "/settings" in path_lower and method in ("PUT", "PATCH"):
+            return {"value": "test_value"}
+
+        # ── Payment ───────────────────────────────────────────────────────────
+        # CreatePaymentIntentDto: orderId, method(enum: CashOnDelivery|BankTransfer|CreditCard|...),
+        #   currency(max 3), cardDetails{cardNumber,expiryDate,cvv,cardHolderName}, installmentCount, returnUrl
+        # NOT: paymentMethod, card, amount alanları YOK
+        _card = {
+            "cardNumber": "4111111111111111",
+            "expiryDate": "12/30",
+            "cvv": "123",
+            "cardHolderName": "Test Kullanici",
+        }
+
+        if "/payment/intents" in path_lower and method == "POST":
+            return {
+                "orderId": session_state.get("created_order_id") or 1,
+                "method": "CreditCard",
+                "currency": "TRY",
+                "cardDetails": _card,
+            }
+
+        if "/payment/gateway/process" in path_lower and method == "POST":
+            return {
+                "orderId": session_state.get("created_order_id") or 1,
+                "method": "CreditCard",
+                "currency": "TRY",
+                "cardDetails": _card,
+            }
+
+        if "/payment/gateway/3ds" in path_lower and method == "POST":
+            return {
+                "orderId": session_state.get("created_order_id") or 1,
+                "method": "CreditCard",
+                "currency": "TRY",
+                "cardDetails": _card,
+                "returnUrl": "https://localhost/callback",
+            }
+
+        # ── TwoFactor ─────────────────────────────────────────────────────────
+        if "/twofactor" in path_lower and method == "POST":
+            return {"code": "000000"}
 
         return None  # Özel payload yok, schema'dan üret
 
@@ -513,8 +580,12 @@ class PayloadFactory:
             return session_state.get("created_listing_id") or 1
         if name_lower in ("orderid",):
             return session_state.get("created_order_id") or 1
-        if name_lower in ("addressid",):
+        if name_lower in ("addressid", "shippingaddressid", "billingaddressid"):
             return session_state.get("created_address_id") or 1
+        if name_lower in ("sellerid",):
+            return session_state.get("seller_user_id") or session_state.get("seller_id") or 1
+        if name_lower in ("userid",):
+            return session_state.get("customer_id") or 1
 
         # String alanlar
         if prop_type == "string":
@@ -523,23 +594,25 @@ class PayloadFactory:
             if prop_format == "password" or "password" in name_lower:
                 return CUSTOMER["password"]
             if prop_format == "date-time" or "date" in name_lower:
-                return "2025-06-01T10:00:00"
+                return "2026-06-01T10:00:00"
             if "phone" in name_lower or "tel" in name_lower:
                 return "+905559876543"
             if "zip" in name_lower or "postal" in name_lower:
                 return "34710"
             if "city" in name_lower:
-                return "İstanbul"
+                return "Istanbul"
             if "district" in name_lower:
-                return "Kadıköy"
-            if "address" in name_lower or "street" in name_lower:
+                return "Kadikoy"
+            if "addressline" in name_lower or "street" in name_lower:
                 return "Moda Caddesi No:15"
+            if "fullname" in name_lower:
+                return "Test Kullanici"
             if "name" in name_lower:
-                return "Test Ürün"
+                return "Test Urun"
             if "title" in name_lower:
-                return "Test Başlığı"
+                return "Test Basligi"
             if "description" in name_lower or "comment" in name_lower or "note" in name_lower:
-                return "Bu bir test açıklamasıdır."
+                return "Bu bir test aciklamasidir."
             if "sku" in name_lower:
                 return f"SKU-{_ts()}"
             if "slug" in name_lower:
@@ -556,7 +629,7 @@ class PayloadFactory:
                 return "YK123456789TR"
             if "url" in name_lower or "image" in name_lower:
                 return "https://via.placeholder.com/400"
-            return "Test değeri"
+            return "Test degeri"
 
         # Number alanlar
         if prop_type in ("number", "integer"):
