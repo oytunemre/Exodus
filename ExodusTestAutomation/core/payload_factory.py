@@ -75,7 +75,7 @@ class PayloadFactory:
 
         if "/auth/login" in path_lower:
             return {
-                "email": ADMIN["email"],
+                "emailOrUsername": ADMIN["email"],
                 "password": ADMIN["password"],
             }
 

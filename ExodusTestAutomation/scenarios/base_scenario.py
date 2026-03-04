@@ -154,7 +154,7 @@ class BaseScenario:
         try:
             response = self.client.post(
                 "/api/auth/login",
-                json={"email": email, "password": password},
+                json={"emailOrUsername": email, "password": password},
                 headers={"Content-Type": "application/json"},
             )
             if response.status_code == 200:

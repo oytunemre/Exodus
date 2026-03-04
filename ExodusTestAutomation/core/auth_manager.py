@@ -41,7 +41,7 @@ class AuthManager:
             response = self.client.post(
                 "/api/auth/login",
                 json={
-                    "email": persona["email"],
+                    "emailOrUsername": persona["email"],
                     "password": persona["password"],
                 },
             )
