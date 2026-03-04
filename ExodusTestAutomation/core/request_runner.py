@@ -151,7 +151,18 @@ class RequestRunner:
             return
 
         path_lower = path.lower()
-        if "/categories" in path_lower:
+        # Önce spesifik (daha uzun) path'ler — sıralama önemli
+        if "/attributes" in path_lower and "/values" in path_lower:
+            session_state.set("created_value_id", entity_id)
+        elif "/attributes" in path_lower:
+            session_state.set("created_attribute_id", entity_id)
+        elif "/banners" in path_lower:
+            session_state.set("created_banner_id", entity_id)
+        elif "/pages" in path_lower:
+            session_state.set("created_page_id", entity_id)
+        elif "/affiliates" in path_lower:
+            session_state.set("created_affiliate_id", entity_id)
+        elif "/categories" in path_lower:
             session_state.set("created_category_id", entity_id)
         elif "/brands" in path_lower:
             session_state.set("created_brand_id", entity_id)
@@ -165,7 +176,7 @@ class RequestRunner:
             session_state.set("created_cart_id", entity_id)
         elif "/orders" in path_lower:
             session_state.set("created_order_id", entity_id)
-        elif "/address" in path_lower:  # /api/Address ve /api/.../addresses her ikisini de yakala
+        elif "/address" in path_lower:
             session_state.set("created_address_id", entity_id)
         elif "/reviews" in path_lower:
             session_state.set("created_review_id", entity_id)
@@ -175,6 +186,8 @@ class RequestRunner:
             session_state.set("created_coupon_id", entity_id)
         elif "/wishlist" in path_lower:
             session_state.set("created_wishlist_item_id", entity_id)
+        elif "/notifications" in path_lower:
+            session_state.set("created_notification_id", entity_id)
 
     def run_all(self, endpoints: List[Dict], group: Optional[str] = None) -> List[Dict]:
         """Tüm endpoint'leri sırayla çalıştır."""

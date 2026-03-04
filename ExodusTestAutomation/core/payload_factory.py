@@ -36,11 +36,34 @@ class PayloadFactory:
 
         return None
 
+    # Path prefix → session key eşlemesi: {id} parametresini doğru değerle doldurur
+    _PATH_ID_MAP = [
+        ("/attributes",      "created_attribute_id"),
+        ("/values",          "created_value_id"),
+        ("/banners",         "created_banner_id"),
+        ("/campaigns",       "created_campaign_id"),
+        ("/categories",      "created_category_id"),
+        ("/brands",          "created_brand_id"),
+        ("/products",        "created_product_id"),
+        ("/listings",        "created_listing_id"),
+        ("/orders",          "created_order_id"),
+        ("/cart",            "created_cart_id"),
+        ("/address",         "created_address_id"),
+        ("/reviews",         "created_review_id"),
+        ("/coupons",         "created_coupon_id"),
+        ("/wishlist",        "created_wishlist_item_id"),
+        ("/pages",           "created_page_id"),
+        ("/affiliates",      "created_affiliate_id"),
+        ("/users",           "created_user_id"),
+        ("/notifications",   "created_notification_id"),
+    ]
+
     def resolve_path_params(self, path: str) -> str:
         """Path'teki {id} gibi parametreleri session'dan doldur."""
         result = path
+        path_lower = path.lower()
 
-        # Spesifik pattern'ler önce
+        # Spesifik isimli parametreler önce
         replacements = [
             (r"\{categoryId\}", str(session_state.get("created_category_id") or "1")),
             (r"\{productId\}", str(session_state.get("created_product_id") or "1")),
@@ -52,14 +75,30 @@ class PayloadFactory:
             (r"\{reviewId\}", str(session_state.get("created_review_id") or "1")),
             (r"\{campaignId\}", str(session_state.get("created_campaign_id") or "1")),
             (r"\{couponId\}", str(session_state.get("created_coupon_id") or "1")),
-            (r"\{sellerId\}", str(session_state.get("seller_id") or "1")),
+            (r"\{sellerId\}", str(session_state.get("seller_user_id") or session_state.get("seller_id") or "1")),
             (r"\{userId\}", str(session_state.get("customer_id") or "1")),
-            # Genel {id}
-            (r"\{id\}", "1"),
+            (r"\{brandId\}", str(session_state.get("created_brand_id") or "1")),
+            (r"\{bannerId\}", str(session_state.get("created_banner_id") or "1")),
+            (r"\{pageId\}", str(session_state.get("created_page_id") or "1")),
+            (r"\{affiliateId\}", str(session_state.get("created_affiliate_id") or "1")),
+            (r"\{attributeId\}", str(session_state.get("created_attribute_id") or "1")),
+            (r"\{valueId\}", str(session_state.get("created_value_id") or "1")),
+            (r"\{notificationId\}", str(session_state.get("created_notification_id") or "1")),
         ]
 
         for pattern, value in replacements:
             result = re.sub(pattern, value, result, flags=re.IGNORECASE)
+
+        # Genel {id} → path'e göre doğru session key'i bul
+        if re.search(r"\{id\}", result, re.IGNORECASE):
+            generic_id = "1"
+            for segment, key in self._PATH_ID_MAP:
+                if segment in path_lower:
+                    val = session_state.get(key)
+                    if val:
+                        generic_id = str(val)
+                    break
+            result = re.sub(r"\{id\}", generic_id, result, flags=re.IGNORECASE)
 
         return result
 
@@ -97,6 +136,84 @@ class PayloadFactory:
                 "currentPassword": ADMIN["password"],
                 "newPassword": "NewAdmin1234!",
                 "confirmPassword": "NewAdmin1234!",
+            }
+
+        # Attributes
+        if "/attributes" in path_lower and "/values" in path_lower and method == "POST":
+            return {
+                "value": f"Kırmızı_{_ts()}",
+                "code": f"red-{_ts()}",
+                "isActive": True,
+            }
+
+        if "/attributes" in path_lower and method == "POST":
+            return {
+                "name": f"Renk_{_ts()}",
+                "code": f"color-{_ts()}",
+                "type": "Select",
+                "isActive": True,
+            }
+
+        if "/attributes" in path_lower and method in ("PUT", "PATCH"):
+            return {
+                "name": "Renk (Güncellendi)",
+                "isActive": True,
+            }
+
+        # Banners
+        if "/banners" in path_lower and method == "POST":
+            ts = _ts()
+            return {
+                "title": f"Kampanya Banner {ts}",
+                "subtitle": "Kaçırılmayacak fırsatlar",
+                "imageUrl": "https://via.placeholder.com/1920x600",
+                "linkUrl": f"/kampanya-{ts}",
+                "slug": f"banner-{ts}",
+                "isActive": True,
+                "order": 1,
+            }
+
+        if "/banners" in path_lower and method in ("PUT", "PATCH"):
+            return {
+                "title": "Güncellenen Banner",
+                "isActive": True,
+            }
+
+        # Content / Pages
+        if "/pages" in path_lower and method == "POST":
+            ts = _ts()
+            return {
+                "title": f"Test Sayfası {ts}",
+                "slug": f"test-sayfa-{ts}",
+                "content": "<p>Bu bir test içeriğidir.</p>",
+                "metaTitle": f"Test Sayfası {ts}",
+                "metaDescription": "Test meta açıklaması",
+                "isActive": True,
+                "isPublished": True,
+            }
+
+        if "/pages" in path_lower and method in ("PUT", "PATCH"):
+            return {
+                "title": "Güncellenen Sayfa",
+                "content": "<p>Güncellenmiş içerik.</p>",
+                "isActive": True,
+            }
+
+        # Affiliates
+        if "/affiliates" in path_lower and method == "POST":
+            ts = _ts()
+            return {
+                "name": f"Affiliate Partner {ts}",
+                "email": f"affiliate{ts}@test.com",
+                "commissionRate": 5.0,
+                "isActive": True,
+            }
+
+        if "/affiliates" in path_lower and method in ("PUT", "PATCH"):
+            return {
+                "name": "Güncellenen Partner",
+                "commissionRate": 7.5,
+                "isActive": True,
             }
 
         # Categories
@@ -235,9 +352,9 @@ class PayloadFactory:
                 "isActive": True,
             }
 
-        # Admin Campaigns
+        # Admin Campaigns - SellerId gönderilmemeli (null/FK ihlali önlenir)
         if "/campaigns" in path_lower and method == "POST":
-            return {
+            payload = {
                 "name": f"Bahar İndirimi {_ts()}",
                 "description": "Seçili ürünlerde %20 indirim",
                 "discountType": "Percentage",
@@ -246,6 +363,10 @@ class PayloadFactory:
                 "endDate": "2026-12-31T23:59:59",
                 "isActive": True,
             }
+            seller_user_id = session_state.get("seller_user_id")
+            if seller_user_id:
+                payload["sellerId"] = seller_user_id
+            return payload
 
         # Campaign products/categories update
         if "/campaigns" in path_lower and "/products" in path_lower and method == "PUT":
@@ -257,11 +378,11 @@ class PayloadFactory:
         # Coupons
         if "/coupons" in path_lower and method == "POST":
             return {
-                "code": "EXODUS10",
+                "code": f"EXODUS{_ts()}",
                 "discountPercent": 10,
                 "minOrderAmount": 100,
                 "maxUsage": 100,
-                "expiryDate": "2025-12-31T23:59:59",
+                "expiryDate": "2026-12-31T23:59:59",
                 "isActive": True,
             }
 
@@ -419,8 +540,12 @@ class PayloadFactory:
                 return "Test Başlığı"
             if "description" in name_lower or "comment" in name_lower or "note" in name_lower:
                 return "Bu bir test açıklamasıdır."
-            if "sku" in name_lower or "code" in name_lower:
-                return "TEST-SKU-001"
+            if "sku" in name_lower:
+                return f"SKU-{_ts()}"
+            if "slug" in name_lower:
+                return f"slug-{_ts()}"
+            if "code" in name_lower:
+                return f"CODE-{_ts()}"
             if "brand" in name_lower:
                 return "Sony"
             if "role" in name_lower:
