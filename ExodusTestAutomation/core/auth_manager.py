@@ -68,8 +68,7 @@ class AuthManager:
         return None
 
     def get_token(self, persona: dict) -> Optional[str]:
-        """Register → Login akışıyla token al."""
-        self._try_register(persona)
+        """Direkt login yap (kullanıcılar DB'de zaten kayıtlı)."""
         return self._login(persona)
 
     def authenticate_all(self) -> dict:
