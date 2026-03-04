@@ -1,7 +1,7 @@
 """
 Rich kütüphanesiyle renkli terminal çıktısı.
 """
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 
 try:
@@ -165,6 +165,3 @@ def _print_plain(results: List[Dict[str, Any]], title: str) -> None:
         time_ms = r.get("response_time_ms", "")
         print(f"  [{r['method']:6}] {r['path']:<50} {code}  {time_ms}ms")
 
-
-# Optional type için import
-from typing import Optional
