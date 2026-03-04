@@ -3,9 +3,14 @@ Swagger schema'sından gerçekçi ve tutarlı payload üretir.
 Session state'ten ID'leri alarak birbiriyle uyumlu veri sağlar.
 """
 import re
+import time
 from typing import Any, Dict, Optional
 from core import session_state
 from core.test_data import PRODUCTS, CATEGORIES, ADDRESSES, ADMIN, SELLER, CUSTOMER
+
+def _ts() -> str:
+    """Saniye cinsinden kısa timestamp - slug/SKU çakışmalarını önler."""
+    return str(int(time.time()))[-6:]
 
 
 class PayloadFactory:
@@ -67,6 +72,8 @@ class PayloadFactory:
             return {
                 "email": CUSTOMER["email"],
                 "password": CUSTOMER["password"],
+                "name": f"{CUSTOMER['firstName']} {CUSTOMER['lastName']}",
+                "username": CUSTOMER["email"].split("@")[0],
                 "firstName": CUSTOMER["firstName"],
                 "lastName": CUSTOMER["lastName"],
                 "role": CUSTOMER["role"],
@@ -78,6 +85,9 @@ class PayloadFactory:
                 "emailOrUsername": ADMIN["email"],
                 "password": ADMIN["password"],
             }
+
+        if "/auth/login/2fa" in path_lower:
+            return {"twoFactorCode": "000000"}
 
         if "/auth/refresh" in path_lower:
             return {"refreshToken": "test-refresh-token"}
@@ -107,7 +117,7 @@ class PayloadFactory:
         # Brands
         if "/brands" in path_lower and method == "POST":
             return {
-                "name": "TechBrand",
+                "name": f"TechBrand_{_ts()}",
                 "description": "Premium teknoloji markası",
                 "isActive": True,
             }
@@ -120,7 +130,7 @@ class PayloadFactory:
                 "description": product["description"],
                 "price": product["price"],
                 "stock": product["stock"],
-                "sku": product["sku"],
+                "sku": f"{product['sku']}-{_ts()}",
                 "brand": product["brand"],
                 "categoryId": session_state.get("created_category_id") or 1,
                 "isActive": True,
@@ -146,10 +156,14 @@ class PayloadFactory:
 
         # Cart
         if "/cart/add" in path_lower or ("/cart" in path_lower and "/items" in path_lower and method == "POST"):
-            return {
+            payload = {
                 "listingId": session_state.get("created_listing_id") or 1,
                 "quantity": 1,
             }
+            customer_id = session_state.get("customer_id")
+            if customer_id:
+                payload["userId"] = customer_id
+            return payload
 
         if "/cart/coupon" in path_lower or "/coupon" in path_lower:
             return {"couponCode": "EXODUS10"}
@@ -174,6 +188,18 @@ class PayloadFactory:
         # Addresses
         if "/addresses" in path_lower and method == "POST":
             addr = ADDRESSES[0]
+            # /api/Profile/addresses farklı DTO kullanıyor
+            if "/profile/" in path_lower:
+                return {
+                    "fullName": f"{addr['firstName']} {addr['lastName']}",
+                    "addressLine": f"{addr['street']} No:{addr['buildingNo']} Daire:{addr['apartmentNo']}",
+                    "city": addr["city"],
+                    "district": addr["district"],
+                    "zipCode": addr["zipCode"],
+                    "phone": addr["phone"],
+                    "title": addr["title"],
+                    "isDefault": addr["isDefault"],
+                }
             return {
                 "title": addr["title"],
                 "firstName": addr["firstName"],
@@ -197,16 +223,36 @@ class PayloadFactory:
                 "comment": "Harika bir ürün, kesinlikle tavsiye ederim!",
             }
 
-        # Campaigns
-        if "/campaigns" in path_lower and method == "POST":
+        # Seller Campaigns (farklı DTO)
+        if "/seller/campaigns" in path_lower and method == "POST":
             return {
-                "name": "Bahar İndirimi",
-                "description": "Seçili ürünlerde %20 indirim",
-                "discountPercent": 20,
-                "startDate": "2025-01-01T00:00:00",
-                "endDate": "2025-12-31T23:59:59",
+                "name": f"Satici Kampanya {_ts()}",
+                "description": "Seçili ürünlerde indirim",
+                "discountType": "Percentage",
+                "discountPercent": 15,
+                "startDate": "2026-01-01T00:00:00",
+                "endDate": "2026-12-31T23:59:59",
                 "isActive": True,
             }
+
+        # Admin Campaigns
+        if "/campaigns" in path_lower and method == "POST":
+            return {
+                "name": f"Bahar İndirimi {_ts()}",
+                "description": "Seçili ürünlerde %20 indirim",
+                "discountType": "Percentage",
+                "discountPercent": 20,
+                "startDate": "2026-01-01T00:00:00",
+                "endDate": "2026-12-31T23:59:59",
+                "isActive": True,
+            }
+
+        # Campaign products/categories update
+        if "/campaigns" in path_lower and "/products" in path_lower and method == "PUT":
+            return {"productIds": [session_state.get("created_product_id") or 1]}
+
+        if "/campaigns" in path_lower and "/categories" in path_lower and method == "PUT":
+            return {"categoryIds": [session_state.get("created_category_id") or 1]}
 
         # Coupons
         if "/coupons" in path_lower and method == "POST":
@@ -226,18 +272,91 @@ class PayloadFactory:
             }
 
         # Notifications
-        if "/notifications" in path_lower and method == "POST":
+        if "/notifications/send" in path_lower and method == "POST":
             return {
                 "title": "Test Bildirimi",
                 "message": "Bu bir test bildirimidir.",
                 "userId": session_state.get("customer_id") or 1,
             }
 
+        if "/notifications/delete-bulk" in path_lower and method == "POST":
+            return {"notificationIds": [1]}
+
+        if "/notifications/send-bulk" in path_lower and method == "POST":
+            return {
+                "title": "Toplu Bildirim",
+                "message": "Bu bir toplu test bildirimidir.",
+                "userIds": [session_state.get("customer_id") or 1],
+            }
+
         # Settings
+        if "/settings/bulk-update" in path_lower and method == "POST":
+            return {"settings": [{"key": "test_key", "value": "test_value"}]}
+
+        if "/settings" in path_lower and "/settings/" in path_lower and method == "PUT":
+            return {"value": "test_value"}
+
         if "/settings" in path_lower and method in ("PUT", "PATCH"):
             return {
                 "siteName": "Exodus Marketplace",
                 "supportEmail": "destek@exodus.com",
+            }
+
+        # Payment
+        if "/payment/intents" in path_lower and method == "POST":
+            return {
+                "orderId": session_state.get("created_order_id") or 1,
+                "amount": 100.0,
+                "currency": "TRY",
+                "paymentMethod": "CreditCard",
+            }
+
+        if "/payment/gateway/process" in path_lower and method == "POST":
+            return {
+                "orderId": session_state.get("created_order_id") or 1,
+                "amount": 100.0,
+                "currency": "TRY",
+                "card": {
+                    "cardNumber": "4111111111111111",
+                    "cardHolderName": "Test User",
+                    "expireMonth": "12",
+                    "expireYear": "2030",
+                    "cvc": "123",
+                },
+            }
+
+        if "/payment/gateway/3ds/initialize" in path_lower and method == "POST":
+            return {
+                "orderId": session_state.get("created_order_id") or 1,
+                "amount": 100.0,
+                "currency": "TRY",
+                "card": {
+                    "cardNumber": "4111111111111111",
+                    "cardHolderName": "Test User",
+                    "expireMonth": "12",
+                    "expireYear": "2030",
+                    "cvc": "123",
+                },
+                "callbackUrl": "https://localhost/callback",
+            }
+
+        # TwoFactor
+        if "/twofactor/verify" in path_lower or "/twofactor/disable" in path_lower or "/twofactor/backup-codes" in path_lower:
+            return {"code": "000000"}
+
+        # Listings bulk update
+        if "/listings/bulk-update" in path_lower and method == "POST":
+            return {
+                "listingIds": [session_state.get("created_listing_id") or 1],
+                "isActive": True,
+            }
+
+        # Admin notifications send
+        if "/admin/notifications/send" in path_lower and not "bulk" in path_lower and method == "POST":
+            return {
+                "userId": session_state.get("customer_id") or 1,
+                "title": "Test Bildirimi",
+                "message": "Bu bir test bildirimidir.",
             }
 
         return None  # Özel payload yok, schema'dan üret

@@ -165,7 +165,7 @@ class RequestRunner:
             session_state.set("created_cart_id", entity_id)
         elif "/orders" in path_lower:
             session_state.set("created_order_id", entity_id)
-        elif "/addresses" in path_lower:
+        elif "/address" in path_lower:  # /api/Address ve /api/.../addresses her ikisini de yakala
             session_state.set("created_address_id", entity_id)
         elif "/reviews" in path_lower:
             session_state.set("created_review_id", entity_id)

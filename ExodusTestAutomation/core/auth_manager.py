@@ -47,16 +47,27 @@ class AuthManager:
             )
             if response.status_code == 200:
                 data = response.json()
+
                 # Token farklı field adlarında olabilir
+                token = None
                 for key in ("token", "accessToken", "access_token", "jwt"):
                     if key in data:
-                        return data[key]
+                        token = data[key]
+                        break
                 # Nested data objesi
-                if "data" in data and isinstance(data["data"], dict):
+                if token is None and "data" in data and isinstance(data["data"], dict):
                     for key in ("token", "accessToken", "access_token", "jwt"):
                         if key in data["data"]:
-                            return data["data"][key]
-                print(f"  [AUTH] Token field bulunamadı. Response: {data}")
+                            token = data["data"][key]
+                            break
+
+                if token is None:
+                    print(f"  [AUTH] Token field bulunamadı. Response: {data}")
+                    return None
+
+                # Kullanıcı ID'lerini session'a kaydet
+                self._extract_user_ids(persona, data)
+                return token
             else:
                 try:
                     body = response.json()
@@ -66,6 +77,29 @@ class AuthManager:
         except Exception as e:
             print(f"  [AUTH] Login hatası ({persona['email']}): {e}")
         return None
+
+    def _extract_user_ids(self, persona: dict, data: dict) -> None:
+        """Login response'dan user/seller ID'lerini session'a kaydet."""
+        role = persona.get("role", "").lower()
+
+        # ID'yi bul (data.id veya id)
+        user_id = None
+        seller_id = None
+
+        src = data.get("data", data)
+        if isinstance(src, dict):
+            user_id = src.get("id") or src.get("userId") or src.get("user", {}).get("id")
+            seller_id = src.get("sellerId") or src.get("sellerProfileId")
+
+        if role == "admin" and user_id:
+            session_state.set("admin_id", user_id)
+        elif role == "seller":
+            if user_id:
+                session_state.set("seller_user_id", user_id)
+            if seller_id:
+                session_state.set("seller_id", seller_id)
+        elif role == "customer" and user_id:
+            session_state.set("customer_id", user_id)
 
     def get_token(self, persona: dict) -> Optional[str]:
         """Direkt login yap (kullanıcılar DB'de zaten kayıtlı)."""
