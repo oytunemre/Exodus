@@ -56,6 +56,13 @@ class AuthManager:
                     for key in ("token", "accessToken", "access_token", "jwt"):
                         if key in data["data"]:
                             return data["data"][key]
+                print(f"  [AUTH] Token field bulunamadı. Response: {data}")
+            else:
+                try:
+                    body = response.json()
+                except Exception:
+                    body = response.text
+                print(f"  [AUTH] Login başarısız ({persona['email']}): HTTP {response.status_code} → {body}")
         except Exception as e:
             print(f"  [AUTH] Login hatası ({persona['email']}): {e}")
         return None

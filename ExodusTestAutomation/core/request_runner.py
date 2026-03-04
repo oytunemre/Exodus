@@ -111,6 +111,13 @@ class RequestRunner:
             except Exception:
                 result["response_body"] = response.text
 
+            # Hatalı response'ları logla
+            if response.status_code >= 400:
+                import json as _json
+                body = result["response_body"]
+                body_str = _json.dumps(body, ensure_ascii=False) if isinstance(body, dict) else str(body)
+                print(f"  [WARN] {method} {path} → {response.status_code} | {body_str[:300]}")
+
             # Başarılı POST response'larından ID'leri session'a kaydet
             if response.status_code in (200, 201) and method == "POST":
                 self._extract_ids(path_template, result["response_body"])
