@@ -86,6 +86,8 @@ class PayloadFactory:
             (r"\{notificationId\}", str(session_state.get("created_notification_id") or "1")),
             (r"\{referralId\}", str(session_state.get("created_affiliate_id") or "1")),
             (r"\{payoutId\}", str(session_state.get("created_affiliate_id") or "1")),
+            (r"\{key\}", "site_name"),
+            (r"\{provider\}", "stripe"),
         ]
 
         for pattern, value in replacements:
@@ -543,6 +545,68 @@ class PayloadFactory:
                 "returnUrl": "https://localhost/callback",
             }
 
+        # ── Payment Webhook ───────────────────────────────────────────────────
+        if "/payment/webhook" in path_lower and method == "POST":
+            import json
+            webhook_event = json.dumps({
+                "eventType": "payment.captured",
+                "externalReference": "ext-ref-test-001",
+                "amount": 100.0,
+                "message": "Payment captured via webhook"
+            })
+            return {"payload": webhook_event}
+
+        # ── Gift Cards ────────────────────────────────────────────────────────
+        if "/giftcards" in path_lower and "/bulk" in path_lower and method == "POST":
+            ts = _ts()
+            return {
+                "count": 2,
+                "amount": 100.0,
+                "currency": "TRY",
+                "expiresAt": "2027-12-31T23:59:59",
+                "prefix": f"GC{ts}",
+            }
+
+        if "/giftcards" in path_lower and method == "POST":
+            ts = _ts()
+            return {
+                "code": f"GC{ts}",
+                "amount": 100.0,
+                "currency": "TRY",
+                "expiresAt": "2027-12-31T23:59:59",
+            }
+
+        if "/giftcards" in path_lower and "/balance" in path_lower:
+            return {"amount": 50.0}
+
+        if "/giftcards" in path_lower and method in ("PUT", "PATCH"):
+            return {"isActive": True}
+
+        # ── Regions ───────────────────────────────────────────────────────────
+        if "/regions" in path_lower and method == "POST":
+            ts = _ts()
+            return {
+                "name": f"Test Bolge {ts}",
+                "code": f"R{ts}",
+            }
+
+        if "/regions" in path_lower and method in ("PUT", "PATCH"):
+            return {"name": "Guncellenen Bolge", "isActive": True}
+
+        # ── Tax Rates ─────────────────────────────────────────────────────────
+        if "/tax" in path_lower and "/rates" in path_lower and method == "POST":
+            ts = _ts()
+            return {
+                "name": f"KDV {ts}",
+                "code": f"T{ts}",
+                "rate": 18.0,
+                "isDefault": False,
+            }
+
+        if "/tax" in path_lower and method in ("PUT", "PATCH"):
+            ts = _ts()
+            return {"name": "KDV (Guncellendi)", "code": f"T{ts}", "rate": 18.0}
+
         # ── TwoFactor ─────────────────────────────────────────────────────────
         if "/twofactor" in path_lower and method == "POST":
             return {"code": "000000"}
@@ -617,8 +681,10 @@ class PayloadFactory:
                 return f"SKU-{_ts()}"
             if "slug" in name_lower:
                 return f"slug-{_ts()}"
+            if "currency" in name_lower:
+                return "TRY"
             if "code" in name_lower:
-                return f"CODE-{_ts()}"
+                return f"C{_ts()}"
             if "brand" in name_lower:
                 return "Sony"
             if "role" in name_lower:

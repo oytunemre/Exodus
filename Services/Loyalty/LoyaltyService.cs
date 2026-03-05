@@ -1,5 +1,6 @@
 using Exodus.Data;
 using Exodus.Models.Entities;
+using Exodus.Services.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace Exodus.Services.Loyalty;
@@ -80,7 +81,7 @@ public class LoyaltyService : ILoyaltyService
         var loyalty = await GetOrCreateLoyaltyAsync(userId, ct);
 
         if (loyalty.AvailablePoints < points)
-            throw new InvalidOperationException($"Yetersiz puan. Mevcut: {loyalty.AvailablePoints}, Istenen: {points}");
+            throw new BadRequestException($"Yetersiz puan. Mevcut: {loyalty.AvailablePoints}, Istenen: {points}");
 
         loyalty.AvailablePoints -= points;
         loyalty.SpentPoints += points;
