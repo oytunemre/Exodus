@@ -75,6 +75,9 @@ def _resolve_path_params(path: str, variables: dict, state: dict) -> str:
     import re
     def replace_path_param(m: re.Match) -> str:
         key = m.group(1)
+        # Sayısal literal ise direkt kullan: {13} → 13
+        if key.isdigit():
+            return key
         # Önce state, sonra variables'a bak
         if key in state and state[key] is not None:
             return str(state[key])
