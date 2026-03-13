@@ -71,7 +71,7 @@ def _get_nested(data: Any, path: str) -> Optional[Any]:
 
 
 def _resolve_path_params(path: str, variables: dict, state: dict) -> str:
-    """URL path'indeki {id}, {userId} gibi parametreleri state'den doldurur."""
+    """URL path'indeki {id}, {{id}} parametrelerini state'den doldurur."""
     import re
     def replace_path_param(m: re.Match) -> str:
         key = m.group(1)
@@ -84,7 +84,10 @@ def _resolve_path_params(path: str, variables: dict, state: dict) -> str:
         if key in variables:
             return str(variables[key])
         return m.group(0)
-    return re.sub(r'\{(\w+)\}', replace_path_param, path)
+    # Önce {{key}} çift parantezi işle, sonra {key} tek parantezi
+    result = re.sub(r'\{\{(\w+)\}\}', replace_path_param, path)
+    result = re.sub(r'\{(\w+)\}', replace_path_param, result)
+    return result
 
 
 def _color(text: str, code: str) -> str:

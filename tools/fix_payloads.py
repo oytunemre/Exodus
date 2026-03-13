@@ -26,6 +26,7 @@ def fix():
         "secondProductId": 10,
         "listingId": 9,
         "secondListingId": 10,
+        "categoryId": 3,   # Mevcut "Elektronik" kategorisi
     }
     for k, v in known.items():
         if data["state"].get(k) is None:
