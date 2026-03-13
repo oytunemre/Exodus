@@ -34,6 +34,7 @@ using Exodus.Services.RecentlyViewedProducts;
 using Exodus.Services.SellerReviews;
 using Exodus.Services.Loyalty;
 using Exodus.Services.Comparison;
+using Exodus.Services.Shipping;
 using Exodus.Models.Dto;
 using System.Threading.RateLimiting;
 
@@ -239,6 +240,7 @@ builder.Services.AddScoped<ILoyaltyService, LoyaltyService>();
 
 // Product Comparison Service
 builder.Services.AddScoped<IProductComparisonService, ProductComparisonService>();
+builder.Services.AddScoped<IReturnShipmentService, ReturnShipmentService>();
 
 // --------------------
 // BUILD

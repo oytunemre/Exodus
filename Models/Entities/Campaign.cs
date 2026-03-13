@@ -15,8 +15,8 @@ public class Campaign : BaseEntity
     [Required]
     public CampaignType Type { get; set; }
 
-    [Required]
-    public int SellerId { get; set; }
+    // Null = platform/admin campaign (no specific seller)
+    public int? SellerId { get; set; }
 
     [ForeignKey(nameof(SellerId))]
     public Users? Seller { get; set; }

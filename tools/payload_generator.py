@@ -103,6 +103,18 @@ SYSTEM_PROMPT = """Sen bir ASP.NET Core API test uzmanısın.
 Senden istenen şey: Bir marketplace projesinin endpoint'leri ve DTO'ları verildiğinde,
 bu endpoint'ler için GERÇEKÇİ ve TUTARLI test flow'u oluşturmak.
 
+ÖNEMLİ KISITLAMA: Ödeme (payment) endpoint'leri henüz implemente edilmemiştir.
+Aşağıdaki adımlar KESINLIKLE flow'a dahil edilmemelidir:
+- customer_create_payment_intent (POST /api/payment/intent veya benzeri)
+- customer_get_payment_intent
+- customer_get_payment_by_order
+- customer_authorize_payment
+- customer_simulate_payment_success
+- customer_get_payment_events
+- admin_get_payment_by_id
+- Herhangi bir /api/payment/* veya /api/admin/payment/* endpoint'i
+Bu adımları tamamen atla, flow'a ekleme.
+
 TUTARLILIK KURALLARI (ZORUNLU):
 1. Register payload'ındaki email/şifre, Login payload'ında BİREBİR AYNI olmalı.
 2. Login'den dönen token → sonraki isteklerde {{adminToken}}/{{sellerToken}}/{{customerToken}} olarak kullanılmalı.
