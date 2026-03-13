@@ -206,13 +206,12 @@ def generate_payloads(dto_content: str, controller_content: str) -> dict:
         dtos=dto_content,
     )
 
-    print("  Model: claude-opus-4-6 (adaptive thinking + streaming)")
+    print("  Model: claude-opus-4-6 (streaming)")
 
     full_text = ""
     with client.messages.stream(
         model="claude-opus-4-6",
         max_tokens=16000,
-        thinking={"type": "adaptive"},
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": prompt}],
     ) as stream:
