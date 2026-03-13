@@ -10,7 +10,7 @@ public class CampaignDto
     public string? Description { get; set; }
     public CampaignType Type { get; set; }
     public string TypeDisplay => Type.ToString();
-    public int SellerId { get; set; }
+    public int? SellerId { get; set; }
     public string? SellerName { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
