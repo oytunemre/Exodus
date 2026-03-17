@@ -15,8 +15,7 @@ public class Campaign : BaseEntity
     [Required]
     public CampaignType Type { get; set; }
 
-    [Required]
-    public int SellerId { get; set; }
+    public int? SellerId { get; set; }
 
     [ForeignKey(nameof(SellerId))]
     public Users? Seller { get; set; }

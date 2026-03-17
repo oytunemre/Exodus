@@ -196,6 +196,7 @@ builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IShipmentService, ShipmentService>();
+builder.Services.AddScoped<Exodus.Services.Shipping.IReturnShipmentService, Exodus.Services.Shipping.ReturnShipmentService>();
 
 // Security Services
 builder.Services.AddScoped<IAuditService, AuditService>();
