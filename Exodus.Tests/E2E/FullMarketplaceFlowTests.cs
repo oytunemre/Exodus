@@ -30,7 +30,7 @@ public class FullMarketplaceFlowTests : IClassFixture<CustomWebApplicationFactor
         var client = _factory.CreateClient();
 
         // --- Step 1: Admin creates a category ---
-        var admin = await TestHelper.RegisterAndLoginAsAdminAsync(client);
+        var admin = await TestHelper.RegisterAndLoginAsAdminAsync(client, "fmf1");
 
         var categoryDto = new CreateCategoryDto
         {
@@ -56,7 +56,7 @@ public class FullMarketplaceFlowTests : IClassFixture<CustomWebApplicationFactor
         {
             ProductName = "iPhone 15 Pro",
             ProductDescription = "Apple iPhone 15 Pro 256GB",
-            Barcodes = new List<string> { "0194253396895" }
+            Barcodes = new List<string> { Guid.NewGuid().ToString("N") }
         };
         var prodResponse = await client.PostAsJsonAsync("/api/product", productDto, TestHelper.JsonOptions);
         prodResponse.StatusCode.Should().Be(HttpStatusCode.Created);

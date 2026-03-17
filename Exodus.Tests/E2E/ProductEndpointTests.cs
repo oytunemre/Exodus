@@ -36,7 +36,7 @@ public class ProductEndpointTests : IClassFixture<CustomWebApplicationFactory>
         {
             ProductName = "Test Product",
             ProductDescription = "A test product description",
-            Barcodes = new List<string> { "1234567890123" }
+            Barcodes = new List<string> { Guid.NewGuid().ToString("N") }
         };
 
         var response = await client.PostAsJsonAsync("/api/product", dto, TestHelper.JsonOptions);
@@ -52,13 +52,13 @@ public class ProductEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task CreateProduct_AsAdmin_ReturnsCreated()
     {
         var client = _factory.CreateClient();
-        await TestHelper.RegisterAndLoginAsAdminAsync(client);
+        await TestHelper.RegisterAndLoginAsAdminAsync(client, "prodadm");
 
         var dto = new AddProductDto
         {
             ProductName = "Admin Product",
             ProductDescription = "Product created by admin",
-            Barcodes = new List<string> { "9876543210123" }
+            Barcodes = new List<string> { Guid.NewGuid().ToString("N") }
         };
 
         var response = await client.PostAsJsonAsync("/api/product", dto, TestHelper.JsonOptions);
@@ -111,7 +111,7 @@ public class ProductEndpointTests : IClassFixture<CustomWebApplicationFactory>
         {
             ProductName = "Get By Id Product",
             ProductDescription = "Test description",
-            Barcodes = new List<string> { "5555555555555" }
+            Barcodes = new List<string> { Guid.NewGuid().ToString("N") }
         };
 
         var createResponse = await client.PostAsJsonAsync("/api/product", createDto, TestHelper.JsonOptions);
@@ -147,7 +147,7 @@ public class ProductEndpointTests : IClassFixture<CustomWebApplicationFactory>
         {
             ProductName = "Updated Name",
             ProductDescription = "Updated description",
-            Barcodes = new List<string> { "1111111111111" }
+            Barcodes = new List<string> { Guid.NewGuid().ToString("N") }
         };
 
         var response = await client.PutAsJsonAsync($"/api/product/{created!.Id}", updateDto, TestHelper.JsonOptions);

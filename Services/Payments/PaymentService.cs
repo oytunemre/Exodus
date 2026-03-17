@@ -53,6 +53,7 @@ public class PaymentService : IPaymentService
         };
 
         // Handle card payments
+        bool needs3DS = false;
         if (dto.CardDetails != null && (dto.Method == PaymentMethod.CreditCard || dto.Method == PaymentMethod.DebitCard))
         {
             intent.CardLast4 = dto.CardDetails.CardNumber.Length >= 4
@@ -64,8 +65,8 @@ public class PaymentService : IPaymentService
             if (order.TotalAmount > 500)
             {
                 intent.Requires3DSecure = true;
-                intent.ThreeDSecureUrl = $"/api/payments/{intent.Id}/3ds?returnUrl={dto.ReturnUrl}";
                 intent.Status = PaymentStatus.Pending;
+                needs3DS = true;
             }
         }
 
@@ -77,6 +78,13 @@ public class PaymentService : IPaymentService
 
         _db.PaymentIntents.Add(intent);
         await _db.SaveChangesAsync(ct);
+
+        // Set ThreeDSecureUrl after save so intent.Id is assigned
+        if (needs3DS)
+        {
+            intent.ThreeDSecureUrl = $"/api/payments/{intent.Id}/3ds?returnUrl={dto.ReturnUrl}";
+            await _db.SaveChangesAsync(ct);
+        }
 
         await AddEventAsync(intent.Id, PaymentStatus.Created, "payment.created",
             JsonSerializer.Serialize(new { method = intent.Method.ToString(), amount = intent.Amount }), "API", ct);
