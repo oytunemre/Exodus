@@ -215,9 +215,14 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 
-// Payment Gateway (iyzico)
-builder.Services.Configure<IyzicoSettings>(builder.Configuration.GetSection("IyzicoSettings"));
-builder.Services.AddHttpClient<IPaymentGateway, IyzicoPaymentGateway>();
+// Payment Gateway
+if (builder.Environment.IsDevelopment())
+    builder.Services.AddScoped<IPaymentGateway, MockPaymentGateway>();
+else
+{
+    builder.Services.Configure<IyzicoSettings>(builder.Configuration.GetSection("IyzicoSettings"));
+    builder.Services.AddHttpClient<IPaymentGateway, IyzicoPaymentGateway>();
+}
 
 // Campaign Service
 builder.Services.AddScoped<ICampaignService, CampaignService>();
