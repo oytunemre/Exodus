@@ -15,17 +15,20 @@ public static class DbSeeder
         // -------------------------
         var usersToSeed = new List<Users>
         {
-            new Users { Name = "Ahmet Yılmaz",  Email = "ahmet@test.com",  Password = "123456", Username = "ahmety" },
-            new Users { Name = "Zeynep Kaya",   Email = "zeynep@test.com", Password = "123456", Username = "zeynepk" },
-            new Users { Name = "Mehmet Demir",  Email = "mehmet@test.com", Password = "123456", Username = "mehmetd" },
-            new Users { Name = "Elif Şahin",    Email = "elif@test.com",   Password = "123456", Username = "elifs" },
-            new Users { Name = "Can Arslan",    Email = "can@test.com",    Password = "123456", Username = "canars" }
+            new Users { Name = "Ahmet Yılmaz",  Email = "ahmet@test.com",  Password = "123456", Username = "ahmety",   EmailVerified = true },
+            new Users { Name = "Zeynep Kaya",   Email = "zeynep@test.com", Password = "123456", Username = "zeynepk", EmailVerified = true },
+            new Users { Name = "Mehmet Demir",  Email = "mehmet@test.com", Password = "123456", Username = "mehmetd", EmailVerified = true },
+            new Users { Name = "Elif Şahin",    Email = "elif@test.com",   Password = "123456", Username = "elifs",   EmailVerified = true },
+            new Users { Name = "Can Arslan",    Email = "can@test.com",    Password = "123456", Username = "canars",  EmailVerified = true }
         };
 
         foreach (var u in usersToSeed)
         {
-            var exists = await db.Users.IgnoreQueryFilters().AnyAsync(x => x.Email == u.Email);
-            if (!exists) db.Users.Add(u);
+            var existing = await db.Users.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Email == u.Email);
+            if (existing == null)
+                db.Users.Add(u);
+            else if (!existing.EmailVerified)
+                existing.EmailVerified = true;
         }
         await db.SaveChangesAsync();
 
