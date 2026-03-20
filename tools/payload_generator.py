@@ -123,17 +123,23 @@ KULLANICI ROL DEĞERLERİ (KRİTİK - ASLA KARIŞTIRMA):
 
 TEST KULLANICILARI TEMİZLEME (FLOW'UN İLK 3 ADIMI OLMALI):
 Flow'un başına şu 3 adımı ekle (her test çalıştırmasında temiz başlangıç sağlar):
-1. DELETE /api/dev/users/{{adminEmail}} → id: "cleanup_admin"
-2. DELETE /api/dev/users/{{sellerEmail}} → id: "cleanup_seller"
-3. DELETE /api/dev/users/{{customerEmail}} → id: "cleanup_customer"
+1. DELETE /api/auth/dev/users/{{adminEmail}} → id: "cleanup_admin"
+2. DELETE /api/auth/dev/users/{{sellerEmail}} → id: "cleanup_seller"
+3. DELETE /api/auth/dev/users/{{customerEmail}} → id: "cleanup_customer"
 Bu adımlar 404 veya 200 dönebilir, ikisi de kabul edilebilir (requires_auth: false, save_response: {}).
 
 KRİTİK: DOĞRU FIELD İSİMLERİ (BUNLARI KESİNLİKLE KULLAN):
 
-LOGIN (POST /api/auth/login) YANITI — save_response:
+REGISTER ve LOGIN (POST /api/auth/register ve /api/auth/login) YANITI — save_response:
   - Token field adı: "token"   (ASLA "accessToken", "jwt", "jwtToken" YAZMA)
   - UserId field adı: "userId" (ASLA "id", "user_id", "Id" YAZMA)
-  - Örnek: {"adminToken": "token", "adminId": "userId"}
+  - Register VE login adımlarının her ikisi de save_response içermeli:
+    * register_admin:   {"adminToken": "token", "adminId": "userId"}
+    * login_admin:      {"adminToken": "token", "adminId": "userId"}
+    * register_seller:  {"sellerToken": "token", "sellerId": "userId"}
+    * login_seller:     {"sellerToken": "token", "sellerId": "userId"}
+    * register_customer: {"customerToken": "token", "customerId": "userId"}
+    * login_customer:   {"customerToken": "token", "customerId": "userId"}
 
 SEPET (POST /api/cart/add veya /api/cart/items) — payload:
   - Body'de "userId" alanı zorunlu (JWT'den alınmaz, body'de gönderilmeli)
@@ -240,7 +246,7 @@ profil, adres, ürün, listing, sepet, sipariş, ödeme akışları dahil.
         "password": "{{{{adminPassword}}}}",
         "role": 2
       }},
-      "save_response": {{}}
+      "save_response": {{"adminToken": "token", "adminId": "userId"}}
     }},
     ... (tüm diğer adımlar)
   ]

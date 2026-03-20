@@ -189,7 +189,8 @@ class ExodusAutomation:
                 response_data = response.text
 
             # Register 409: kullanıcı zaten var → login ile devam et
-            if response.status_code == 409 and "register" in step_id and save_response:
+            fallback_success = False
+            if response.status_code == 409 and "register" in step_id:
                 print(f"  {_color('→ 409', '93')}  Kullanıcı zaten var, login deneniyor...")
                 # Hangi rol? step_id'den çıkar (register_admin → admin, register_seller → seller, ...)
                 role_hint = step_id.replace("register_", "")  # admin / seller / customer
@@ -212,6 +213,7 @@ class ExodusAutomation:
                                 self.state[state_key] = value
                                 print(f"  → state.{state_key} = {value} (login fallback)")
                         print(f"  {_color('✓ login', '92')}  {role_hint} token kaydedildi")
+                        fallback_success = True
                     else:
                         print(f"  {_color('✗ login de başarısız', '91')}  {login_data}")
                 except Exception as e:
@@ -225,13 +227,21 @@ class ExodusAutomation:
                         self.state[state_key] = value
                         print(f"  → state.{state_key} = {value}")
 
+            # cleanup adımları için 404 başarı sayılır (kullanıcı zaten yoksa sorun değil)
+            is_cleanup = step_id.startswith("cleanup_")
+            is_success = (
+                response.status_code < 400
+                or fallback_success
+                or (is_cleanup and response.status_code == 404)
+            )
+
             result = {
                 "step_id": step_id,
                 "method": method,
                 "url": url,
                 "payload": resolved_payload,
                 "status_code": response.status_code,
-                "success": response.status_code < 400,
+                "success": is_success,
                 "response": response_data,
             }
 
