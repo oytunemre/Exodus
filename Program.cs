@@ -291,12 +291,12 @@ app.MapHealthChecks("/health/ready");
 app.MapControllers();
 
 // --------------------
-// SEED (Build'den sonra, Run'dan önce)
+// DB MIGRATION (Build'den sonra, Run'dan önce)
 // --------------------
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await DbSeeder.SeedAsync(db);
+    await db.Database.MigrateAsync();
 }
 
 app.Run();
