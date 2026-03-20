@@ -5,7 +5,9 @@ using Exodus.Models.Entities;
 using Exodus.Services.Common;
 using Exodus.Services.Email;
 using Exodus.Services.TwoFactor;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -21,6 +23,7 @@ namespace Exodus.Services.Auth
         private readonly JwtSettings _jwtSettings;
         private readonly IEmailService _emailService;
         private readonly ITwoFactorService _twoFactorService;
+        private readonly IWebHostEnvironment _env;
 
         private const int MaxFailedLoginAttempts = 5;
         private const int LockoutDurationMinutes = 15;
@@ -29,12 +32,14 @@ namespace Exodus.Services.Auth
             ApplicationDbContext context,
             IOptions<JwtSettings> jwtSettings,
             IEmailService emailService,
-            ITwoFactorService twoFactorService)
+            ITwoFactorService twoFactorService,
+            IWebHostEnvironment env)
         {
             _context = context;
             _jwtSettings = jwtSettings.Value;
             _emailService = emailService;
             _twoFactorService = twoFactorService;
+            _env = env;
         }
 
         public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
@@ -67,7 +72,7 @@ namespace Exodus.Services.Auth
                 Username = dto.Username,
                 Password = hashedPassword,
                 Role = dto.Role,
-                EmailVerified = false,
+                EmailVerified = _env.IsDevelopment(),
                 EmailVerificationToken = emailVerificationToken,
                 EmailVerificationTokenExpiresAt = DateTime.UtcNow.AddHours(24)
             };
