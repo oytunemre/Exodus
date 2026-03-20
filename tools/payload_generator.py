@@ -113,13 +113,39 @@ TUTARLILIK KURALLARI (ZORUNLU):
 7. Türkçe karakterler ve Türkiye'ye uygun gerçekçi veriler kullan (telefon: 5xxxxxxxxx formatında).
 8. Şifreler güçlü olsun: büyük+küçük harf + rakam + özel karakter (en az 8 karakter).
 
+KRİTİK: DOĞRU FIELD İSİMLERİ (BUNLARI KESİNLİKLE KULLAN):
+
+LOGIN (POST /api/auth/login) YANITI — save_response:
+  - Token field adı: "token"   (ASLA "accessToken", "jwt", "jwtToken" YAZMA)
+  - UserId field adı: "userId" (ASLA "id", "user_id", "Id" YAZMA)
+  - Örnek: {"adminToken": "token", "adminId": "userId"}
+
+SEPET (POST /api/cart/add veya /api/cart/items) — payload:
+  - Body'de "userId" alanı zorunlu (JWT'den alınmaz, body'de gönderilmeli)
+  - {"userId": {{customerId}}, "listingId": {{listingId}}, "quantity": 1}
+
+SON GÖRÜNTÜLENEN (POST /api/recently-viewed/{productId}):
+  - Bu endpoint SADECE route parametresi alır, body GÖNDERME (boş payload: {})
+  - Path: /api/recently-viewed/{{productId}}
+
+KARŞILAŞTIRMA (Comparison):
+  - Karşılaştırma listesi oluştur: POST /api/comparison  →  body: {"name": "Karşılaştırma"}  →  save: comparisonId = "id"
+  - Ürün ekle: POST /api/comparison/{{comparisonId}}/products/{{productId}}  →  body: {}
+
+ÜRÜN SORU/CEVAP:
+  - Soru sor: POST /api/products/{{productId}}/questions  →  {"questionText": "..."}  →  save: questionId = "id"
+  - Cevap ver: POST /api/products/{{productId}}/questions/{{questionId}}/answers  →  {"answerText": "..."}
+
+CHECKOUT (POST /api/orders/checkout):
+  - {"shippingAddressId": {{addressId}}, "billingAddressId": {{addressId}}}
+  - save_response: {"orderId": "id", "orderNumber": "orderNumber"}
+
 ÖDEME AKIŞI (ZORUNLU KURALLAR):
 - Ödeme için ASLA /api/payment/gateway/* endpointlerini kullanma (gerçek banka bağlantısı gerektirir).
 - Ödeme akışı her zaman şu 2 adımdan oluşmalı:
-  1. POST /api/payment/intents  →  payload: {orderId: {{orderId}}, method: 4, currency: "TRY"}  →  save: paymentIntentId = "id"
-  2. POST /api/payment/intents/{{paymentIntentId}}/simulate-success  →  payload: {}  →  save: -
+  1. POST /api/payment/intents  →  {"orderId": {{orderId}}, "method": 4, "currency": "TRY"}  →  save: paymentIntentId = "id"
+  2. POST /api/payment/intents/{{paymentIntentId}}/simulate-success  →  body: {}
 - method değeri: 4 = BankTransfer (3DS tetiklemeyen, basit akış).
-- simulate-success ödemeyi "Captured" durumuna getirir, sipariş "Processing" olur.
 
 EMAIL DOĞRULAMA:
 - Development ortamında register olan kullanıcılar otomatik verified olur.
@@ -134,6 +160,8 @@ STATE REFERANSLARI:
 - {{cartItemId}} → sepete eklenen item ID
 - {{orderId}} → oluşturulan sipariş ID
 - {{paymentIntentId}} → oluşturulan payment intent ID
+- {{comparisonId}} → oluşturulan karşılaştırma ID
+- {{questionId}} → oluşturulan soru ID
 
 SADECE geçerli JSON döndür, başka hiçbir şey ekleme."""
 
@@ -205,7 +233,8 @@ profil, adres, ürün, listing, sepet, sipariş, ödeme akışları dahil.
 
 ÖNEMLİ NOT: flow dizisindeki her adım için save_response alanı şu formatta olmalı:
 - state'e kaydedilecek key → response içindeki JSON path (nokta ile ayrılmış)
-- Örnek: {{"adminToken": "token", "adminId": "id"}}
+- Login örneği: {{"adminToken": "token", "adminId": "userId"}}  ← "userId" ZORUNLU, "id" DEĞİL
+- Genel örnek: {{"productId": "id"}}  ← çoğu create endpoint'i "id" döner
 - Yanıt doğruca dizi değilse root field'ı kullan."""
 
 
