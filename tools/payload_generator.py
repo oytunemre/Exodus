@@ -172,8 +172,27 @@ EMAIL DOĞRULAMA:
 - Development ortamında register olan kullanıcılar otomatik verified olur.
 - /api/auth/dev/verify-email endpointini KULLANMA.
 
+AUTH_ROLE ALANI (KRİTİK - HER ADIMDA OLMALI):
+Her adımda "auth_role" alanını açıkça belirt. Bu alan hangi token'ın kullanılacağını belirler:
+- "auth_role": "admin"    → adminToken kullanılır  (admin_ ile başlayan adımlar)
+- "auth_role": "seller"   → sellerToken kullanılır (seller_ ile başlayan adımlar)
+- "auth_role": "customer" → customerToken kullanılır (customer_ ile başlayan adımlar)
+
+Örnekler:
+  Admin endpoint: {"id": "admin_get_users", "requires_auth": true, "auth_role": "admin", ...}
+  Seller endpoint: {"id": "seller_create_listing", "requires_auth": true, "auth_role": "seller", ...}
+  Customer endpoint: {"id": "customer_checkout", "requires_auth": true, "auth_role": "customer", ...}
+
+SELLER ENDPOINT'LERİ (/api/seller/...):
+- /api/seller/listings (GET, POST, PUT, DELETE) → "auth_role": "seller"
+- /api/seller/orders/* → "auth_role": "seller"
+- /api/seller/campaigns/* → "auth_role": "seller"
+
+ADMIN ENDPOINT'LERİ (/api/admin/...):
+- Tüm /api/admin/* endpoint'leri → "auth_role": "admin"
+
 STATE REFERANSLARI:
-- {{adminToken}}, {{sellerToken}}, {{customerToken}} → JWT token
+- {{adminToken}}, {{sellerToken}}, {{customerToken}} → JWT token (auth_role ile otomatik seçilir)
 - {{adminId}}, {{sellerId}}, {{customerId}} → kullanıcı ID
 - {{addressId}} → oluşturulan adres ID
 - {{listingId}} → oluşturulan listing ID
