@@ -147,7 +147,7 @@ namespace Exodus.Services.Auth
             }
 
             // Check if email is verified
-            if (!user.EmailVerified)
+            if (!user.EmailVerified && !_env.IsDevelopment())
                 throw new UnauthorizedException("Please verify your email before logging in.");
 
             // Reset failed login attempts on successful login
@@ -231,7 +231,7 @@ namespace Exodus.Services.Auth
             }
 
             // Check if email is verified
-            if (!user.EmailVerified)
+            if (!user.EmailVerified && !_env.IsDevelopment())
                 throw new UnauthorizedException("Please verify your email before logging in.");
 
             // Verify 2FA is enabled

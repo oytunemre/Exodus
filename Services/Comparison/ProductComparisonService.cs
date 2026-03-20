@@ -72,6 +72,7 @@ public class ProductComparisonService : IProductComparisonService
         _db.Set<ProductComparisonItem>().Remove(item);
         await _db.SaveChangesAsync(ct);
 
+        _db.Entry(comparison).State = Microsoft.EntityFrameworkCore.EntityState.Detached;
         return await GetComparisonAsync(userId, comparisonId, ct);
     }
 

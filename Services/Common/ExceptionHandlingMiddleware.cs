@@ -36,11 +36,15 @@ public class ExceptionHandlingMiddleware
             context.Response.StatusCode = 500;
             context.Response.ContentType = "application/json";
 
+            var detail = ex.InnerException != null
+                ? $"{ex.Message} | Inner: {ex.InnerException.Message}"
+                : ex.Message;
+
             var problem = new ProblemDetails
             {
                 Status = 500,
                 Title = "Server error",
-                Detail = ex.Message
+                Detail = detail
             };
 
             await context.Response.WriteAsJsonAsync(problem);
