@@ -113,6 +113,18 @@ TUTARLILIK KURALLARI (ZORUNLU):
 7. Türkçe karakterler ve Türkiye'ye uygun gerçekçi veriler kullan (telefon: 5xxxxxxxxx formatında).
 8. Şifreler güçlü olsun: büyük+küçük harf + rakam + özel karakter (en az 8 karakter).
 
+ÖDEME AKIŞI (ZORUNLU KURALLAR):
+- Ödeme için ASLA /api/payment/gateway/* endpointlerini kullanma (gerçek banka bağlantısı gerektirir).
+- Ödeme akışı her zaman şu 2 adımdan oluşmalı:
+  1. POST /api/payment/intents  →  payload: {orderId: {{orderId}}, method: 4, currency: "TRY"}  →  save: paymentIntentId = "id"
+  2. POST /api/payment/intents/{{paymentIntentId}}/simulate-success  →  payload: {}  →  save: -
+- method değeri: 4 = BankTransfer (3DS tetiklemeyen, basit akış).
+- simulate-success ödemeyi "Captured" durumuna getirir, sipariş "Processing" olur.
+
+EMAIL DOĞRULAMA:
+- Development ortamında register olan kullanıcılar otomatik verified olur.
+- /api/auth/dev/verify-email endpointini KULLANMA.
+
 STATE REFERANSLARI:
 - {{adminToken}}, {{sellerToken}}, {{customerToken}} → JWT token
 - {{adminId}}, {{sellerId}}, {{customerId}} → kullanıcı ID
