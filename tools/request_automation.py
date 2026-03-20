@@ -188,8 +188,37 @@ class ExodusAutomation:
             except Exception:
                 response_data = response.text
 
+            # Register 409: kullanıcı zaten var → login ile devam et
+            if response.status_code == 409 and "register" in step_id and save_response:
+                print(f"  {_color('→ 409', '93')}  Kullanıcı zaten var, login deneniyor...")
+                # Hangi rol? step_id'den çıkar (register_admin → admin, register_seller → seller, ...)
+                role_hint = step_id.replace("register_", "")  # admin / seller / customer
+                login_payload = {
+                    "emailOrUsername": resolved_payload.get("email", ""),
+                    "password": resolved_payload.get("password", ""),
+                }
+                try:
+                    login_resp = self.session.post(
+                        f"{self.base_url}/api/auth/login",
+                        json=login_payload,
+                        headers={"Content-Type": "application/json", "Accept": "application/json"},
+                        timeout=30,
+                    )
+                    login_data = login_resp.json()
+                    if login_resp.status_code < 400 and isinstance(login_data, dict):
+                        for state_key, response_path in save_response.items():
+                            value = _get_nested(login_data, response_path)
+                            if value is not None:
+                                self.state[state_key] = value
+                                print(f"  → state.{state_key} = {value} (login fallback)")
+                        print(f"  {_color('✓ login', '92')}  {role_hint} token kaydedildi")
+                    else:
+                        print(f"  {_color('✗ login de başarısız', '91')}  {login_data}")
+                except Exception as e:
+                    print(f"  {_color('✗ login hatası', '91')}  {e}")
+
             # State'e değerleri kaydet
-            if save_response and isinstance(response_data, dict) and response.status_code < 400:
+            elif save_response and isinstance(response_data, dict) and response.status_code < 400:
                 for state_key, response_path in save_response.items():
                     value = _get_nested(response_data, response_path)
                     if value is not None:

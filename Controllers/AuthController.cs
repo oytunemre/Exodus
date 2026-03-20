@@ -197,5 +197,26 @@ namespace Exodus.Controllers
 
             return Ok(new { Message = "Email verified successfully" });
         }
+
+        /// <summary>
+        /// [DEV ONLY] Delete a user by email — for automation test cleanup
+        /// </summary>
+        [HttpDelete("dev/users/{email}")]
+        [AllowAnonymous]
+        [DisableRateLimiting]
+        public async Task<ActionResult> DevDeleteUser(string email)
+        {
+            if (!_env.IsDevelopment())
+                return NotFound();
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (user == null)
+                return NotFound(new { Message = "User not found" });
+
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Message = $"User {email} deleted successfully" });
+        }
     }
 }

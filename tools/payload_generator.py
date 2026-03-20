@@ -113,6 +113,21 @@ TUTARLILIK KURALLARI (ZORUNLU):
 7. Türkçe karakterler ve Türkiye'ye uygun gerçekçi veriler kullan (telefon: 5xxxxxxxxx formatında).
 8. Şifreler güçlü olsun: büyük+küçük harf + rakam + özel karakter (en az 8 karakter).
 
+KULLANICI ROL DEĞERLERİ (KRİTİK - ASLA KARIŞTIRMA):
+  Customer = 0
+  Seller   = 1
+  Admin    = 2
+- register_admin → "role": 2
+- register_seller → "role": 1
+- register_customer → "role": 0
+
+TEST KULLANICILARI TEMİZLEME (FLOW'UN İLK 3 ADIMI OLMALI):
+Flow'un başına şu 3 adımı ekle (her test çalıştırmasında temiz başlangıç sağlar):
+1. DELETE /api/dev/users/{{adminEmail}} → id: "cleanup_admin"
+2. DELETE /api/dev/users/{{sellerEmail}} → id: "cleanup_seller"
+3. DELETE /api/dev/users/{{customerEmail}} → id: "cleanup_customer"
+Bu adımlar 404 veya 200 dönebilir, ikisi de kabul edilebilir (requires_auth: false, save_response: {}).
+
 KRİTİK: DOĞRU FIELD İSİMLERİ (BUNLARI KESİNLİKLE KULLAN):
 
 LOGIN (POST /api/auth/login) YANITI — save_response:
@@ -223,7 +238,7 @@ profil, adres, ürün, listing, sepet, sipariş, ödeme akışları dahil.
         "email": "{{{{adminEmail}}}}",
         "username": "{{{{adminUsername}}}}",
         "password": "{{{{adminPassword}}}}",
-        "role": 0
+        "role": 2
       }},
       "save_response": {{}}
     }},
