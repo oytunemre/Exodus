@@ -136,13 +136,17 @@ class ExodusAutomation:
         description = step.get("description", step_id)
         method = step.get("method", "GET").upper()
         path = step.get("path", "/")
-        requires_auth = step.get("requires_auth", False)
         _auth_role_default = (
             "admin" if step_id.lower().startswith("admin")
             else "seller" if step_id.lower().startswith("seller")
             else "customer"
         )
         auth_role = step.get("auth_role", _auth_role_default)
+        # Infer requires_auth: admin/seller steps always need auth; customer steps too,
+        # except register, login, cleanup, and public_ prefixed steps
+        _public_step = any(step_id.lower().startswith(p) for p in ("register", "login", "cleanup", "public_", "verify_email"))
+        _inferred_auth = not _public_step
+        requires_auth = step.get("requires_auth", _inferred_auth)
         raw_payload = step.get("payload", {})
         save_response = step.get("save_response", {})
         skip_if_null = step.get("skip_if_state_null", None)

@@ -164,7 +164,7 @@ namespace Exodus.Services.Orders
                 }
                 catch
                 {
-                    await tx.RollbackAsync();
+                    try { await tx.RollbackAsync(); } catch { /* ignore rollback error, rethrow original */ }
                     throw;
                 }
             });

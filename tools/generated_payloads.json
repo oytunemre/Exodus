@@ -1,0 +1,524 @@
+{
+  "variables": {
+    "baseUrl": "http://localhost:5013",
+    "adminEmail": "testadmin@exodus.test",
+    "adminUsername": "testadmin",
+    "adminPassword": "Admin123!",
+    "sellerEmail": "testseller@exodus.test",
+    "sellerUsername": "testseller",
+    "sellerPassword": "Seller123!",
+    "customerEmail": "testcustomer@exodus.test",
+    "customerUsername": "testcustomer",
+    "customerPassword": "Customer123!"
+  },
+  "state": {
+    "adminToken": null,
+    "sellerToken": null,
+    "customerToken": null,
+    "adminId": null,
+    "sellerId": null,
+    "customerId": null,
+    "categoryId": null,
+    "productId": null,
+    "listingId": null,
+    "addressId": null,
+    "orderId": null,
+    "orderNumber": null,
+    "sellerOrderId": null,
+    "paymentIntentId": null,
+    "taxRateId": null,
+    "ticketId": null,
+    "comparisonId": null
+  },
+  "flow": [
+    {
+      "id": "cleanup_admin",
+      "description": "Admin test kullanıcısını temizle",
+      "method": "DELETE",
+      "path": "/api/auth/dev/users/{{adminEmail}}",
+      "requires_auth": false
+    },
+    {
+      "id": "cleanup_seller",
+      "description": "Seller test kullanıcısını temizle",
+      "method": "DELETE",
+      "path": "/api/auth/dev/users/{{sellerEmail}}",
+      "requires_auth": false
+    },
+    {
+      "id": "cleanup_customer",
+      "description": "Customer test kullanıcısını temizle",
+      "method": "DELETE",
+      "path": "/api/auth/dev/users/{{customerEmail}}",
+      "requires_auth": false
+    },
+    {
+      "id": "register_admin",
+      "description": "Admin kullanıcısı kaydet",
+      "method": "POST",
+      "path": "/api/auth/register",
+      "requires_auth": false,
+      "payload": {
+        "name": "Test Admin",
+        "email": "{{adminEmail}}",
+        "username": "{{adminUsername}}",
+        "password": "{{adminPassword}}",
+        "role": 1
+      },
+      "save_response": {
+        "adminToken": "token"
+      }
+    },
+    {
+      "id": "verify_email_admin",
+      "description": "Admin email doğrula",
+      "method": "POST",
+      "path": "/api/auth/dev/verify-email",
+      "requires_auth": false,
+      "payload": {
+        "email": "{{adminEmail}}"
+      }
+    },
+    {
+      "id": "login_admin",
+      "description": "Admin giriş yap",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "requires_auth": false,
+      "payload": {
+        "emailOrUsername": "{{adminEmail}}",
+        "password": "{{adminPassword}}"
+      },
+      "save_response": {
+        "adminToken": "token",
+        "adminId": "userId"
+      }
+    },
+    {
+      "id": "register_seller",
+      "description": "Seller kullanıcısı kaydet",
+      "method": "POST",
+      "path": "/api/auth/register",
+      "requires_auth": false,
+      "payload": {
+        "name": "Test Seller",
+        "email": "{{sellerEmail}}",
+        "username": "{{sellerUsername}}",
+        "password": "{{sellerPassword}}",
+        "role": 2
+      },
+      "save_response": {
+        "sellerToken": "token"
+      }
+    },
+    {
+      "id": "verify_email_seller",
+      "description": "Seller email doğrula",
+      "method": "POST",
+      "path": "/api/auth/dev/verify-email",
+      "requires_auth": false,
+      "payload": {
+        "email": "{{sellerEmail}}"
+      }
+    },
+    {
+      "id": "login_seller",
+      "description": "Seller giriş yap",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "requires_auth": false,
+      "payload": {
+        "emailOrUsername": "{{sellerEmail}}",
+        "password": "{{sellerPassword}}"
+      },
+      "save_response": {
+        "sellerToken": "token",
+        "sellerId": "userId"
+      }
+    },
+    {
+      "id": "register_customer",
+      "description": "Customer kullanıcısı kaydet",
+      "method": "POST",
+      "path": "/api/auth/register",
+      "requires_auth": false,
+      "payload": {
+        "name": "Test Customer",
+        "email": "{{customerEmail}}",
+        "username": "{{customerUsername}}",
+        "password": "{{customerPassword}}",
+        "role": 3
+      },
+      "save_response": {
+        "customerToken": "token"
+      }
+    },
+    {
+      "id": "verify_email_customer",
+      "description": "Customer email doğrula",
+      "method": "POST",
+      "path": "/api/auth/dev/verify-email",
+      "requires_auth": false,
+      "payload": {
+        "email": "{{customerEmail}}"
+      }
+    },
+    {
+      "id": "login_customer",
+      "description": "Customer giriş yap",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "requires_auth": false,
+      "payload": {
+        "emailOrUsername": "{{customerEmail}}",
+        "password": "{{customerPassword}}"
+      },
+      "save_response": {
+        "customerToken": "token",
+        "customerId": "userId"
+      }
+    },
+    {
+      "id": "admin_get_me",
+      "description": "Admin profil bilgilerini al",
+      "method": "GET",
+      "path": "/api/auth/me",
+      "requires_auth": true,
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_dashboard",
+      "description": "Admin dashboard istatistiklerini al",
+      "method": "GET",
+      "path": "/api/admin/dashboard",
+      "requires_auth": true,
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_create_category",
+      "description": "Yeni kategori oluştur",
+      "method": "POST",
+      "path": "/api/admin/categories",
+      "requires_auth": true,
+      "auth_role": "admin",
+      "payload": {
+        "name": "Test Elektronik",
+        "description": "Test kategori açıklaması",
+        "displayOrder": 1
+      },
+      "save_response": {
+        "categoryId": "id"
+      }
+    },
+    {
+      "id": "admin_get_categories",
+      "description": "Kategorileri listele",
+      "method": "GET",
+      "path": "/api/admin/categories",
+      "requires_auth": true,
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_create_tax_rate",
+      "description": "Vergi oranı oluştur",
+      "method": "POST",
+      "path": "/api/admin/taxes",
+      "requires_auth": true,
+      "auth_role": "admin",
+      "payload": {
+        "name": "KDV %18",
+        "rate": 18.0,
+        "isDefault": false,
+        "description": "Test KDV oranı"
+      },
+      "save_response": {
+        "taxRateId": "id"
+      }
+    },
+    {
+      "id": "public_get_all_listings",
+      "description": "Tüm aktif ilanları listele (public)",
+      "method": "GET",
+      "path": "/api/listing",
+      "requires_auth": false
+    },
+    {
+      "id": "public_get_categories",
+      "description": "Kategorileri al (public)",
+      "method": "GET",
+      "path": "/api/category",
+      "requires_auth": false
+    },
+    {
+      "id": "seller_get_me",
+      "description": "Seller profil bilgilerini al",
+      "method": "GET",
+      "path": "/api/auth/me",
+      "requires_auth": true,
+      "auth_role": "seller"
+    },
+    {
+      "id": "seller_create_product",
+      "description": "Yeni ürün oluştur",
+      "method": "POST",
+      "path": "/api/product",
+      "requires_auth": true,
+      "auth_role": "seller",
+      "payload": {
+        "productName": "Test Ürün - Akıllı Telefon",
+        "productDescription": "Test ürün açıklaması - yüksek kaliteli akıllı telefon",
+        "barcodes": ["1234567890123"]
+      },
+      "save_response": {
+        "productId": "id"
+      }
+    },
+    {
+      "id": "seller_get_my_listings",
+      "description": "Seller kendi ilanlarını listele",
+      "method": "GET",
+      "path": "/api/seller/listings",
+      "requires_auth": true,
+      "auth_role": "seller"
+    },
+    {
+      "id": "seller_create_listing",
+      "description": "Yeni ilan oluştur",
+      "method": "POST",
+      "path": "/api/seller/listings",
+      "requires_auth": true,
+      "auth_role": "seller",
+      "payload": {
+        "productId": "{{productId}}",
+        "price": 1500.00,
+        "stock": 10,
+        "condition": 0
+      },
+      "save_response": {
+        "listingId": "id"
+      },
+      "skip_if_state_null": "productId"
+    },
+    {
+      "id": "customer_get_all_listings",
+      "description": "Customer tüm ilanları görüntüle",
+      "method": "GET",
+      "path": "/api/listing",
+      "requires_auth": false
+    },
+    {
+      "id": "customer_add_to_cart",
+      "description": "Sepete ürün ekle",
+      "method": "POST",
+      "path": "/api/cart/add",
+      "requires_auth": true,
+      "auth_role": "customer",
+      "payload": {
+        "userId": "{{customerId}}",
+        "listingId": "{{listingId}}",
+        "quantity": 1
+      },
+      "skip_if_state_null": "listingId"
+    },
+    {
+      "id": "customer_get_cart",
+      "description": "Sepeti görüntüle",
+      "method": "GET",
+      "path": "/api/cart/my",
+      "requires_auth": true,
+      "auth_role": "customer"
+    },
+    {
+      "id": "customer_create_address",
+      "description": "Yeni adres ekle",
+      "method": "POST",
+      "path": "/api/address",
+      "requires_auth": true,
+      "auth_role": "customer",
+      "payload": {
+        "title": "Ev Adresim",
+        "fullName": "Test Customer",
+        "phone": "05001234567",
+        "city": "İstanbul",
+        "district": "Kadıköy",
+        "neighborhood": "Moda",
+        "addressLine": "Test Caddesi No:1 Daire:1",
+        "postalCode": "34710",
+        "isDefault": true,
+        "type": 0
+      },
+      "save_response": {
+        "addressId": "id"
+      }
+    },
+    {
+      "id": "customer_get_addresses",
+      "description": "Adresleri listele",
+      "method": "GET",
+      "path": "/api/address",
+      "requires_auth": true,
+      "auth_role": "customer"
+    },
+    {
+      "id": "customer_checkout",
+      "description": "Sipariş oluştur (checkout)",
+      "method": "POST",
+      "path": "/api/order/checkout",
+      "requires_auth": true,
+      "auth_role": "customer",
+      "payload": {
+        "shippingAddressId": "{{addressId}}",
+        "customerNote": "Lütfen kapıda bırakın"
+      },
+      "save_response": {
+        "orderId": "id",
+        "orderNumber": "orderNumber"
+      },
+      "skip_if_state_null": "addressId"
+    },
+    {
+      "id": "customer_get_order",
+      "description": "Sipariş detayını görüntüle",
+      "method": "GET",
+      "path": "/api/order/{{orderId}}",
+      "requires_auth": true,
+      "auth_role": "customer",
+      "skip_if_state_null": "orderId"
+    },
+    {
+      "id": "customer_get_orders",
+      "description": "Siparişleri listele",
+      "method": "GET",
+      "path": "/api/order",
+      "requires_auth": true,
+      "auth_role": "customer"
+    },
+    {
+      "id": "customer_process_payment",
+      "description": "Ödeme yap (mock gateway)",
+      "method": "POST",
+      "path": "/api/payment/gateway/process",
+      "requires_auth": true,
+      "auth_role": "customer",
+      "payload": {
+        "orderId": "{{orderId}}",
+        "card": {
+          "cardHolderName": "Test Customer",
+          "cardNumber": "5528790000000008",
+          "expireMonth": "12",
+          "expireYear": "2030",
+          "cvc": "123"
+        },
+        "installmentCount": 1,
+        "use3DSecure": false
+      },
+      "save_response": {
+        "paymentIntentId": "paymentIntentId"
+      },
+      "skip_if_state_null": "orderId"
+    },
+    {
+      "id": "customer_create_support_ticket",
+      "description": "Destek talebi oluştur",
+      "method": "POST",
+      "path": "/api/support/tickets",
+      "requires_auth": true,
+      "auth_role": "customer",
+      "payload": {
+        "subject": "Test destek talebi",
+        "message": "Bu bir test destek talebidir.",
+        "category": "General"
+      },
+      "save_response": {
+        "ticketId": "id"
+      }
+    },
+    {
+      "id": "customer_get_tickets",
+      "description": "Destek taleplerini listele",
+      "method": "GET",
+      "path": "/api/support/tickets",
+      "requires_auth": true,
+      "auth_role": "customer"
+    },
+    {
+      "id": "customer_create_comparison",
+      "description": "Ürün karşılaştırması oluştur",
+      "method": "POST",
+      "path": "/api/comparison",
+      "requires_auth": true,
+      "auth_role": "customer",
+      "payload": {},
+      "save_response": {
+        "comparisonId": "id"
+      }
+    },
+    {
+      "id": "customer_add_to_comparison",
+      "description": "Karşılaştırmaya ürün ekle",
+      "method": "POST",
+      "path": "/api/comparison/{{comparisonId}}/products/{{productId}}",
+      "requires_auth": true,
+      "auth_role": "customer",
+      "skip_if_state_null": "comparisonId"
+    },
+    {
+      "id": "customer_get_comparison",
+      "description": "Karşılaştırmayı görüntüle",
+      "method": "GET",
+      "path": "/api/comparison/{{comparisonId}}",
+      "requires_auth": true,
+      "auth_role": "customer",
+      "skip_if_state_null": "comparisonId"
+    },
+    {
+      "id": "seller_get_orders",
+      "description": "Seller siparişlerini listele",
+      "method": "GET",
+      "path": "/api/seller/orders",
+      "requires_auth": true,
+      "auth_role": "seller"
+    },
+    {
+      "id": "admin_get_orders",
+      "description": "Admin tüm siparişleri listele",
+      "method": "GET",
+      "path": "/api/admin/orders",
+      "requires_auth": true,
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_users",
+      "description": "Admin kullanıcıları listele",
+      "method": "GET",
+      "path": "/api/admin/users",
+      "requires_auth": true,
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_sellers",
+      "description": "Admin satıcıları listele",
+      "method": "GET",
+      "path": "/api/admin/sellers",
+      "requires_auth": true,
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_tax_rates",
+      "description": "Vergi oranlarını listele",
+      "method": "GET",
+      "path": "/api/admin/taxes",
+      "requires_auth": true,
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_delete_tax_rate",
+      "description": "Vergi oranı sil (non-default)",
+      "method": "DELETE",
+      "path": "/api/admin/taxes/{{taxRateId}}",
+      "requires_auth": true,
+      "auth_role": "admin",
+      "skip_if_state_null": "taxRateId"
+    }
+  ]
+}
