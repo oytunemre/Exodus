@@ -233,7 +233,7 @@ public class AdminCampaignController : ControllerBase
             Name = dto.Name,
             Description = dto.Description,
             Type = dto.Type,
-            SellerId = dto.SellerId ?? 0, // 0 for admin/platform campaigns
+            SellerId = dto.SellerId,
             StartDate = dto.StartDate,
             EndDate = dto.EndDate,
             IsActive = dto.IsActive,

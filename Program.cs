@@ -18,6 +18,7 @@ using System.Text.Json.Serialization;
 using Exodus.Services.Orders;
 using Exodus.Services.Payments;
 using Exodus.Services.Shipments;
+using Exodus.Services.Shipping;
 using Exodus.Services.Audit;
 using Exodus.Services.Security;
 using Exodus.Services.TwoFactor;
@@ -229,6 +230,9 @@ else
 
 // Campaign Service
 builder.Services.AddScoped<ICampaignService, CampaignService>();
+
+// Return Shipment Service
+builder.Services.AddScoped<IReturnShipmentService, ReturnShipmentService>();
 
 // Address Service
 builder.Services.AddScoped<IAddressService, AddressService>();

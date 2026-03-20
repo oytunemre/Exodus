@@ -95,7 +95,7 @@ public class AdminAttributeController : ControllerBase
         var value = new ProductAttributeValue { AttributeId = attributeId, Value = dto.Value, Code = dto.Code, ColorHex = dto.ColorHex, ImageUrl = dto.ImageUrl, DisplayOrder = dto.DisplayOrder };
         _db.Set<ProductAttributeValue>().Add(value);
         await _db.SaveChangesAsync();
-        return Ok(value);
+        return Ok(new { value.Id, value.AttributeId, value.Value, value.Code, value.ColorHex, value.ImageUrl, value.DisplayOrder, value.IsActive });
     }
 
     [HttpPut("values/{id:int}")]

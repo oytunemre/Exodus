@@ -523,7 +523,8 @@ namespace Exodus.Services.Orders
 
         private static string FormatAddressSnapshot(Address address)
         {
-            return $"{address.FullName}, {address.AddressLine}, {address.Neighborhood ?? ""} {address.District}/{address.City} {address.PostalCode ?? ""} - Tel: {address.Phone}";
+            var snapshot = $"{address.FullName}, {address.AddressLine}, {address.Neighborhood ?? ""} {address.District}/{address.City} {address.PostalCode ?? ""} - Tel: {address.Phone}";
+            return snapshot.Length > 495 ? snapshot[..495] + "..." : snapshot;
         }
 
         private static string GetStatusTitle(OrderStatus status)

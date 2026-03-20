@@ -127,7 +127,7 @@ public class AdminHomeWidgetController : ControllerBase
     {
         var widget = new HomeWidget
         {
-            Name = dto.Name,
+            Name = dto.Name ?? dto.Title ?? "Widget",
             Code = dto.Code,
             Type = dto.Type,
             Title = dto.Title,
@@ -276,7 +276,7 @@ public class AdminHomeWidgetController : ControllerBase
 
 public class CreateHomeWidgetDto
 {
-    [Required] public required string Name { get; set; }
+    public string? Name { get; set; }
     public string? Code { get; set; }
     public HomeWidgetType Type { get; set; }
     public string? Title { get; set; }
