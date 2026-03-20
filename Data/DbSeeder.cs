@@ -1,4 +1,4 @@
-﻿using Exodus.Models.Entities;
+using Exodus.Models.Entities;
 using Exodus.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,23 +13,69 @@ public static class DbSeeder
         // -------------------------
         // 1) USERS (>=5)
         // -------------------------
-        var usersToSeed = new List<Users>
+
+        // Automation test users (admin, seller, customer) - used by request_automation.py
+        var automationUsers = new[]
         {
-            new Users { Name = "Ahmet Yılmaz",  Email = "ahmet@test.com",  Password = "123456", Username = "ahmety",   EmailVerified = true },
-            new Users { Name = "Zeynep Kaya",   Email = "zeynep@test.com", Password = "123456", Username = "zeynepk", EmailVerified = true },
-            new Users { Name = "Mehmet Demir",  Email = "mehmet@test.com", Password = "123456", Username = "mehmetd", EmailVerified = true },
-            new Users { Name = "Elif Şahin",    Email = "elif@test.com",   Password = "123456", Username = "elifs",   EmailVerified = true },
-            new Users { Name = "Can Arslan",    Email = "can@test.com",    Password = "123456", Username = "canars",  EmailVerified = true }
+            new { Name = "Ahmet Yılmaz",  Email = "admin@exodus.com",   Password = "Admin123!@#",   Username = "ahmetyilmaz", Role = UserRole.Admin    },
+            new { Name = "Mehmet Kaya",   Email = "satici@exodus.com",  Password = "Satici456!@#",  Username = "mehmetkaya",  Role = UserRole.Seller   },
+            new { Name = "Ayşe Demir",    Email = "musteri@exodus.com", Password = "Musteri789!@#", Username = "aysedemir",   Role = UserRole.Customer },
+        };
+
+        foreach (var u in automationUsers)
+        {
+            var existing = await db.Users.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Email == u.Email);
+            if (existing == null)
+            {
+                db.Users.Add(new Users
+                {
+                    Name          = u.Name,
+                    Email         = u.Email,
+                    Username      = u.Username,
+                    Password      = BCrypt.Net.BCrypt.HashPassword(u.Password),
+                    Role          = u.Role,
+                    EmailVerified = true,
+                });
+            }
+            else
+            {
+                if (!existing.EmailVerified)
+                    existing.EmailVerified = true;
+                if (existing.Role != u.Role)
+                    existing.Role = u.Role;
+            }
+        }
+
+        // Extra seed users
+        var usersToSeed = new[]
+        {
+            new { Name = "Zeynep Kaya",  Email = "zeynep@test.com", Password = "123456", Username = "zeynepk", Role = UserRole.Customer },
+            new { Name = "Mehmet Demir", Email = "mehmet@test.com", Password = "123456", Username = "mehmetd", Role = UserRole.Seller   },
+            new { Name = "Elif Şahin",   Email = "elif@test.com",   Password = "123456", Username = "elifs",   Role = UserRole.Customer },
+            new { Name = "Can Arslan",   Email = "can@test.com",    Password = "123456", Username = "canars",  Role = UserRole.Customer },
         };
 
         foreach (var u in usersToSeed)
         {
             var existing = await db.Users.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Email == u.Email);
             if (existing == null)
-                db.Users.Add(u);
+            {
+                db.Users.Add(new Users
+                {
+                    Name          = u.Name,
+                    Email         = u.Email,
+                    Username      = u.Username,
+                    Password      = BCrypt.Net.BCrypt.HashPassword(u.Password),
+                    Role          = u.Role,
+                    EmailVerified = true,
+                });
+            }
             else if (!existing.EmailVerified)
+            {
                 existing.EmailVerified = true;
+            }
         }
+
         await db.SaveChangesAsync();
 
         var users = await db.Users.ToListAsync();

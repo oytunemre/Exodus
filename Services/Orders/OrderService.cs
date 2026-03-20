@@ -50,7 +50,7 @@ namespace Exodus.Services.Orders
 
             var strategy = _db.Database.CreateExecutionStrategy();
 
-            return await strategy.ExecuteAsync(async () =>
+            int createdOrderId = await strategy.ExecuteAsync(async () =>
             {
                 await using var tx = await _db.Database.BeginTransactionAsync();
                 try
@@ -160,14 +160,7 @@ namespace Exodus.Services.Orders
 
                     await _db.SaveChangesAsync();
                     await tx.CommitAsync();
-
-                    // Send notification
-                    await _notificationService.SendOrderUpdateAsync(
-                        userId, order.Id,
-                        "Siparişiniz Oluşturuldu",
-                        $"#{order.OrderNumber} numaralı siparişiniz oluşturuldu.");
-
-                    return await GetByIdAsync(userId, order.Id);
+                    return order.Id;
                 }
                 catch
                 {
@@ -175,6 +168,14 @@ namespace Exodus.Services.Orders
                     throw;
                 }
             });
+
+            // Post-transaction: notification and response (outside transaction scope)
+            await _notificationService.SendOrderUpdateAsync(
+                userId, createdOrderId,
+                "Siparişiniz Oluşturuldu",
+                $"Siparişiniz başarıyla oluşturuldu.");
+
+            return await GetByIdAsync(userId, createdOrderId);
         }
 
         public async Task<OrderDetailResponseDto> GetByIdAsync(int userId, int orderId)
