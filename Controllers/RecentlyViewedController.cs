@@ -6,7 +6,7 @@ using System.Security.Claims;
 namespace Exodus.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/recently-viewed")]
 [Authorize]
 public class RecentlyViewedController : ControllerBase
 {
