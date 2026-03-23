@@ -120,6 +120,40 @@ def fix():
     if fixed_barcodes:
         print(f"  {fixed_barcodes} adımın Barcodes alanı düzeltildi")
 
+    # ── 7. seller_create_listing/seller_create_listing_2: alan adı düzelt ────
+    # /api/seller/listings → SellerCreateListingDto kullanır:
+    #   stockQuantity (int), NOT stock; SellerId olmamalı
+    fixed_listing = 0
+    for step in data["flow"]:
+        if step.get("id") in ("seller_create_listing", "seller_create_listing_2", "seller_create_seller_listing"):
+            payload = step.get("payload", {})
+            if isinstance(payload, dict):
+                # "stock" → "stockQuantity"
+                if "stock" in payload and "stockQuantity" not in payload:
+                    payload["stockQuantity"] = payload.pop("stock")
+                    fixed_listing += 1
+                if "Stock" in payload and "StockQuantity" not in payload:
+                    payload["StockQuantity"] = payload.pop("Stock")
+                    fixed_listing += 1
+                # SellerId is taken from JWT, not body
+                payload.pop("sellerId", None)
+                payload.pop("SellerId", None)
+
+    if fixed_listing:
+        print(f"  {fixed_listing} listing adımının payload'ı düzeltildi (stock→stockQuantity)")
+
+    # ── 8. customer_create_seller_review: Rating aralığı kontrolü ─────────
+    for step in data["flow"]:
+        if step.get("id") == "customer_create_seller_review":
+            payload = step.get("payload", {})
+            if isinstance(payload, dict):
+                rating_key = next((k for k in ("rating", "Rating") if k in payload), None)
+                if rating_key:
+                    val = payload[rating_key]
+                    if not isinstance(val, int) or not (1 <= val <= 5):
+                        payload[rating_key] = 5
+                        print("  customer_create_seller_review rating düzeltildi → 5")
+
     with open(PAYLOADS_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 

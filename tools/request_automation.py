@@ -41,11 +41,11 @@ def _resolve(value: Any, variables: dict, state: dict) -> Any:
         pure = re.match(r'^\{\{(\w+)\}\}$', value)
         if pure:
             key = pure.group(1)
-            if key in state and state[key] is not None:
-                return state[key]  # int/bool/float gibi orijinal tipi döner
+            if key in state:
+                return state[key]  # None dahil tüm tipleri döndür (null state → JSON null)
             if key in variables:
                 return variables[key]
-            return value  # Çözülemediyse olduğu gibi bırak
+            return value  # Hiç tanımlı değilse olduğu gibi bırak (debug için)
         # Karma template: string içinde birden fazla ya da kısmi placeholder
         def replace_ref(m: re.Match) -> str:
             key = m.group(1)
@@ -207,6 +207,7 @@ class ExodusAutomation:
                         print(f"  → state.{state_key} = {value}")
 
             # 409 Conflict: on_conflict_get ile mevcut kaynağı bul, ID'yi state'e yaz
+            conflict_resolved = False
             if response.status_code == 409 and on_conflict_get and save_response:
                 fallback_path = _resolve_path_params(on_conflict_get, self.variables, self.state)
                 fallback_url = f"{self.base_url}{fallback_path}"
@@ -218,16 +219,18 @@ class ExodusAutomation:
                         # Liste dönüyorsa ilk elemanı al
                         if isinstance(fb_data, list) and fb_data:
                             fb_data = fb_data[0]
-                        elif isinstance(fb_data, dict) and "items" in fb_data and fb_data["items"]:
-                            fb_data = fb_data["items"][0]
+                        elif isinstance(fb_data, dict):
+                            # Hem "items" hem "Items" (büyük/küçük harf) destekle
+                            items_key = next((k for k in ("items", "Items") if k in fb_data and fb_data[k]), None)
+                            if items_key:
+                                fb_data = fb_data[items_key][0]
                         if isinstance(fb_data, dict):
                             for state_key, response_path in save_response.items():
                                 value = _get_nested(fb_data, response_path)
                                 if value is not None:
                                     self.state[state_key] = value
                                     print(f"  → state.{state_key} = {value} (conflict fallback)")
-                            result["success"] = True  # Çakışma çözüldü, başarılı say
-                            result["conflict_resolved"] = True
+                            conflict_resolved = True
                 except Exception as e:
                     print(f"  → Conflict fallback başarısız: {e}")
 
@@ -237,7 +240,8 @@ class ExodusAutomation:
                 "url": url,
                 "payload": resolved_payload,
                 "status_code": response.status_code,
-                "success": response.status_code < 400,
+                "success": response.status_code < 400 or conflict_resolved,
+                "conflict_resolved": conflict_resolved,
                 "response": response_data,
             }
 
