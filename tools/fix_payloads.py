@@ -123,30 +123,126 @@ def fix():
     if fixed_barcodes:
         print(f"  {fixed_barcodes} adımın Barcodes alanı düzeltildi")
 
-    # ── 7. seller_create_seller_listing: alan adı düzelt ────────────────────
-    # /api/seller/listings → SellerCreateListingDto: stockQuantity (int), SellerId YOK (JWT'den gelir)
-    # /api/listings        → AddListingDto:           stock (int), SellerId gerekli (validator: > 0)
-    # seller_create_listing ve seller_create_listing_2 büyük ihtimalle /api/listings kullanır → dokunma
+    # ── 7. Listing oluşturma adımları: /api/seller/listings'e taşı ──────────
+    # SellerCreateListingDto: productId, price, stockQuantity, condition (SellerId YOK, JWT'den gelir)
+    # AddListingDto: productId, sellerId, price, stock — SellerId > 0 zorunlu, cascade 400'e yol açar
+    # Tüm listing oluşturma adımlarını /api/seller/listings'e taşıyarak SellerId bağımlılığını kaldır
+    LISTING_CREATE_STEPS = {
+        "seller_create_listing", "seller_create_listing_2", "seller_create_seller_listing"
+    }
     fixed_listing = 0
     for step in data["flow"]:
-        if step.get("id") == "seller_create_seller_listing":
-            payload = step.get("payload", {})
-            if isinstance(payload, dict):
-                # "stock" → "stockQuantity"
-                if "stock" in payload and "stockQuantity" not in payload:
-                    payload["stockQuantity"] = payload.pop("stock")
-                    fixed_listing += 1
-                if "Stock" in payload and "StockQuantity" not in payload:
-                    payload["StockQuantity"] = payload.pop("Stock")
-                    fixed_listing += 1
-                # SellerId is taken from JWT for /api/seller/listings
-                payload.pop("sellerId", None)
-                payload.pop("SellerId", None)
+        if step.get("id") not in LISTING_CREATE_STEPS:
+            continue
+        # Path düzelt
+        if step.get("path", "") != "/api/seller/listings":
+            step["path"] = "/api/seller/listings"
+            fixed_listing += 1
+        payload = step.get("payload", {})
+        if isinstance(payload, dict):
+            # stock → stockQuantity (SellerCreateListingDto alanı)
+            for old, new in (("stock", "stockQuantity"), ("Stock", "StockQuantity")):
+                if old in payload and new not in payload:
+                    payload[new] = payload.pop(old)
+            # SellerId JWT'den gelir, payload'da olmaz
+            payload.pop("sellerId", None)
+            payload.pop("SellerId", None)
 
     if fixed_listing:
-        print(f"  {fixed_listing} seller_create_seller_listing payload'ı düzeltildi (stock→stockQuantity)")
+        print(f"  {fixed_listing} listing oluşturma adımı → /api/seller/listings'e taşındı")
 
-    # ── 8. customer_create_seller_review: Rating aralığı kontrolü ─────────
+    # ── 8. Login save_response: UserId doğru kaydediliyor mu? ───────────────
+    # AuthResponseDto: { UserId, Token, ... } — "id" field YOK, "UserId" var
+    LOGIN_SAVE_MAP = {
+        "login_admin":    {"adminToken": "token",  "adminId":    "UserId"},
+        "login_seller":   {"sellerToken": "token", "sellerId":   "UserId"},
+        "login_customer": {"customerToken": "token","customerId": "UserId"},
+    }
+    for step in data["flow"]:
+        step_id = step.get("id", "")
+        if step_id not in LOGIN_SAVE_MAP:
+            continue
+        expected = LOGIN_SAVE_MAP[step_id]
+        sr = step.get("save_response", {})
+        changed = False
+        for state_key, resp_path in expected.items():
+            if sr.get(state_key) != resp_path:
+                sr[state_key] = resp_path
+                changed = True
+        if changed:
+            step["save_response"] = sr
+            print(f"  {step_id} save_response düzeltildi")
+
+    # ── 9. seller_update_stock: SellerUpdateStockDto → stockQuantity ─────────
+    for step in data["flow"]:
+        if step.get("id") != "seller_update_stock":
+            continue
+        payload = step.get("payload", {})
+        if isinstance(payload, dict):
+            for old, new in (("stock", "stockQuantity"), ("Stock", "StockQuantity"),
+                             ("quantity", "stockQuantity"), ("Quantity", "StockQuantity")):
+                if old in payload and new not in payload:
+                    payload[new] = payload.pop(old)
+                    print("  seller_update_stock payload düzeltildi")
+
+    # ── 10. customer_create_payment_intent: Method enum 1-7 ──────────────────
+    # PaymentMethod: CashOnDelivery=1, BankTransfer=2, CreditCard=3, ...
+    # 0 geçersiz, varsayılan CreditCard=3 ata
+    for step in data["flow"]:
+        if step.get("id") != "customer_create_payment_intent":
+            continue
+        payload = step.get("payload", {})
+        if isinstance(payload, dict):
+            method_key = next((k for k in ("method", "Method") if k in payload), None)
+            if method_key:
+                val = payload[method_key]
+                if not isinstance(val, int) or not (1 <= val <= 7):
+                    payload[method_key] = 3  # CreditCard
+                    print("  customer_create_payment_intent method düzeltildi → 3 (CreditCard)")
+
+    # ── 11. admin_create_home_widget: Type enum 0-10 ──────────────────────────
+    # HomeWidgetType: Banner=0 ... FeaturedSellers=10
+    for step in data["flow"]:
+        if step.get("id") != "admin_create_home_widget":
+            continue
+        payload = step.get("payload", {})
+        if isinstance(payload, dict):
+            type_key = next((k for k in ("type", "Type") if k in payload), None)
+            if type_key:
+                val = payload[type_key]
+                if not isinstance(val, int) or not (0 <= val <= 10):
+                    payload[type_key] = 2  # ProductSlider
+                    print("  admin_create_home_widget type düzeltildi → 2 (ProductSlider)")
+            # name zorunlu
+            name_key = next((k for k in ("name", "Name") if k in payload), None)
+            if not name_key:
+                payload["name"] = "Ana Sayfa Ürün Slider"
+                print("  admin_create_home_widget name eklendi")
+
+    # ── 12. admin_create_page: title ve content zorunlu ──────────────────────
+    for step in data["flow"]:
+        if step.get("id") != "admin_create_page":
+            continue
+        payload = step.get("payload", {})
+        if isinstance(payload, dict):
+            if not payload.get("title") and not payload.get("Title"):
+                payload["title"] = "Hakkımızda"
+                print("  admin_create_page title eklendi")
+            if not payload.get("content") and not payload.get("Content"):
+                payload["content"] = "<p>Exodus marketplace hakkında bilgi.</p>"
+                print("  admin_create_page content eklendi")
+
+    # ── 13. admin_create_carrier: name zorunlu ────────────────────────────────
+    for step in data["flow"]:
+        if step.get("id") != "admin_create_carrier":
+            continue
+        payload = step.get("payload", {})
+        if isinstance(payload, dict):
+            if not payload.get("name") and not payload.get("Name"):
+                payload["name"] = "Aras Kargo"
+                print("  admin_create_carrier name eklendi")
+
+    # ── 14. customer_create_seller_review: Rating aralığı kontrolü ────────────
     for step in data["flow"]:
         if step.get("id") == "customer_create_seller_review":
             payload = step.get("payload", {})
