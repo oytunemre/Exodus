@@ -1,0 +1,538 @@
+{
+  "variables": {
+    "baseUrl": "http://localhost:5013",
+    "adminEmail": "admin@exodus.com",
+    "adminPassword": "Admin123!@#",
+    "adminName": "Ahmet Yılmaz",
+    "adminUsername": "ahmetyilmaz",
+    "sellerEmail": "satici@exodus.com",
+    "sellerPassword": "Satici456!@#",
+    "sellerName": "Mehmet Kaya",
+    "sellerUsername": "mehmetkaya",
+    "customerEmail": "musteri@exodus.com",
+    "customerPassword": "Musteri789!@#",
+    "customerName": "Ayşe Demir",
+    "customerUsername": "aysedemir"
+  },
+  "state": {
+    "_comment": "Bu alan request_automation.py tarafından runtime'da doldurulur",
+    "adminToken": null,
+    "sellerToken": null,
+    "customerToken": null,
+    "adminId": null,
+    "sellerId": null,
+    "customerId": null,
+    "addressId": null,
+    "billingAddressId": null,
+    "productId": null,
+    "secondProductId": null,
+    "listingId": null,
+    "secondListingId": null,
+    "sellerListingId": null,
+    "cartItemId": null,
+    "orderId": null,
+    "paymentIntentId": null,
+    "campaignId": null,
+    "questionId": null,
+    "ticketId": null,
+    "comparisonId": null,
+    "taxRateId": null,
+    "categoryId": 3
+  },
+  "flow": [
+    {
+      "id": "register_admin",
+      "description": "Admin kullanıcı kaydı",
+      "method": "POST",
+      "path": "/api/auth/register",
+      "requires_auth": false,
+      "payload": {
+        "name": "{{adminName}}",
+        "email": "{{adminEmail}}",
+        "username": "{{adminUsername}}",
+        "password": "{{adminPassword}}",
+        "role": 0
+      },
+      "save_response": {}
+    },
+    {
+      "id": "login_admin",
+      "description": "Admin kullanıcı girişi",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "requires_auth": false,
+      "payload": {
+        "emailOrUsername": "{{adminEmail}}",
+        "password": "{{adminPassword}}"
+      },
+      "save_response": {
+        "adminToken": "token",
+        "adminId": "UserId"
+      }
+    },
+    {
+      "id": "register_seller",
+      "description": "Satıcı kullanıcı kaydı",
+      "method": "POST",
+      "path": "/api/auth/register",
+      "requires_auth": false,
+      "payload": {
+        "name": "{{sellerName}}",
+        "email": "{{sellerEmail}}",
+        "username": "{{sellerUsername}}",
+        "password": "{{sellerPassword}}",
+        "role": 1
+      },
+      "save_response": {}
+    },
+    {
+      "id": "login_seller",
+      "description": "Satıcı kullanıcı girişi",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "requires_auth": false,
+      "payload": {
+        "emailOrUsername": "{{sellerEmail}}",
+        "password": "{{sellerPassword}}"
+      },
+      "save_response": {
+        "sellerToken": "token",
+        "sellerId": "UserId"
+      }
+    },
+    {
+      "id": "register_customer",
+      "description": "Müşteri kullanıcı kaydı",
+      "method": "POST",
+      "path": "/api/auth/register",
+      "requires_auth": false,
+      "payload": {
+        "name": "{{customerName}}",
+        "email": "{{customerEmail}}",
+        "username": "{{customerUsername}}",
+        "password": "{{customerPassword}}",
+        "role": 2
+      },
+      "save_response": {}
+    },
+    {
+      "id": "login_customer",
+      "description": "Müşteri kullanıcı girişi",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "requires_auth": false,
+      "payload": {
+        "emailOrUsername": "{{customerEmail}}",
+        "password": "{{customerPassword}}"
+      },
+      "save_response": {
+        "customerToken": "token",
+        "customerId": "UserId"
+      }
+    },
+    {
+      "id": "admin_create_brand",
+      "description": "Admin: Marka oluştur",
+      "method": "POST",
+      "path": "/api/admin/brands",
+      "requires_auth": true,
+      "auth_role": "admin",
+      "payload": {
+        "name": "Exodus Marka",
+        "description": "Türkiye'nin önde gelen markası",
+        "isActive": true,
+        "isFeatured": true,
+        "displayOrder": 1
+      },
+      "save_response": {
+        "brandId": "id"
+      },
+      "on_conflict_get": "/api/admin/brands"
+    },
+    {
+      "id": "admin_create_category",
+      "description": "Admin: Kategori oluştur",
+      "method": "POST",
+      "path": "/api/admin/categories",
+      "requires_auth": true,
+      "auth_role": "admin",
+      "payload": {
+        "name": "Elektronik",
+        "description": "Elektronik ürünler kategorisi",
+        "displayOrder": 1
+      },
+      "save_response": {
+        "categoryId": "id"
+      },
+      "on_conflict_get": "/api/admin/categories"
+    },
+    {
+      "id": "admin_create_carrier",
+      "description": "Admin: Kargo şirketi oluştur",
+      "method": "POST",
+      "path": "/api/admin/shipments/carriers",
+      "requires_auth": true,
+      "auth_role": "admin",
+      "payload": {
+        "name": "Aras Kargo",
+        "code": "ARAS",
+        "isActive": true
+      },
+      "save_response": {
+        "carrierId": "id"
+      },
+      "on_conflict_get": "/api/admin/shipments/carriers"
+    },
+    {
+      "id": "admin_create_tax_rate",
+      "description": "Admin: Vergi oranı oluştur",
+      "method": "POST",
+      "path": "/api/admin/taxes",
+      "requires_auth": true,
+      "auth_role": "admin",
+      "payload": {
+        "name": "KDV %18",
+        "code": "KDV18",
+        "rate": 18,
+        "isDefault": false,
+        "isActive": true,
+        "appliesToAllCategories": true,
+        "displayOrder": 1
+      },
+      "save_response": {
+        "taxRateId": "id"
+      }
+    },
+    {
+      "id": "admin_create_page",
+      "description": "Admin: İçerik sayfası oluştur",
+      "method": "POST",
+      "path": "/api/admin/content/pages",
+      "requires_auth": true,
+      "auth_role": "admin",
+      "payload": {
+        "title": "Hakkımızda",
+        "content": "<p>Exodus marketplace hakkında bilgi.</p>",
+        "isPublished": true,
+        "displayOrder": 1
+      },
+      "save_response": {
+        "pageId": "id"
+      },
+      "on_conflict_get": "/api/admin/content/pages"
+    },
+    {
+      "id": "admin_create_home_widget",
+      "description": "Admin: Ana sayfa widget'ı oluştur",
+      "method": "POST",
+      "path": "/api/admin/home-widgets",
+      "requires_auth": true,
+      "auth_role": "admin",
+      "payload": {
+        "name": "Ana Sayfa Ürün Slider",
+        "type": 2,
+        "title": "Öne Çıkan Ürünler",
+        "isActive": true,
+        "displayOrder": 1,
+        "itemCount": 10
+      },
+      "save_response": {
+        "homeWidgetId": "id"
+      }
+    },
+    {
+      "id": "seller_create_product",
+      "description": "Satıcı: İlk ürün oluştur",
+      "method": "POST",
+      "path": "/api/products",
+      "requires_auth": true,
+      "auth_role": "seller",
+      "payload": {
+        "productName": "Samsung Galaxy A54 Akıllı Telefon",
+        "productDescription": "6.4 inç Super AMOLED ekran, 128GB dahili depolama, 5000mAh pil",
+        "barcodes": [
+          "8801643857400"
+        ]
+      },
+      "save_response": {
+        "productId": "id"
+      },
+      "on_conflict_get": "/api/products"
+    },
+    {
+      "id": "seller_create_product_2",
+      "description": "Satıcı: İkinci ürün oluştur",
+      "method": "POST",
+      "path": "/api/products",
+      "requires_auth": true,
+      "auth_role": "seller",
+      "payload": {
+        "productName": "Apple AirPods Pro 2. Nesil",
+        "productDescription": "Aktif gürültü engelleme, H2 çip, MagSafe şarj kutusu",
+        "barcodes": [
+          "194253378778"
+        ]
+      },
+      "save_response": {
+        "secondProductId": "id"
+      },
+      "on_conflict_get": "/api/products"
+    },
+    {
+      "id": "seller_create_listing",
+      "description": "Satıcı: İlk ürün için listing oluştur",
+      "method": "POST",
+      "path": "/api/seller/listings",
+      "requires_auth": true,
+      "auth_role": "seller",
+      "payload": {
+        "productId": "{{productId}}",
+        "price": 14999.99,
+        "stockQuantity": 50,
+        "condition": 0
+      },
+      "save_response": {
+        "listingId": "id"
+      },
+      "on_conflict_get": "/api/seller/listings"
+    },
+    {
+      "id": "seller_create_listing_2",
+      "description": "Satıcı: İkinci ürün için listing oluştur",
+      "method": "POST",
+      "path": "/api/seller/listings",
+      "requires_auth": true,
+      "auth_role": "seller",
+      "payload": {
+        "productId": "{{secondProductId}}",
+        "price": 7999.99,
+        "stockQuantity": 30,
+        "condition": 0
+      },
+      "save_response": {
+        "secondListingId": "id"
+      },
+      "on_conflict_get": "/api/seller/listings"
+    },
+    {
+      "id": "seller_create_seller_listing",
+      "description": "Satıcı: Üçüncü listing oluştur (ikinci ürün yenilenmiş)",
+      "method": "POST",
+      "path": "/api/seller/listings",
+      "requires_auth": true,
+      "auth_role": "seller",
+      "payload": {
+        "productId": "{{productId}}",
+        "price": 11999.99,
+        "stockQuantity": 10,
+        "condition": 1
+      },
+      "save_response": {
+        "sellerListingId": "id"
+      },
+      "on_conflict_get": "/api/seller/listings"
+    },
+    {
+      "id": "seller_update_stock",
+      "description": "Satıcı: Stok güncelle",
+      "method": "PATCH",
+      "path": "/api/seller/listings/{{listingId}}/stock",
+      "requires_auth": true,
+      "auth_role": "seller",
+      "payload": {
+        "stockQuantity": 45
+      },
+      "save_response": {}
+    },
+    {
+      "id": "customer_create_shipping_address",
+      "description": "Müşteri: Teslimat adresi oluştur",
+      "method": "POST",
+      "path": "/api/profile/addresses",
+      "requires_auth": true,
+      "auth_role": "customer",
+      "payload": {
+        "title": "Ev Adresi",
+        "fullName": "Ayşe Demir",
+        "phone": "5321234567",
+        "city": "İstanbul",
+        "district": "Kadıköy",
+        "neighborhood": "Moda",
+        "addressLine": "Moda Caddesi No: 42 Daire: 5",
+        "postalCode": "34710",
+        "isDefault": true,
+        "type": 0
+      },
+      "save_response": {
+        "addressId": "id"
+      }
+    },
+    {
+      "id": "customer_create_billing_address",
+      "description": "Müşteri: Fatura adresi oluştur",
+      "method": "POST",
+      "path": "/api/profile/addresses",
+      "requires_auth": true,
+      "auth_role": "customer",
+      "payload": {
+        "title": "İş Adresi",
+        "fullName": "Ayşe Demir",
+        "phone": "5321234567",
+        "city": "İstanbul",
+        "district": "Şişli",
+        "neighborhood": "Mecidiyeköy",
+        "addressLine": "Büyükdere Caddesi No: 100 Kat: 3",
+        "postalCode": "34394",
+        "isDefault": false,
+        "type": 1
+      },
+      "save_response": {
+        "billingAddressId": "id"
+      }
+    },
+    {
+      "id": "customer_add_to_cart",
+      "description": "Müşteri: Sepete ürün ekle",
+      "method": "POST",
+      "path": "/api/cart/add",
+      "requires_auth": true,
+      "auth_role": "customer",
+      "payload": {
+        "userId": "{{customerId}}",
+        "listingId": "{{listingId}}",
+        "quantity": 1
+      },
+      "save_response": {
+        "cartItemId": "id"
+      }
+    },
+    {
+      "id": "customer_get_cart",
+      "description": "Müşteri: Sepeti görüntüle",
+      "method": "GET",
+      "path": "/api/cart/my",
+      "requires_auth": true,
+      "auth_role": "customer",
+      "payload": {},
+      "save_response": {}
+    },
+    {
+      "id": "customer_checkout",
+      "description": "Müşteri: Sipariş oluştur (checkout)",
+      "method": "POST",
+      "path": "/api/order/checkout",
+      "requires_auth": true,
+      "auth_role": "customer",
+      "payload": {
+        "shippingAddressId": "{{addressId}}",
+        "billingAddressId": "{{billingAddressId}}",
+        "customerNote": "Lütfen kapı zilini çalın."
+      },
+      "save_response": {
+        "orderId": "id"
+      }
+    },
+    {
+      "id": "customer_create_payment_intent",
+      "description": "Müşteri: Ödeme niyeti oluştur",
+      "method": "POST",
+      "path": "/api/payment/intents",
+      "requires_auth": true,
+      "auth_role": "customer",
+      "payload": {
+        "orderId": "{{orderId}}",
+        "method": 3,
+        "currency": "TRY",
+        "cardDetails": {
+          "cardNumber": "4111111111111111",
+          "expiryDate": "12/26",
+          "cvv": "123",
+          "cardHolderName": "AYSE DEMIR"
+        }
+      },
+      "save_response": {
+        "paymentIntentId": "id"
+      }
+    },
+    {
+      "id": "customer_ask_question",
+      "description": "Müşteri: Ürüne soru sor",
+      "method": "POST",
+      "path": "/api/products/{{productId}}/questions",
+      "requires_auth": true,
+      "auth_role": "customer",
+      "payload": {
+        "questionText": "Bu ürün garantili mi? Kaç yıl garanti sunuyorsunuz?"
+      },
+      "save_response": {
+        "questionId": "id"
+      }
+    },
+    {
+      "id": "customer_create_support_ticket",
+      "description": "Müşteri: Destek talebi oluştur",
+      "method": "POST",
+      "path": "/api/support/tickets",
+      "requires_auth": true,
+      "auth_role": "customer",
+      "payload": {
+        "subject": "Siparişim hakkında bilgi almak istiyorum",
+        "message": "Siparişimin ne zaman teslim edileceğini öğrenmek istiyorum.",
+        "category": "ORDER"
+      },
+      "save_response": {
+        "ticketId": "ticketId"
+      }
+    },
+    {
+      "id": "customer_create_comparison",
+      "description": "Müşteri: Ürün karşılaştırması oluştur",
+      "method": "POST",
+      "path": "/api/comparison",
+      "requires_auth": true,
+      "auth_role": "customer",
+      "payload": {},
+      "save_response": {
+        "comparisonId": "id"
+      }
+    },
+    {
+      "id": "customer_add_product_to_comparison",
+      "description": "Müşteri: Karşılaştırmaya ürün ekle",
+      "method": "POST",
+      "path": "/api/comparison/{{comparisonId}}/products/{{productId}}",
+      "requires_auth": true,
+      "auth_role": "customer",
+      "payload": {},
+      "save_response": {},
+      "skip_if_state_null": "comparisonId"
+    },
+    {
+      "id": "customer_create_seller_review",
+      "description": "Müşteri: Satıcı değerlendirmesi yap",
+      "method": "POST",
+      "path": "/api/sellers/{{sellerId}}/reviews",
+      "requires_auth": true,
+      "auth_role": "customer",
+      "payload": {
+        "rating": 5,
+        "comment": "Hızlı kargo ve iletişim konusunda çok başarılıydı, teşekkürler!"
+      },
+      "save_response": {
+        "sellerReviewId": "id"
+      }
+    },
+    {
+      "id": "admin_delete_tax_rate",
+      "description": "Admin: Vergi oranını sil",
+      "method": "DELETE",
+      "path": "/api/admin/taxes/{{taxRateId}}",
+      "requires_auth": true,
+      "auth_role": "admin",
+      "payload": {},
+      "save_response": {},
+      "skip_if_state_null": "taxRateId",
+      "on_conflict_get": null
+    }
+  ]
+}
