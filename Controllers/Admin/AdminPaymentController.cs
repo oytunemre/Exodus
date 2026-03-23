@@ -68,7 +68,7 @@ public class AdminPaymentController : ControllerBase
 
         var events = await _db.PaymentEvents.Where(e => e.PaymentIntentId == id)
             .OrderByDescending(e => e.CreatedAt)
-            .Select(e => new { e.Id, e.EventType, e.Status, e.Message, e.CreatedAt })
+            .Select(e => new { e.Id, e.EventType, e.Status, e.Source, e.CreatedAt })
             .ToListAsync();
 
         return Ok(new { payment, events });
