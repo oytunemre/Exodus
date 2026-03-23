@@ -10,17 +10,9 @@ namespace Exodus.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // OrderNumber format is "ORD-{yyyyMMdd}-{8hex}" = 21 chars,
-            // but the column was defined as nvarchar(20). Widen it to nvarchar(30).
-            migrationBuilder.AlterColumn<string>(
-                name: "OrderNumber",
-                table: "Orders",
-                type: "nvarchar(30)",
-                maxLength: 30,
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "nvarchar(20)",
-                oldMaxLength: 20);
+            // OrderNumber format is "ORD-{yyyyMMdd}-{8hex}" = 21 chars.
+            // Use raw SQL to avoid oldType mismatch on fresh databases.
+            migrationBuilder.Sql("ALTER TABLE [Orders] ALTER COLUMN [OrderNumber] nvarchar(30) NOT NULL;");
         }
 
         /// <inheritdoc />
