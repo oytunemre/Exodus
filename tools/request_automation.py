@@ -138,6 +138,35 @@ class ExodusAutomation:
         self.session = requests.Session()
         self.results: list[dict] = []
 
+    # ── 429 RETRY WRAPPER ────────────────────────────────────────────────────
+
+    def _request_with_retry(
+        self,
+        method: str,
+        url: str,
+        json_payload=None,
+        headers: Optional[dict] = None,
+        max_retries: int = 3,
+        timeout: int = 30,
+    ) -> Any:
+        """HTTP isteği atar; 429 alınırsa Retry-After kadar bekleyip tekrar dener."""
+        for attempt in range(max_retries + 1):
+            response = self.session.request(
+                method=method,
+                url=url,
+                json=json_payload,
+                headers=headers,
+                timeout=timeout,
+            )
+            if response.status_code != 429 or attempt == max_retries:
+                return response
+            # 429 → bekle ve tekrar dene
+            retry_after = int(response.headers.get("Retry-After", 0))
+            wait = retry_after if retry_after > 0 else min(10 * (attempt + 1), 65)
+            print(f"  {_color(f'⏳ 429 Rate Limit — {wait}s bekleniyor (deneme {attempt + 1}/{max_retries})', '93')}")
+            time.sleep(wait)
+        return response  # son deneme sonucu
+
     # ── İSTEK ATAN ANA METOD ────────────────────────────────────────────────
 
     def run_step(self, step: dict) -> dict:
@@ -183,14 +212,13 @@ class ExodusAutomation:
         if resolved_payload:
             print(f"  Payload: {json.dumps(resolved_payload, ensure_ascii=False)}")
 
-        # İsteği gönder
+        # İsteği gönder (429 için otomatik retry)
         try:
-            response = self.session.request(
+            response = self._request_with_retry(
                 method=method,
                 url=url,
-                json=resolved_payload if resolved_payload else None,
+                json_payload=resolved_payload if resolved_payload else None,
                 headers=headers,
-                timeout=30,
             )
 
             try:
@@ -213,16 +241,16 @@ class ExodusAutomation:
                 fallback_url = f"{self.base_url}{fallback_path}"
                 print(f"  → 409 alındı, mevcut kaynak aranıyor: GET {fallback_path}")
                 try:
-                    fb = self.session.get(fallback_url, headers=headers, timeout=15)
+                    fb = self._request_with_retry("GET", fallback_url, headers=headers)
                     # Eğer yetkisiz dönerse (401/403), admin token ile tekrar dene, sonra auth'suz
                     if fb.status_code in (401, 403):
                         admin_token = self.state.get("adminToken")
                         if admin_token:
                             admin_headers = {**headers, "Authorization": f"Bearer {admin_token}"}
-                            fb = self.session.get(fallback_url, headers=admin_headers, timeout=15)
+                            fb = self._request_with_retry("GET", fallback_url, headers=admin_headers)
                         if fb.status_code in (401, 403):
                             no_auth_headers = {k: v for k, v in headers.items() if k != "Authorization"}
-                            fb = self.session.get(fallback_url, headers=no_auth_headers, timeout=15)
+                            fb = self._request_with_retry("GET", fallback_url, headers=no_auth_headers)
                     if fb.status_code < 400:
                         fb_data = fb.json()
                         # Liste dönüyorsa ilk elemanı al
@@ -382,7 +410,7 @@ def main() -> None:
     parser.add_argument("--step", metavar="ID", help="Sadece bu adımı çalıştır")
     parser.add_argument("--from", dest="from_step", metavar="ID", help="Bu adımdan itibaren çalıştır")
     parser.add_argument("--list", action="store_true", help="Tüm adımları listele")
-    parser.add_argument("--delay", type=float, default=0.4, help="Adımlar arası bekleme (saniye, default: 0.4)")
+    parser.add_argument("--delay", type=float, default=0.7, help="Adımlar arası bekleme (saniye, default: 0.7 — rate limit: 100/dk)")
     parser.add_argument("--no-delay", action="store_true", help="Adımlar arası bekleme olmasın")
     args = parser.parse_args()
 
