@@ -55,12 +55,23 @@ public class AdminPaymentController : ControllerBase
     public async Task<ActionResult> GetPayment(int id)
     {
         var payment = await _db.PaymentIntents.Include(p => p.Order).ThenInclude(o => o.Buyer)
-            .FirstOrDefaultAsync(p => p.Id == id);
+            .Where(p => p.Id == id)
+            .Select(p => new {
+                p.Id, p.OrderId, OrderNumber = p.Order != null ? p.Order.OrderNumber : null,
+                p.Amount, p.Currency, p.Status, p.Method, p.ExternalReference, p.CreatedAt, p.UpdatedAt,
+                Buyer = p.Order != null && p.Order.Buyer != null
+                    ? new { p.Order.Buyer.Id, p.Order.Buyer.Name, p.Order.Buyer.Email }
+                    : null
+            })
+            .FirstOrDefaultAsync();
         if (payment == null) throw new NotFoundException("Payment not found");
 
-        var events = await _db.PaymentEvents.Where(e => e.PaymentIntentId == id).OrderByDescending(e => e.CreatedAt).ToListAsync();
+        var events = await _db.PaymentEvents.Where(e => e.PaymentIntentId == id)
+            .OrderByDescending(e => e.CreatedAt)
+            .Select(e => new { e.Id, e.EventType, e.Status, e.Message, e.CreatedAt })
+            .ToListAsync();
 
-        return Ok(new { Payment = payment, Events = events });
+        return Ok(new { payment, events });
     }
 
     [HttpGet("events")]
