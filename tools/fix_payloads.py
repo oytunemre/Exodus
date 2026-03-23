@@ -6,6 +6,7 @@ Sorunlar:
 1. productId/listingId state'de null → bilinen ID'lerle doldurur
 2. auth_role yanlış atanmış → step_id prefix'e göre düzeltir
 3. ticketId save_response eksik → ekler
+4. on_conflict_get eksik → 409 alındığında mevcut kaynağı bulmak için GET path ekler
 
 Kullanım:
     python fix_payloads.py
@@ -14,6 +15,21 @@ import json
 from pathlib import Path
 
 PAYLOADS_FILE = Path(__file__).parent / "generated_payloads.json"
+
+# 409 durumunda mevcut kaynağı bulmak için fallback GET path'leri
+# key: step_id, value: GET path (state placeholder'ları desteklenir)
+CONFLICT_GET_PATHS = {
+    "admin_create_brand":        "/api/admin/brands",
+    "admin_create_category":     "/api/admin/categories",
+    "seller_create_product":     "/api/admin/products",
+    "seller_create_product_2":   "/api/admin/products",
+    "seller_create_listing":     "/api/seller/listings",
+    "seller_create_listing_2":   "/api/seller/listings",
+    "seller_create_seller_listing": "/api/seller/listings",
+    "admin_create_carrier":      "/api/admin/shipments/carriers",
+    "admin_create_page":         "/api/admin/content/pages",
+    "admin_delete_tax_rate":     None,  # Silme işlemi, fallback yok
+}
 
 
 def fix():
@@ -71,6 +87,38 @@ def fix():
                 sr["comparisonId"] = "id"
                 step["save_response"] = sr
                 print("  customer_create_comparison save_response düzeltildi")
+
+    # ── 5. on_conflict_get ekle (409 fallback) ────────────────────────────
+    fixed_conflict = 0
+    for step in data["flow"]:
+        step_id = step.get("id", "")
+        if step_id in CONFLICT_GET_PATHS:
+            fallback = CONFLICT_GET_PATHS[step_id]
+            if fallback and not step.get("on_conflict_get"):
+                step["on_conflict_get"] = fallback
+                fixed_conflict += 1
+
+    print(f"  {fixed_conflict} adıma on_conflict_get eklendi")
+
+    # ── 6. Payload'larda boş Barcodes dizisini düzelt ─────────────────────
+    # AddProductDto ve ProductUpdateDto Barcodes gerektirir (en az 1, min 3 char)
+    fixed_barcodes = 0
+    for step in data["flow"]:
+        payload = step.get("payload", {})
+        if isinstance(payload, dict) and "barcodes" in payload:
+            barcodes = payload["barcodes"]
+            if not isinstance(barcodes, list) or len(barcodes) == 0:
+                payload["barcodes"] = ["BARCODE001"]
+                fixed_barcodes += 1
+        # Büyük harf key kontrolü
+        if isinstance(payload, dict) and "Barcodes" in payload:
+            barcodes = payload["Barcodes"]
+            if not isinstance(barcodes, list) or len(barcodes) == 0:
+                payload["Barcodes"] = ["BARCODE001"]
+                fixed_barcodes += 1
+
+    if fixed_barcodes:
+        print(f"  {fixed_barcodes} adımın Barcodes alanı düzeltildi")
 
     with open(PAYLOADS_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)

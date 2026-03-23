@@ -36,8 +36,17 @@ RESULTS_FILE = Path(__file__).parent / "automation_results.json"
 def _resolve(value: Any, variables: dict, state: dict) -> Any:
     """{{placeholder}} referanslarını variables + state ile değiştirir."""
     if isinstance(value, str):
-        # Tüm {{...}} referanslarını çöz
         import re
+        # Eğer tüm string tek bir {{key}} template'i ise orijinal tipi koru
+        pure = re.match(r'^\{\{(\w+)\}\}$', value)
+        if pure:
+            key = pure.group(1)
+            if key in state and state[key] is not None:
+                return state[key]  # int/bool/float gibi orijinal tipi döner
+            if key in variables:
+                return variables[key]
+            return value  # Çözülemediyse olduğu gibi bırak
+        # Karma template: string içinde birden fazla ya da kısmi placeholder
         def replace_ref(m: re.Match) -> str:
             key = m.group(1)
             if key in state and state[key] is not None:
@@ -141,6 +150,7 @@ class ExodusAutomation:
         raw_payload = step.get("payload", {})
         save_response = step.get("save_response", {})
         skip_if_null = step.get("skip_if_state_null", None)
+        on_conflict_get = step.get("on_conflict_get", None)  # 409 fallback GET path
 
         # State bağımlılık kontrolü
         if skip_if_null and self.state.get(skip_if_null) is None:
@@ -195,6 +205,31 @@ class ExodusAutomation:
                     if value is not None:
                         self.state[state_key] = value
                         print(f"  → state.{state_key} = {value}")
+
+            # 409 Conflict: on_conflict_get ile mevcut kaynağı bul, ID'yi state'e yaz
+            if response.status_code == 409 and on_conflict_get and save_response:
+                fallback_path = _resolve_path_params(on_conflict_get, self.variables, self.state)
+                fallback_url = f"{self.base_url}{fallback_path}"
+                print(f"  → 409 alındı, mevcut kaynak aranıyor: GET {fallback_path}")
+                try:
+                    fb = self.session.get(fallback_url, headers=headers, timeout=15)
+                    if fb.status_code < 400:
+                        fb_data = fb.json()
+                        # Liste dönüyorsa ilk elemanı al
+                        if isinstance(fb_data, list) and fb_data:
+                            fb_data = fb_data[0]
+                        elif isinstance(fb_data, dict) and "items" in fb_data and fb_data["items"]:
+                            fb_data = fb_data["items"][0]
+                        if isinstance(fb_data, dict):
+                            for state_key, response_path in save_response.items():
+                                value = _get_nested(fb_data, response_path)
+                                if value is not None:
+                                    self.state[state_key] = value
+                                    print(f"  → state.{state_key} = {value} (conflict fallback)")
+                            result["success"] = True  # Çakışma çözüldü, başarılı say
+                            result["conflict_resolved"] = True
+                except Exception as e:
+                    print(f"  → Conflict fallback başarısız: {e}")
 
             result = {
                 "step_id": step_id,
