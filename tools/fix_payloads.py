@@ -39,11 +39,9 @@ def fix():
         data = json.load(f)
 
     # ── 1. Bilinen ID'leri state'e yaz ────────────────────────────────────
+    # NOT: productId/listingId'yi hardcode etme — conflict fallback runtime'da gerçek ID'leri alır
+    # Sadece categoryId gibi sabit değerleri yaz
     known = {
-        "productId": 9,
-        "secondProductId": 10,
-        "listingId": 9,
-        "secondListingId": 10,
         "categoryId": 3,   # Mevcut "Elektronik" kategorisi
     }
     for k, v in known.items():
@@ -72,7 +70,38 @@ def fix():
 
     print(f"  {fixed_auth} adımın auth_role'ü düzeltildi")
 
-    # ── 3. ticketId save_response düzelt ──────────────────────────────────
+    # ── 3. Kritik save_response eksikliklerini düzelt ─────────────────────
+    # Anahtar adımların save_response alanları doğru path'lerle doldurulmuş olmalı.
+    # ProductResponseDto: { id, productName, ... }
+    # Listing response: { id, productId, price, ... }
+    # Address response: { id, street, ... }
+    # Question response: { id, questionText, ... }
+    REQUIRED_SAVE_RESPONSE = {
+        "seller_create_product":           {"productId": "id"},
+        "seller_create_product_2":         {"secondProductId": "id"},
+        "seller_create_listing":           {"listingId": "id"},
+        "seller_create_listing_2":         {"secondListingId": "id"},
+        "seller_create_seller_listing":    {"sellerListingId": "id"},
+        "customer_create_shipping_address":{"addressId": "id"},
+        "customer_create_billing_address": {"billingAddressId": "id"},
+        "customer_ask_question":           {"questionId": "id"},
+    }
+    for step in data["flow"]:
+        step_id = step.get("id", "")
+        if step_id not in REQUIRED_SAVE_RESPONSE:
+            continue
+        expected = REQUIRED_SAVE_RESPONSE[step_id]
+        sr = step.get("save_response") or {}
+        changed = False
+        for state_key, resp_path in expected.items():
+            if sr.get(state_key) != resp_path:
+                sr[state_key] = resp_path
+                changed = True
+        if changed:
+            step["save_response"] = sr
+            print(f"  {step_id} save_response düzeltildi: {expected}")
+
+    # ── 4. ticketId / comparisonId save_response düzelt ──────────────────
     for step in data["flow"]:
         if step.get("id") == "customer_create_support_ticket":
             sr = step.get("save_response", {})
@@ -81,7 +110,6 @@ def fix():
                 step["save_response"] = sr
                 print("  customer_create_support_ticket save_response düzeltildi")
 
-    # ── 4. comparisonId save_response düzelt ──────────────────────────────
     for step in data["flow"]:
         if step.get("id") == "customer_create_comparison":
             sr = step.get("save_response", {})
@@ -253,6 +281,19 @@ def fix():
                     if not isinstance(val, int) or not (1 <= val <= 5):
                         payload[rating_key] = 5
                         print("  customer_create_seller_review rating düzeltildi → 5")
+
+    # ── 15. admin_delete_tax_rate: IsDefault=true olan silinemez → skip_if ──
+    # Default tax rate silinemez (400 BadRequest). taxRateId state'e bağlı — eğer
+    # taxRateId 0 ya da default rate ise hata alınır. skip_if_state_null ile koru.
+    for step in data["flow"]:
+        if step.get("id") == "admin_delete_tax_rate":
+            if not step.get("skip_if_state_null"):
+                step["skip_if_state_null"] = "taxRateId"
+                print("  admin_delete_tax_rate skip_if_state_null=taxRateId eklendi")
+            # taxRateId state'de yok ise step atlanır; varsa silinecek rate ID güvenli
+            # olmalı. State'i temizle ki hata üretmesin:
+            if data["state"].get("taxRateId") is None:
+                pass  # Zaten null, skip çalışır
 
     with open(PAYLOADS_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)

@@ -235,8 +235,9 @@ class ExodusAutomation:
                         print(f"  → state.{state_key} = {value}")
 
             # 409 Conflict: on_conflict_get ile mevcut kaynağı bul, ID'yi state'e yaz
+            # NOT: save_response boş olsa bile conflict_resolved=True işaretlenmeli
             conflict_resolved = False
-            if response.status_code == 409 and on_conflict_get and save_response:
+            if response.status_code == 409 and on_conflict_get:
                 fallback_path = _resolve_path_params(on_conflict_get, self.variables, self.state)
                 fallback_url = f"{self.base_url}{fallback_path}"
                 print(f"  → 409 alındı, mevcut kaynak aranıyor: GET {fallback_path}")
