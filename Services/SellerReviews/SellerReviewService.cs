@@ -16,14 +16,14 @@ public class SellerReviewService : ISellerReviewService
     public async Task<SellerReviewResponseDto> CreateReviewAsync(int userId, CreateSellerReviewDto dto, CancellationToken ct = default)
     {
         var seller = await _db.Users.FindAsync(new object[] { dto.SellerId }, ct)
-            ?? throw new KeyNotFoundException("Satici bulunamadi");
+            ?? throw new NotFoundException("Satici bulunamadi");
 
         // Ayni satici ve siparis icin tekrar degerlendirme yapilmasin
         var existingReview = await _db.Set<SellerReview>()
             .FirstOrDefaultAsync(r => r.UserId == userId && r.SellerId == dto.SellerId && r.OrderId == dto.OrderId, ct);
 
         if (existingReview != null)
-            throw new InvalidOperationException("Bu siparis icin zaten bir degerlendirme yapilmis");
+            throw new BadRequestException("Bu siparis icin zaten bir degerlendirme yapilmis");
 
         var review = new SellerReview
         {
@@ -48,7 +48,7 @@ public class SellerReviewService : ISellerReviewService
     {
         var review = await _db.Set<SellerReview>()
             .FirstOrDefaultAsync(r => r.Id == reviewId && r.UserId == userId, ct)
-            ?? throw new KeyNotFoundException("Degerlendirme bulunamadi");
+            ?? throw new NotFoundException("Degerlendirme bulunamadi");
 
         if (dto.Rating.HasValue) review.Rating = dto.Rating.Value;
         if (dto.Comment != null) review.Comment = dto.Comment;
@@ -64,7 +64,7 @@ public class SellerReviewService : ISellerReviewService
     {
         var review = await _db.Set<SellerReview>()
             .FirstOrDefaultAsync(r => r.Id == reviewId && r.UserId == userId, ct)
-            ?? throw new KeyNotFoundException("Degerlendirme bulunamadi");
+            ?? throw new NotFoundException("Degerlendirme bulunamadi");
 
         _db.Set<SellerReview>().Remove(review);
         await _db.SaveChangesAsync(ct);
@@ -87,7 +87,7 @@ public class SellerReviewService : ISellerReviewService
     public async Task<SellerReviewSummaryDto> GetSellerRatingSummaryAsync(int sellerId, CancellationToken ct = default)
     {
         var seller = await _db.Users.FindAsync(new object[] { sellerId }, ct)
-            ?? throw new KeyNotFoundException("Satici bulunamadi");
+            ?? throw new NotFoundException("Satici bulunamadi");
 
         var reviews = await _db.Set<SellerReview>()
             .Where(r => r.SellerId == sellerId && r.Status == SellerReviewStatus.Active)
@@ -113,7 +113,7 @@ public class SellerReviewService : ISellerReviewService
     {
         var review = await _db.Set<SellerReview>()
             .FirstOrDefaultAsync(r => r.Id == reviewId && r.SellerId == sellerId, ct)
-            ?? throw new KeyNotFoundException("Degerlendirme bulunamadi");
+            ?? throw new NotFoundException("Degerlendirme bulunamadi");
 
         review.SellerReply = reply;
         review.SellerReplyDate = DateTime.UtcNow;
@@ -126,7 +126,7 @@ public class SellerReviewService : ISellerReviewService
     {
         var review = await _db.Set<SellerReview>()
             .FirstOrDefaultAsync(r => r.Id == reviewId, ct)
-            ?? throw new KeyNotFoundException("Degerlendirme bulunamadi");
+            ?? throw new NotFoundException("Degerlendirme bulunamadi");
 
         review.Status = SellerReviewStatus.Reported;
         await _db.SaveChangesAsync(ct);
@@ -138,7 +138,7 @@ public class SellerReviewService : ISellerReviewService
     {
         var review = await _db.Set<SellerReview>()
             .FirstOrDefaultAsync(r => r.Id == reviewId, ct)
-            ?? throw new KeyNotFoundException("Degerlendirme bulunamadi");
+            ?? throw new NotFoundException("Degerlendirme bulunamadi");
 
         if (Enum.TryParse<SellerReviewStatus>(status, true, out var reviewStatus))
             review.Status = reviewStatus;
@@ -153,7 +153,7 @@ public class SellerReviewService : ISellerReviewService
             .Include(r => r.User)
             .Include(r => r.Seller)
             .FirstOrDefaultAsync(r => r.Id == reviewId, ct)
-            ?? throw new KeyNotFoundException("Degerlendirme bulunamadi");
+            ?? throw new NotFoundException("Degerlendirme bulunamadi");
 
         return MapToDto(review);
     }

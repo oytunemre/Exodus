@@ -33,16 +33,16 @@ public class ProductComparisonService : IProductComparisonService
         var comparison = await _db.Set<ProductComparison>()
             .Include(c => c.Items).ThenInclude(i => i.Product).ThenInclude(p => p.Images)
             .FirstOrDefaultAsync(c => c.Id == comparisonId && c.UserId == userId, ct)
-            ?? throw new KeyNotFoundException("Karsilastirma listesi bulunamadi");
+            ?? throw new NotFoundException("Karsilastirma listesi bulunamadi");
 
         if (comparison.Items.Count >= MaxProductsPerComparison)
-            throw new InvalidOperationException($"Bir karsilastirma listesinde en fazla {MaxProductsPerComparison} urun olabilir");
+            throw new BadRequestException($"Bir karsilastirma listesinde en fazla {MaxProductsPerComparison} urun olabilir");
 
         if (comparison.Items.Any(i => i.ProductId == productId))
-            throw new InvalidOperationException("Bu urun zaten karsilastirma listesinde");
+            throw new BadRequestException("Bu urun zaten karsilastirma listesinde");
 
         var product = await _db.Products.FindAsync(new object[] { productId }, ct)
-            ?? throw new KeyNotFoundException("Urun bulunamadi");
+            ?? throw new NotFoundException("Urun bulunamadi");
 
         var maxOrder = comparison.Items.Any() ? comparison.Items.Max(i => i.DisplayOrder) : 0;
 
@@ -63,11 +63,11 @@ public class ProductComparisonService : IProductComparisonService
     {
         var comparison = await _db.Set<ProductComparison>()
             .FirstOrDefaultAsync(c => c.Id == comparisonId && c.UserId == userId, ct)
-            ?? throw new KeyNotFoundException("Karsilastirma listesi bulunamadi");
+            ?? throw new NotFoundException("Karsilastirma listesi bulunamadi");
 
         var item = await _db.Set<ProductComparisonItem>()
             .FirstOrDefaultAsync(i => i.ComparisonId == comparisonId && i.ProductId == productId, ct)
-            ?? throw new KeyNotFoundException("Urun karsilastirma listesinde bulunamadi");
+            ?? throw new NotFoundException("Urun karsilastirma listesinde bulunamadi");
 
         _db.Set<ProductComparisonItem>().Remove(item);
         await _db.SaveChangesAsync(ct);
@@ -80,7 +80,7 @@ public class ProductComparisonService : IProductComparisonService
         var comparison = await _db.Set<ProductComparison>()
             .Include(c => c.Items).ThenInclude(i => i.Product).ThenInclude(p => p.Images)
             .FirstOrDefaultAsync(c => c.Id == comparisonId && c.UserId == userId, ct)
-            ?? throw new KeyNotFoundException("Karsilastirma listesi bulunamadi");
+            ?? throw new NotFoundException("Karsilastirma listesi bulunamadi");
 
         return MapToResponseDto(comparison);
     }
@@ -106,7 +106,7 @@ public class ProductComparisonService : IProductComparisonService
     {
         var comparison = await _db.Set<ProductComparison>()
             .FirstOrDefaultAsync(c => c.Id == comparisonId && c.UserId == userId, ct)
-            ?? throw new KeyNotFoundException("Karsilastirma listesi bulunamadi");
+            ?? throw new NotFoundException("Karsilastirma listesi bulunamadi");
 
         _db.Set<ProductComparison>().Remove(comparison);
         await _db.SaveChangesAsync(ct);
@@ -118,7 +118,7 @@ public class ProductComparisonService : IProductComparisonService
             .Include(c => c.Items).ThenInclude(i => i.Product).ThenInclude(p => p.Images)
             .Include(c => c.Items).ThenInclude(i => i.Product).ThenInclude(p => p.Category)
             .FirstOrDefaultAsync(c => c.Id == comparisonId && c.UserId == userId, ct)
-            ?? throw new KeyNotFoundException("Karsilastirma listesi bulunamadi");
+            ?? throw new NotFoundException("Karsilastirma listesi bulunamadi");
 
         var productIds = comparison.Items.Select(i => i.ProductId).ToList();
 

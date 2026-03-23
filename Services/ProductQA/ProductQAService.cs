@@ -16,7 +16,7 @@ public class ProductQAService : IProductQAService
     public async Task<QuestionResponseDto> AskQuestionAsync(int userId, AskQuestionDto dto, CancellationToken ct = default)
     {
         var product = await _db.Products.FindAsync(new object[] { dto.ProductId }, ct)
-            ?? throw new KeyNotFoundException("Urun bulunamadi");
+            ?? throw new NotFoundException("Urun bulunamadi");
 
         var question = new ProductQuestion
         {
@@ -54,7 +54,7 @@ public class ProductQAService : IProductQAService
             .Include(q => q.Product)
             .Include(q => q.Answers).ThenInclude(a => a.AnsweredByUser)
             .FirstOrDefaultAsync(q => q.Id == questionId, ct)
-            ?? throw new KeyNotFoundException("Soru bulunamadi");
+            ?? throw new NotFoundException("Soru bulunamadi");
 
         return MapQuestionToDto(question);
     }
@@ -63,7 +63,7 @@ public class ProductQAService : IProductQAService
     {
         var question = await _db.Set<ProductQuestion>()
             .FirstOrDefaultAsync(q => q.Id == questionId && q.AskedByUserId == userId, ct)
-            ?? throw new KeyNotFoundException("Soru bulunamadi");
+            ?? throw new NotFoundException("Soru bulunamadi");
 
         _db.Set<ProductQuestion>().Remove(question);
         await _db.SaveChangesAsync(ct);
@@ -73,7 +73,7 @@ public class ProductQAService : IProductQAService
     {
         var question = await _db.Set<ProductQuestion>()
             .FirstOrDefaultAsync(q => q.Id == questionId, ct)
-            ?? throw new KeyNotFoundException("Soru bulunamadi");
+            ?? throw new NotFoundException("Soru bulunamadi");
 
         question.UpvoteCount++;
         await _db.SaveChangesAsync(ct);
@@ -86,7 +86,7 @@ public class ProductQAService : IProductQAService
         var question = await _db.Set<ProductQuestion>()
             .Include(q => q.Product)
             .FirstOrDefaultAsync(q => q.Id == questionId, ct)
-            ?? throw new KeyNotFoundException("Soru bulunamadi");
+            ?? throw new NotFoundException("Soru bulunamadi");
 
         // Satici mi kontrol et
         var listing = await _db.Listings
@@ -116,7 +116,7 @@ public class ProductQAService : IProductQAService
             .Include(a => a.Question)
             .Include(a => a.AnsweredByUser)
             .FirstOrDefaultAsync(a => a.Id == answerId, ct)
-            ?? throw new KeyNotFoundException("Cevap bulunamadi");
+            ?? throw new NotFoundException("Cevap bulunamadi");
 
         if (answer.Question.AskedByUserId != userId)
             throw new UnauthorizedAccessException("Sadece soruyu soran cevabi kabul edebilir");
@@ -131,7 +131,7 @@ public class ProductQAService : IProductQAService
     {
         var answer = await _db.Set<ProductAnswer>()
             .FirstOrDefaultAsync(a => a.Id == answerId && a.AnsweredByUserId == userId, ct)
-            ?? throw new KeyNotFoundException("Cevap bulunamadi");
+            ?? throw new NotFoundException("Cevap bulunamadi");
 
         _db.Set<ProductAnswer>().Remove(answer);
         await _db.SaveChangesAsync(ct);
@@ -142,7 +142,7 @@ public class ProductQAService : IProductQAService
         var answer = await _db.Set<ProductAnswer>()
             .Include(a => a.AnsweredByUser)
             .FirstOrDefaultAsync(a => a.Id == answerId, ct)
-            ?? throw new KeyNotFoundException("Cevap bulunamadi");
+            ?? throw new NotFoundException("Cevap bulunamadi");
 
         answer.UpvoteCount++;
         await _db.SaveChangesAsync(ct);
@@ -154,7 +154,7 @@ public class ProductQAService : IProductQAService
     {
         var question = await _db.Set<ProductQuestion>()
             .FirstOrDefaultAsync(q => q.Id == questionId, ct)
-            ?? throw new KeyNotFoundException("Soru bulunamadi");
+            ?? throw new NotFoundException("Soru bulunamadi");
 
         question.Status = status;
         await _db.SaveChangesAsync(ct);
