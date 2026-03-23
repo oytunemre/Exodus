@@ -69,7 +69,7 @@
         "email": "{{adminEmail}}",
         "username": "{{adminUsername}}",
         "password": "{{adminPassword}}",
-        "role": 0
+        "role": 2
       },
       "save_response": {
         "adminId": "userId"
@@ -102,7 +102,7 @@
         "email": "{{sellerEmail}}",
         "username": "{{sellerUsername}}",
         "password": "{{sellerPassword}}",
-        "role": 2
+        "role": 1
       },
       "save_response": {
         "sellerId": "userId"
@@ -134,7 +134,7 @@
         "email": "{{customerEmail}}",
         "username": "{{customerUsername}}",
         "password": "{{customerPassword}}",
-        "role": 1
+        "role": 0
       },
       "save_response": {
         "customerId": "userId"
@@ -823,7 +823,7 @@
         "quantity": 1
       },
       "save_response": {
-        "cartItemId": "cartItemId"
+        "cartItemId": "items.0.cartItemId"
       }
     },
     {
@@ -1197,7 +1197,7 @@
       "payload": {
         "subject": "Fatura talebi",
         "message": "Sipariş numaramla ilgili e-fatura talebim var. Kurumsal fatura düzenlenmesini rica ediyorum.",
-        "category": "Billing",
+        "category": "Payment",
         "priority": 1,
         "orderId": "{{orderId}}"
       },
