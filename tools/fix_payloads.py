@@ -90,17 +90,18 @@ def fix():
                 step["save_response"] = sr
                 print("  customer_create_comparison save_response düzeltildi")
 
-    # ── 5. on_conflict_get ekle (409 fallback) ────────────────────────────
+    # ── 5. on_conflict_get ekle/güncelle (409 fallback) ──────────────────────
+    # Her zaman üzerine yaz — path değişmiş olabilir
     fixed_conflict = 0
     for step in data["flow"]:
         step_id = step.get("id", "")
         if step_id in CONFLICT_GET_PATHS:
             fallback = CONFLICT_GET_PATHS[step_id]
-            if fallback and not step.get("on_conflict_get"):
+            if fallback and step.get("on_conflict_get") != fallback:
                 step["on_conflict_get"] = fallback
                 fixed_conflict += 1
 
-    print(f"  {fixed_conflict} adıma on_conflict_get eklendi")
+    print(f"  {fixed_conflict} adımın on_conflict_get'i ayarlandı")
 
     # ── 6. Payload'larda boş Barcodes dizisini düzelt ─────────────────────
     # AddProductDto ve ProductUpdateDto Barcodes gerektirir (en az 1, min 3 char)
