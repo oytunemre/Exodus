@@ -21,8 +21,10 @@ PAYLOADS_FILE = Path(__file__).parent / "generated_payloads.json"
 CONFLICT_GET_PATHS = {
     "admin_create_brand":        "/api/admin/brands",
     "admin_create_category":     "/api/admin/categories",
-    "seller_create_product":     "/api/admin/products",
-    "seller_create_product_2":   "/api/admin/products",
+    # Ürün için /api/products kullan: AllowAnonymous, seller token ile /api/admin/products açılmaz (AdminOnly)
+    "seller_create_product":     "/api/products",
+    "seller_create_product_2":   "/api/products",
+    # seller_create_listing → /api/listings (AddListingDto), fallback seller listings endpoint
     "seller_create_listing":     "/api/seller/listings",
     "seller_create_listing_2":   "/api/seller/listings",
     "seller_create_seller_listing": "/api/seller/listings",
@@ -120,12 +122,13 @@ def fix():
     if fixed_barcodes:
         print(f"  {fixed_barcodes} adımın Barcodes alanı düzeltildi")
 
-    # ── 7. seller_create_listing/seller_create_listing_2: alan adı düzelt ────
-    # /api/seller/listings → SellerCreateListingDto kullanır:
-    #   stockQuantity (int), NOT stock; SellerId olmamalı
+    # ── 7. seller_create_seller_listing: alan adı düzelt ────────────────────
+    # /api/seller/listings → SellerCreateListingDto: stockQuantity (int), SellerId YOK (JWT'den gelir)
+    # /api/listings        → AddListingDto:           stock (int), SellerId gerekli (validator: > 0)
+    # seller_create_listing ve seller_create_listing_2 büyük ihtimalle /api/listings kullanır → dokunma
     fixed_listing = 0
     for step in data["flow"]:
-        if step.get("id") in ("seller_create_listing", "seller_create_listing_2", "seller_create_seller_listing"):
+        if step.get("id") == "seller_create_seller_listing":
             payload = step.get("payload", {})
             if isinstance(payload, dict):
                 # "stock" → "stockQuantity"
@@ -135,12 +138,12 @@ def fix():
                 if "Stock" in payload and "StockQuantity" not in payload:
                     payload["StockQuantity"] = payload.pop("Stock")
                     fixed_listing += 1
-                # SellerId is taken from JWT, not body
+                # SellerId is taken from JWT for /api/seller/listings
                 payload.pop("sellerId", None)
                 payload.pop("SellerId", None)
 
     if fixed_listing:
-        print(f"  {fixed_listing} listing adımının payload'ı düzeltildi (stock→stockQuantity)")
+        print(f"  {fixed_listing} seller_create_seller_listing payload'ı düzeltildi (stock→stockQuantity)")
 
     # ── 8. customer_create_seller_review: Rating aralığı kontrolü ─────────
     for step in data["flow"]:

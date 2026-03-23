@@ -214,6 +214,15 @@ class ExodusAutomation:
                 print(f"  → 409 alındı, mevcut kaynak aranıyor: GET {fallback_path}")
                 try:
                     fb = self.session.get(fallback_url, headers=headers, timeout=15)
+                    # Eğer yetkisiz dönerse (401/403), admin token ile tekrar dene, sonra auth'suz
+                    if fb.status_code in (401, 403):
+                        admin_token = self.state.get("adminToken")
+                        if admin_token:
+                            admin_headers = {**headers, "Authorization": f"Bearer {admin_token}"}
+                            fb = self.session.get(fallback_url, headers=admin_headers, timeout=15)
+                        if fb.status_code in (401, 403):
+                            no_auth_headers = {k: v for k, v in headers.items() if k != "Authorization"}
+                            fb = self.session.get(fallback_url, headers=no_auth_headers, timeout=15)
                     if fb.status_code < 400:
                         fb_data = fb.json()
                         # Liste dönüyorsa ilk elemanı al
