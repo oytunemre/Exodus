@@ -1,10 +1,15 @@
+using System;
+using Exodus.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace Exodus.Migrations
 {
-    /// <inheritdoc />
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20260323200000_AddMissingUserProfileColumns")]
     public partial class AddMissingUserProfileColumns : Migration
     {
         /// <inheritdoc />
