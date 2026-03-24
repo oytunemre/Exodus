@@ -1801,9 +1801,6 @@ namespace Exodus.Migrations
                     b.Property<int>("PaymentIntentId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("PaymentIntentId1")
-                        .HasColumnType("int");
-
                     b.Property<string>("Source")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
@@ -1817,8 +1814,6 @@ namespace Exodus.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("PaymentIntentId");
-
-                    b.HasIndex("PaymentIntentId1");
 
                     b.ToTable("PaymentEvents");
                 });
@@ -4499,14 +4494,10 @@ namespace Exodus.Migrations
             modelBuilder.Entity("Exodus.Models.Entities.PaymentEvent", b =>
                 {
                     b.HasOne("Exodus.Models.Entities.PaymentIntent", "PaymentIntent")
-                        .WithMany()
+                        .WithMany("Events")
                         .HasForeignKey("PaymentIntentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("Exodus.Models.Entities.PaymentIntent", null)
-                        .WithMany("Events")
-                        .HasForeignKey("PaymentIntentId1");
 
                     b.Navigation("PaymentIntent");
                 });
