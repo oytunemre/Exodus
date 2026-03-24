@@ -840,6 +840,8 @@ namespace Exodus.Data
                     .HasForeignKey(x => x.ListingId)
                     .OnDelete(DeleteBehavior.NoAction);
 
+                b.Property(x => x.PriceAtAdd).HasColumnType("decimal(18,2)");
+
                 b.HasIndex(x => new { x.WishlistId, x.ProductId })
                     .IsUnique()
                     .HasFilter("[IsDeleted] = 0");
