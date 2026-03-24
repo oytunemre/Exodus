@@ -222,7 +222,7 @@ namespace Exodus.Data
                 b.HasKey(x => x.Id);
 
                 b.HasOne(x => x.PaymentIntent)
-                    .WithMany()
+                    .WithMany(x => x.Events)
                     .HasForeignKey(x => x.PaymentIntentId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
