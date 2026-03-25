@@ -145,46 +145,24 @@ namespace Exodus.Migrations
                 filter: "[IsDeleted] = 0");
 
             // Seed default shipping carriers
-            migrationBuilder.InsertData(
-                table: "ShippingCarriers",
-                columns: new[] { "Name", "Code", "TrackingUrlTemplate", "IsActive", "SupportsApi", "DefaultRate", "DisplayOrder", "CreatedAt", "UpdatedAt", "IsDeleted" },
-                values: new object[] { "Yurtiçi Kargo", "YURTICI", "https://www.yurticikargo.com/tr/online-servisler/gonderi-sorgula?code={tracking}", true, false, 29.90m, 1, DateTime.UtcNow, DateTime.UtcNow, false });
-
-            migrationBuilder.InsertData(
-                table: "ShippingCarriers",
-                columns: new[] { "Name", "Code", "TrackingUrlTemplate", "IsActive", "SupportsApi", "DefaultRate", "DisplayOrder", "CreatedAt", "UpdatedAt", "IsDeleted" },
-                values: new object[] { "Aras Kargo", "ARAS", "https://www.araskargo.com.tr/trs/kargo-takip/?tracking={tracking}", true, false, 27.90m, 2, DateTime.UtcNow, DateTime.UtcNow, false });
-
-            migrationBuilder.InsertData(
-                table: "ShippingCarriers",
-                columns: new[] { "Name", "Code", "TrackingUrlTemplate", "IsActive", "SupportsApi", "DefaultRate", "DisplayOrder", "CreatedAt", "UpdatedAt", "IsDeleted" },
-                values: new object[] { "MNG Kargo", "MNG", "https://www.mngkargo.com.tr/gonderi-takip/?barcode={tracking}", true, false, 28.90m, 3, DateTime.UtcNow, DateTime.UtcNow, false });
+            migrationBuilder.Sql(@"
+                INSERT INTO [ShippingCarriers] ([Name],[Code],[TrackingUrlTemplate],[IsActive],[SupportsApi],[DefaultRate],[DisplayOrder],[CreatedAt],[UpdatedAt],[IsDeleted])
+                VALUES
+                (N'Yurtiçi Kargo','YURTICI','https://www.yurticikargo.com/tr/online-servisler/gonderi-sorgula?code={tracking}',1,0,29.90,1,GETUTCDATE(),GETUTCDATE(),0),
+                (N'Aras Kargo','ARAS','https://www.araskargo.com.tr/trs/kargo-takip/?tracking={tracking}',1,0,27.90,2,GETUTCDATE(),GETUTCDATE(),0),
+                (N'MNG Kargo','MNG','https://www.mngkargo.com.tr/gonderi-takip/?barcode={tracking}',1,0,28.90,3,GETUTCDATE(),GETUTCDATE(),0);
+            ");
 
             // Seed default static pages
-            migrationBuilder.InsertData(
-                table: "StaticPages",
-                columns: new[] { "Title", "Slug", "Content", "MetaTitle", "MetaDescription", "IsPublished", "ShowInFooter", "ShowInHeader", "DisplayOrder", "PageType", "PublishedAt", "CreatedAt", "UpdatedAt", "IsDeleted" },
-                values: new object[] { "Hakkımızda", "hakkimizda", "<h1>Hakkımızda</h1><p>Farmazon, Türkiye'nin önde gelen online pazaryeri platformudur.</p>", "Hakkımızda - Farmazon", "Farmazon hakkında bilgi edinin", true, true, false, 1, 3, DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, false });
-
-            migrationBuilder.InsertData(
-                table: "StaticPages",
-                columns: new[] { "Title", "Slug", "Content", "MetaTitle", "MetaDescription", "IsPublished", "ShowInFooter", "ShowInHeader", "DisplayOrder", "PageType", "PublishedAt", "CreatedAt", "UpdatedAt", "IsDeleted" },
-                values: new object[] { "Gizlilik Politikası", "gizlilik-politikasi", "<h1>Gizlilik Politikası</h1><p>Kişisel verilerinizin korunması bizim için önemlidir.</p>", "Gizlilik Politikası - Farmazon", "Farmazon gizlilik politikası", true, true, false, 2, 1, DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, false });
-
-            migrationBuilder.InsertData(
-                table: "StaticPages",
-                columns: new[] { "Title", "Slug", "Content", "MetaTitle", "MetaDescription", "IsPublished", "ShowInFooter", "ShowInHeader", "DisplayOrder", "PageType", "PublishedAt", "CreatedAt", "UpdatedAt", "IsDeleted" },
-                values: new object[] { "Kullanım Şartları", "kullanim-sartlari", "<h1>Kullanım Şartları</h1><p>Platformumuzu kullanmadan önce lütfen okuyunuz.</p>", "Kullanım Şartları - Farmazon", "Farmazon kullanım şartları", true, true, false, 3, 1, DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, false });
-
-            migrationBuilder.InsertData(
-                table: "StaticPages",
-                columns: new[] { "Title", "Slug", "Content", "MetaTitle", "MetaDescription", "IsPublished", "ShowInFooter", "ShowInHeader", "DisplayOrder", "PageType", "PublishedAt", "CreatedAt", "UpdatedAt", "IsDeleted" },
-                values: new object[] { "İletişim", "iletisim", "<h1>İletişim</h1><p>Bize ulaşmak için: destek@farmazon.com</p>", "İletişim - Farmazon", "Farmazon iletişim bilgileri", true, true, true, 4, 3, DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, false });
-
-            migrationBuilder.InsertData(
-                table: "StaticPages",
-                columns: new[] { "Title", "Slug", "Content", "MetaTitle", "MetaDescription", "IsPublished", "ShowInFooter", "ShowInHeader", "DisplayOrder", "PageType", "PublishedAt", "CreatedAt", "UpdatedAt", "IsDeleted" },
-                values: new object[] { "Sıkça Sorulan Sorular", "sss", "<h1>Sıkça Sorulan Sorular</h1><h2>Nasıl sipariş verebilirim?</h2><p>Ürünü sepete ekleyip ödeme adımlarını takip edebilirsiniz.</p>", "SSS - Farmazon", "Farmazon sıkça sorulan sorular", true, true, false, 5, 2, DateTime.UtcNow, DateTime.UtcNow, DateTime.UtcNow, false });
+            migrationBuilder.Sql(@"
+                INSERT INTO [StaticPages] ([Title],[Slug],[Content],[MetaTitle],[MetaDescription],[IsPublished],[ShowInFooter],[ShowInHeader],[DisplayOrder],[PageType],[PublishedAt],[CreatedAt],[UpdatedAt],[IsDeleted])
+                VALUES
+                (N'Hakkımızda','hakkimizda',N'<h1>Hakkımızda</h1><p>Farmazon, Türkiye''nin önde gelen online pazaryeri platformudur.</p>',N'Hakkımızda - Farmazon',N'Farmazon hakkında bilgi edinin',1,1,0,1,3,GETUTCDATE(),GETUTCDATE(),GETUTCDATE(),0),
+                (N'Gizlilik Politikası','gizlilik-politikasi',N'<h1>Gizlilik Politikası</h1><p>Kişisel verilerinizin korunması bizim için önemlidir.</p>',N'Gizlilik Politikası - Farmazon',N'Farmazon gizlilik politikası',1,1,0,2,1,GETUTCDATE(),GETUTCDATE(),GETUTCDATE(),0),
+                (N'Kullanım Şartları','kullanim-sartlari',N'<h1>Kullanım Şartları</h1><p>Platformumuzu kullanmadan önce lütfen okuyunuz.</p>',N'Kullanım Şartları - Farmazon',N'Farmazon kullanım şartları',1,1,0,3,1,GETUTCDATE(),GETUTCDATE(),GETUTCDATE(),0),
+                (N'İletişim','iletisim',N'<h1>İletişim</h1><p>Bize ulaşmak için: destek@farmazon.com</p>',N'İletişim - Farmazon',N'Farmazon iletişim bilgileri',1,1,1,4,3,GETUTCDATE(),GETUTCDATE(),GETUTCDATE(),0),
+                (N'Sıkça Sorulan Sorular','sss',N'<h1>Sıkça Sorulan Sorular</h1><h2>Nasıl sipariş verebilirim?</h2><p>Ürünü sepete ekleyip ödeme adımlarını takip edebilirsiniz.</p>',N'SSS - Farmazon',N'Farmazon sıkça sorulan sorular',1,1,0,5,2,GETUTCDATE(),GETUTCDATE(),GETUTCDATE(),0);
+            ");
         }
 
         /// <inheritdoc />
