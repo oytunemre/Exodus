@@ -44,19 +44,19 @@ namespace Exodus.Migrations
                         column: x => x.OrderId,
                         principalTable: "Orders",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_SupportTickets_SellerOrders_SellerOrderId",
                         column: x => x.SellerOrderId,
                         principalTable: "SellerOrders",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_SupportTickets_Users_AssignedToId",
                         column: x => x.AssignedToId,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_SupportTickets_Users_UserId",
                         column: x => x.UserId,
