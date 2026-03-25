@@ -50,13 +50,13 @@ namespace Exodus.Migrations
                         column: x => x.TicketId,
                         principalTable: "SupportTickets",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_ReturnShipments_Refunds_RefundId",
                         column: x => x.RefundId,
                         principalTable: "Refunds",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_ReturnShipments_SellerOrders_SellerOrderId",
                         column: x => x.SellerOrderId,
@@ -68,7 +68,7 @@ namespace Exodus.Migrations
                         column: x => x.CarrierId,
                         principalTable: "ShippingCarriers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             // Seller Shipping Settings
@@ -105,13 +105,13 @@ namespace Exodus.Migrations
                         column: x => x.SellerId,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_SellerShippingSettings_ShippingCarriers_PreferredCarrierId",
                         column: x => x.PreferredCarrierId,
                         principalTable: "ShippingCarriers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             // Indexes for ReturnShipments
