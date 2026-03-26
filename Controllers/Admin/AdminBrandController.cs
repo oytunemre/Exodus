@@ -88,7 +88,7 @@ public class AdminBrandController : ControllerBase
         var slug = string.IsNullOrEmpty(dto.Slug) ? GenerateSlug(dto.Name) : dto.Slug;
 
         if (await _db.Set<Brand>().AnyAsync(b => b.Slug == slug))
-            throw new ValidationException("Slug already exists");
+            throw new ConflictException("Slug already exists");
 
         var brand = new Brand
         {
@@ -121,7 +121,7 @@ public class AdminBrandController : ControllerBase
         if (dto.Slug != null)
         {
             if (await _db.Set<Brand>().AnyAsync(b => b.Slug == dto.Slug && b.Id != id))
-                throw new ValidationException("Slug already exists");
+                throw new ConflictException("Slug already exists");
             brand.Slug = dto.Slug;
         }
         if (dto.Description != null) brand.Description = dto.Description;

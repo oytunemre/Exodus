@@ -8,7 +8,8 @@ public static class DbSeeder
 {
     public static async Task SeedAsync(ApplicationDbContext db)
     {
-        await db.Database.MigrateAsync();
+        if (db.Database.IsRelational())
+            await db.Database.MigrateAsync();
 
         // -------------------------
         // 1) USERS (>=5)

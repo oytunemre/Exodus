@@ -73,18 +73,16 @@ namespace Exodus.Migrations
                 filter: "[IsDeleted] = 0");
 
             // Seed default site settings
-            migrationBuilder.InsertData(
-                table: "SiteSettings",
-                columns: new[] { "Key", "Value", "Description", "Category", "IsPublic", "CreatedAt", "UpdatedAt", "IsDeleted" },
-                values: new object[,]
-                {
-                    { "Shipping.DefaultCost", "29.90", "Varsayılan kargo ücreti (TL)", "Shipping", false, DateTime.UtcNow, DateTime.UtcNow, false },
-                    { "Shipping.FreeThreshold", "500", "Ücretsiz kargo limiti (TL)", "Shipping", true, DateTime.UtcNow, DateTime.UtcNow, false },
-                    { "Commission.DefaultRate", "10", "Varsayılan komisyon oranı (%)", "Commission", false, DateTime.UtcNow, DateTime.UtcNow, false },
-                    { "Commission.MinAmount", "1", "Minimum komisyon tutarı (TL)", "Commission", false, DateTime.UtcNow, DateTime.UtcNow, false },
-                    { "General.SiteName", "Farmazon", "Site adı", "General", true, DateTime.UtcNow, DateTime.UtcNow, false },
-                    { "Payment.MinOrderAmount", "50", "Minimum sipariş tutarı (TL)", "Payment", true, DateTime.UtcNow, DateTime.UtcNow, false }
-                });
+            migrationBuilder.Sql(@"
+                INSERT INTO [SiteSettings] ([Key],[Value],[Description],[Category],[IsPublic],[CreatedAt],[UpdatedAt],[IsDeleted])
+                VALUES
+                ('Shipping.DefaultCost','29.90','Varsayılan kargo ücreti (TL)','Shipping',0,GETUTCDATE(),GETUTCDATE(),0),
+                ('Shipping.FreeThreshold','500','Ücretsiz kargo limiti (TL)','Shipping',1,GETUTCDATE(),GETUTCDATE(),0),
+                ('Commission.DefaultRate','10','Varsayılan komisyon oranı (%)','Commission',0,GETUTCDATE(),GETUTCDATE(),0),
+                ('Commission.MinAmount','1','Minimum komisyon tutarı (TL)','Commission',0,GETUTCDATE(),GETUTCDATE(),0),
+                ('General.SiteName','Farmazon','Site adı','General',1,GETUTCDATE(),GETUTCDATE(),0),
+                ('Payment.MinOrderAmount','50','Minimum sipariş tutarı (TL)','Payment',1,GETUTCDATE(),GETUTCDATE(),0);
+            ");
         }
 
         /// <inheritdoc />

@@ -12,6 +12,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.AspNetCore.Hosting;
 
 namespace Exodus.Services.Auth
 {
@@ -21,6 +22,7 @@ namespace Exodus.Services.Auth
         private readonly JwtSettings _jwtSettings;
         private readonly IEmailService _emailService;
         private readonly ITwoFactorService _twoFactorService;
+        private readonly IWebHostEnvironment _env;
 
         private const int MaxFailedLoginAttempts = 5;
         private const int LockoutDurationMinutes = 15;
@@ -29,12 +31,14 @@ namespace Exodus.Services.Auth
             ApplicationDbContext context,
             IOptions<JwtSettings> jwtSettings,
             IEmailService emailService,
-            ITwoFactorService twoFactorService)
+            ITwoFactorService twoFactorService,
+            IWebHostEnvironment env)
         {
             _context = context;
             _jwtSettings = jwtSettings.Value;
             _emailService = emailService;
             _twoFactorService = twoFactorService;
+            _env = env;
         }
 
         public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
@@ -141,8 +145,8 @@ namespace Exodus.Services.Auth
                 throw new NotFoundException("Invalid credentials");
             }
 
-            // Check if email is verified
-            if (!user.EmailVerified)
+            // Check if email is verified (skip in Development for automation testing)
+            if (!user.EmailVerified && !_env.IsDevelopment())
                 throw new UnauthorizedException("Please verify your email before logging in.");
 
             // Reset failed login attempts on successful login
@@ -225,8 +229,8 @@ namespace Exodus.Services.Auth
                 throw new NotFoundException("Invalid credentials");
             }
 
-            // Check if email is verified
-            if (!user.EmailVerified)
+            // Check if email is verified (skip in Development for automation testing)
+            if (!user.EmailVerified && !_env.IsDevelopment())
                 throw new UnauthorizedException("Please verify your email before logging in.");
 
             // Verify 2FA is enabled

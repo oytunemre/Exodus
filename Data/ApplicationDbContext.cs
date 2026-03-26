@@ -222,7 +222,7 @@ namespace Exodus.Data
                 b.HasKey(x => x.Id);
 
                 b.HasOne(x => x.PaymentIntent)
-                    .WithMany()
+                    .WithMany(x => x.Events)
                     .HasForeignKey(x => x.PaymentIntentId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
@@ -839,6 +839,8 @@ namespace Exodus.Data
                     .WithMany()
                     .HasForeignKey(x => x.ListingId)
                     .OnDelete(DeleteBehavior.NoAction);
+
+                b.Property(x => x.PriceAtAdd).HasColumnType("decimal(18,2)");
 
                 b.HasIndex(x => new { x.WishlistId, x.ProductId })
                     .IsUnique()

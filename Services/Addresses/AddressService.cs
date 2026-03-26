@@ -1,3 +1,4 @@
+using Exodus.Services.Common;
 using Exodus.Data;
 using Exodus.Models.Dto;
 using Exodus.Models.Entities;
@@ -51,7 +52,7 @@ public class AddressService : IAddressService
     {
         var address = await _db.Addresses
             .FirstOrDefaultAsync(a => a.Id == addressId && a.UserId == userId, ct)
-            ?? throw new KeyNotFoundException("Adres bulunamadi");
+            ?? throw new NotFoundException("Adres bulunamadi");
 
         if (dto.Title != null) address.Title = dto.Title;
         if (dto.FullName != null) address.FullName = dto.FullName;
@@ -85,7 +86,7 @@ public class AddressService : IAddressService
     {
         var address = await _db.Addresses
             .FirstOrDefaultAsync(a => a.Id == addressId && a.UserId == userId, ct)
-            ?? throw new KeyNotFoundException("Adres bulunamadi");
+            ?? throw new NotFoundException("Adres bulunamadi");
 
         _db.Addresses.Remove(address);
         await _db.SaveChangesAsync(ct);
@@ -95,7 +96,7 @@ public class AddressService : IAddressService
     {
         var address = await _db.Addresses
             .FirstOrDefaultAsync(a => a.Id == addressId && a.UserId == userId, ct)
-            ?? throw new KeyNotFoundException("Adres bulunamadi");
+            ?? throw new NotFoundException("Adres bulunamadi");
 
         return MapToDto(address);
     }
@@ -115,7 +116,7 @@ public class AddressService : IAddressService
     {
         var address = await _db.Addresses
             .FirstOrDefaultAsync(a => a.Id == addressId && a.UserId == userId, ct)
-            ?? throw new KeyNotFoundException("Adres bulunamadi");
+            ?? throw new NotFoundException("Adres bulunamadi");
 
         var existingDefaults = await _db.Addresses
             .Where(a => a.UserId == userId && a.IsDefault && a.Id != addressId)

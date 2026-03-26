@@ -1,0 +1,2745 @@
+{
+  "variables": {
+    "baseUrl": "http://localhost:5013",
+    "adminEmail": "admin@exodus.com",
+    "adminPassword": "Admin123!@#",
+    "adminName": "Ahmet Yılmaz",
+    "adminUsername": "ahmetyilmaz",
+    "sellerEmail": "satici@exodus.com",
+    "sellerPassword": "Satici456!@#",
+    "sellerName": "Mehmet Kaya",
+    "sellerUsername": "mehmetkaya",
+    "customerEmail": "musteri@exodus.com",
+    "customerPassword": "Musteri789!@#",
+    "customerName": "Ayşe Demir",
+    "customerUsername": "aysedemir"
+  },
+  "state": {
+    "_comment": "Bu alan request_automation.py tarafından runtime'da doldurulur",
+    "adminToken": null,
+    "sellerToken": null,
+    "customerToken": null,
+    "adminId": null,
+    "sellerId": null,
+    "customerId": null,
+    "addressId": null,
+    "billingAddressId": null,
+    "productId": null,
+    "secondProductId": null,
+    "listingId": null,
+    "secondListingId": null,
+    "cartItemId": null,
+    "orderId": null,
+    "orderNumber": null,
+    "paymentIntentId": null,
+    "campaignId": null,
+    "categoryId": 3,
+    "subCategoryId": null,
+    "ticketId": null,
+    "notificationId": null,
+    "sellerOrderId": null,
+    "refundId": null,
+    "refreshToken": null,
+    "comparisonId": null,
+    "questionId": null,
+    "answerId": null,
+    "brandId": null,
+    "bannerId": null,
+    "attributeId": null,
+    "attributeValueId": null,
+    "carrierId": null,
+    "widgetId": null,
+    "pageId": null,
+    "emailTemplateId": null,
+    "giftCardId": null,
+    "giftCardCode": null,
+    "taxRateId": null,
+    "regionId": null,
+    "sellerReviewId": null
+  },
+  "flow": [
+    {
+      "id": "register_admin",
+      "description": "Admin kullanıcı kaydı",
+      "method": "POST",
+      "path": "/api/auth/register",
+      "requires_auth": false,
+      "payload": {
+        "name": "{{adminName}}",
+        "email": "{{adminEmail}}",
+        "username": "{{adminUsername}}",
+        "password": "{{adminPassword}}",
+        "role": 2
+      },
+      "save_response": {
+        "adminId": "userId"
+      }
+    },
+    {
+      "id": "login_admin",
+      "description": "Admin kullanıcı girişi",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "requires_auth": false,
+      "payload": {
+        "emailOrUsername": "{{adminEmail}}",
+        "password": "{{adminPassword}}"
+      },
+      "save_response": {
+        "adminToken": "token",
+        "adminId": "UserId",
+        "refreshToken": "refreshToken"
+      }
+    },
+    {
+      "id": "register_seller",
+      "description": "Satıcı kullanıcı kaydı",
+      "method": "POST",
+      "path": "/api/auth/register",
+      "requires_auth": false,
+      "payload": {
+        "name": "{{sellerName}}",
+        "email": "{{sellerEmail}}",
+        "username": "{{sellerUsername}}",
+        "password": "{{sellerPassword}}",
+        "role": 1
+      },
+      "save_response": {
+        "sellerId": "userId"
+      }
+    },
+    {
+      "id": "login_seller",
+      "description": "Satıcı kullanıcı girişi",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "requires_auth": false,
+      "payload": {
+        "emailOrUsername": "{{sellerEmail}}",
+        "password": "{{sellerPassword}}"
+      },
+      "save_response": {
+        "sellerToken": "token",
+        "sellerId": "UserId"
+      }
+    },
+    {
+      "id": "register_customer",
+      "description": "Müşteri kullanıcı kaydı",
+      "method": "POST",
+      "path": "/api/auth/register",
+      "requires_auth": false,
+      "payload": {
+        "name": "{{customerName}}",
+        "email": "{{customerEmail}}",
+        "username": "{{customerUsername}}",
+        "password": "{{customerPassword}}",
+        "role": 0
+      },
+      "save_response": {
+        "customerId": "userId"
+      }
+    },
+    {
+      "id": "login_customer",
+      "description": "Müşteri kullanıcı girişi",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "requires_auth": false,
+      "payload": {
+        "emailOrUsername": "{{customerEmail}}",
+        "password": "{{customerPassword}}"
+      },
+      "save_response": {
+        "customerToken": "token",
+        "customerId": "UserId"
+      }
+    },
+    {
+      "id": "admin_get_me",
+      "description": "Admin mevcut kullanıcı bilgisi",
+      "method": "GET",
+      "path": "/api/auth/me",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_stats",
+      "description": "Admin istatistik endpoint kontrolü",
+      "method": "GET",
+      "path": "/api/auth/admin/stats",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "refresh_admin_token",
+      "description": "Admin token yenileme",
+      "method": "POST",
+      "path": "/api/auth/refresh",
+      "requires_auth": false,
+      "payload": {
+        "refreshToken": "{{refreshToken}}"
+      },
+      "save_response": {
+        "adminToken": "accessToken",
+        "refreshToken": "refreshToken"
+      }
+    },
+    {
+      "id": "customer_get_profile",
+      "description": "Müşteri profil bilgisi getir",
+      "method": "GET",
+      "path": "/api/profile",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_update_profile",
+      "description": "Müşteri profil güncelleme",
+      "method": "PUT",
+      "path": "/api/profile",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "payload": {
+        "name": "Ayşe Demir Yılmaz",
+        "phone": "5321234567"
+      },
+      "save_response": {}
+    },
+    {
+      "id": "customer_get_stats",
+      "description": "Müşteri istatistikleri",
+      "method": "GET",
+      "path": "/api/profile/stats",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_change_password",
+      "description": "Müşteri şifre değiştirme",
+      "method": "POST",
+      "path": "/api/profile/change-password",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "payload": {
+        "currentPassword": "{{customerPassword}}",
+        "newPassword": "YeniMusteri789!@#",
+        "confirmPassword": "YeniMusteri789!@#"
+      },
+      "save_response": {}
+    },
+    {
+      "id": "customer_relogin_after_password_change",
+      "description": "Müşteri yeni şifreyle giriş",
+      "method": "POST",
+      "path": "/api/auth/login",
+      "requires_auth": false,
+      "payload": {
+        "emailOrUsername": "{{customerEmail}}",
+        "password": "YeniMusteri789!@#"
+      },
+      "save_response": {
+        "customerToken": "token"
+      }
+    },
+    {
+      "id": "customer_create_shipping_address",
+      "description": "Müşteri teslimat adresi oluşturma",
+      "method": "POST",
+      "path": "/api/address",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "payload": {
+        "title": "Ev Adresim",
+        "fullName": "Ayşe Demir Yılmaz",
+        "phone": "5321234567",
+        "city": "İstanbul",
+        "district": "Kadıköy",
+        "neighborhood": "Caferağa",
+        "addressLine": "Moda Caddesi No:42 Daire:7",
+        "postalCode": "34710",
+        "isDefault": true,
+        "type": 0
+      },
+      "save_response": {
+        "addressId": "id"
+      }
+    },
+    {
+      "id": "customer_create_billing_address",
+      "description": "Müşteri fatura adresi oluşturma",
+      "method": "POST",
+      "path": "/api/address",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "payload": {
+        "title": "İş Adresim",
+        "fullName": "Ayşe Demir Yılmaz",
+        "phone": "5329876543",
+        "city": "İstanbul",
+        "district": "Şişli",
+        "neighborhood": "Mecidiyeköy",
+        "addressLine": "Büyükdere Caddesi No:185 Kat:12",
+        "postalCode": "34394",
+        "isDefault": false,
+        "type": 1
+      },
+      "save_response": {
+        "billingAddressId": "id"
+      }
+    },
+    {
+      "id": "customer_get_all_addresses",
+      "description": "Müşteri tüm adresleri listeleme",
+      "method": "GET",
+      "path": "/api/address",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_get_address_by_id",
+      "description": "Müşteri adres detayı getirme",
+      "method": "GET",
+      "path": "/api/address/{{addressId}}",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_update_address",
+      "description": "Müşteri adres güncelleme",
+      "method": "PUT",
+      "path": "/api/address/{{addressId}}",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "payload": {
+        "title": "Ev Adresim (Güncel)",
+        "neighborhood": "Caferağa Mahallesi",
+        "addressLine": "Moda Caddesi No:42 Daire:7 Kadıköy"
+      },
+      "save_response": {}
+    },
+    {
+      "id": "customer_set_default_address",
+      "description": "Müşteri varsayılan adres ayarlama",
+      "method": "PATCH",
+      "path": "/api/address/{{billingAddressId}}/set-default",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_profile_addresses",
+      "description": "Profil üzerinden adresleri getirme",
+      "method": "GET",
+      "path": "/api/profile/addresses",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "admin_create_category",
+      "description": "Admin ana kategori oluşturma",
+      "method": "POST",
+      "path": "/api/admin/categories",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "payload": {
+        "name": "Elektronik",
+        "description": "Elektronik ürünler ve aksesuarlar",
+        "imageUrl": "https://cdn.exodus.com/categories/elektronik.jpg",
+        "displayOrder": 1
+      },
+      "save_response": {
+        "categoryId": "id"
+      },
+      "auth_role": "admin",
+      "on_conflict_get": "/api/admin/categories"
+    },
+    {
+      "id": "admin_create_subcategory",
+      "description": "Admin alt kategori oluşturma",
+      "method": "POST",
+      "path": "/api/admin/categories",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "payload": {
+        "name": "Cep Telefonu",
+        "description": "Akıllı telefonlar ve aksesuarları",
+        "imageUrl": "https://cdn.exodus.com/categories/cep-telefonu.jpg",
+        "parentCategoryId": "{{categoryId}}",
+        "displayOrder": 1
+      },
+      "save_response": {
+        "subCategoryId": "id"
+      },
+      "auth_role": "admin"
+    },
+    {
+      "id": "get_public_categories",
+      "description": "Herkese açık kategori listesi",
+      "method": "GET",
+      "path": "/api/category",
+      "requires_auth": false,
+      "save_response": {}
+    },
+    {
+      "id": "get_category_tree",
+      "description": "Kategori ağacı",
+      "method": "GET",
+      "path": "/api/category/tree",
+      "requires_auth": false,
+      "save_response": {}
+    },
+    {
+      "id": "get_category_by_id",
+      "description": "Kategori detayı",
+      "method": "GET",
+      "path": "/api/category/{{categoryId}}",
+      "requires_auth": false,
+      "save_response": {}
+    },
+    {
+      "id": "get_subcategories",
+      "description": "Alt kategorileri listeleme",
+      "method": "GET",
+      "path": "/api/category/{{categoryId}}/subcategories",
+      "requires_auth": false,
+      "save_response": {}
+    },
+    {
+      "id": "admin_update_category",
+      "description": "Admin kategori güncelleme",
+      "method": "PUT",
+      "path": "/api/admin/categories/{{categoryId}}",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "payload": {
+        "name": "Elektronik & Teknoloji",
+        "description": "Elektronik ürünler, bilgisayar ve teknoloji aksesuarları",
+        "isActive": true
+      },
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_create_brand",
+      "description": "Admin marka oluşturma",
+      "method": "POST",
+      "path": "/api/admin/brands",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "payload": {
+        "name": "TechPro",
+        "description": "Türk teknoloji markası",
+        "logoUrl": "https://cdn.exodus.com/brands/techpro.png",
+        "websiteUrl": "https://techpro.com.tr",
+        "isActive": true,
+        "isFeatured": true
+      },
+      "save_response": {
+        "brandId": "id"
+      },
+      "auth_role": "admin",
+      "on_conflict_get": "/api/admin/brands"
+    },
+    {
+      "id": "admin_get_brands",
+      "description": "Admin marka listesi",
+      "method": "GET",
+      "path": "/api/admin/brands",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_create_attribute",
+      "description": "Admin ürün özelliği oluşturma",
+      "method": "POST",
+      "path": "/api/admin/attributes",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "payload": {
+        "name": "Renk",
+        "displayName": "Renk Seçenekleri",
+        "isFilterable": true,
+        "isRequired": false,
+        "isActive": true
+      },
+      "save_response": {
+        "attributeId": "id"
+      },
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_create_attribute_value",
+      "description": "Admin özellik değeri oluşturma",
+      "method": "POST",
+      "path": "/api/admin/attributes/{{attributeId}}/values",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "payload": {
+        "value": "Siyah",
+        "displayOrder": 1,
+        "isActive": true
+      },
+      "save_response": {
+        "attributeValueId": "id"
+      },
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_attribute_values",
+      "description": "Admin özellik değerlerini listele",
+      "method": "GET",
+      "path": "/api/admin/attributes/{{attributeId}}/values",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "seller_add_product",
+      "description": "Satıcı ürün ekleme",
+      "method": "POST",
+      "path": "/api/product",
+      "requires_auth": true,
+      "token": "{{sellerToken}}",
+      "payload": {
+        "productName": "TechPro X1 Akıllı Telefon",
+        "productDescription": "6.7 inç AMOLED ekran, 128GB depolama, 8GB RAM, 5000mAh batarya",
+        "barcodes": [
+          "8690000111111",
+          "8690000111128"
+        ]
+      },
+      "save_response": {
+        "productId": "id"
+      },
+      "auth_role": "seller"
+    },
+    {
+      "id": "seller_add_second_product",
+      "description": "Satıcı ikinci ürün ekleme",
+      "method": "POST",
+      "path": "/api/product",
+      "requires_auth": true,
+      "token": "{{sellerToken}}",
+      "payload": {
+        "productName": "TechPro Kablosuz Kulaklık TWS-200",
+        "productDescription": "Bluetooth 5.3, aktif gürültü engelleme, 30 saat pil ömrü",
+        "barcodes": [
+          "8690000222222"
+        ]
+      },
+      "save_response": {
+        "secondProductId": "id"
+      },
+      "auth_role": "seller"
+    },
+    {
+      "id": "get_all_products",
+      "description": "Tüm ürünleri listeleme (herkese açık)",
+      "method": "GET",
+      "path": "/api/product",
+      "requires_auth": false,
+      "save_response": {}
+    },
+    {
+      "id": "get_product_by_id",
+      "description": "Ürün detayı getirme",
+      "method": "GET",
+      "path": "/api/product/{{productId}}",
+      "requires_auth": false,
+      "save_response": {}
+    },
+    {
+      "id": "seller_update_product",
+      "description": "Satıcı ürün güncelleme",
+      "method": "PUT",
+      "path": "/api/product/{{productId}}",
+      "requires_auth": true,
+      "token": "{{sellerToken}}",
+      "payload": {
+        "productName": "TechPro X1 Pro Akıllı Telefon",
+        "productDescription": "6.7 inç AMOLED ekran, 256GB depolama, 12GB RAM, 5000mAh batarya, 108MP kamera",
+        "barcodes": [
+          "8690000111111",
+          "8690000111128",
+          "8690000111135"
+        ]
+      },
+      "save_response": {},
+      "auth_role": "seller"
+    },
+    {
+      "id": "admin_update_product_category",
+      "description": "Admin ürün kategorisi güncelleme",
+      "method": "PATCH",
+      "path": "/api/admin/products/{{productId}}/category",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "payload": {
+        "categoryId": "{{subCategoryId}}"
+      },
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "seller_create_listing",
+      "description": "Satıcı listing oluşturma (telefon)",
+      "method": "POST",
+      "path": "/api/seller/listings",
+      "requires_auth": true,
+      "token": "{{sellerToken}}",
+      "payload": {
+        "productId": "{{productId}}",
+        "price": 24999.99,
+        "condition": 0,
+        "stockQuantity": 50
+      },
+      "save_response": {
+        "listingId": "id"
+      },
+      "auth_role": "seller",
+      "on_conflict_get": "/api/seller/listings"
+    },
+    {
+      "id": "seller_create_second_listing",
+      "description": "Satıcı listing oluşturma (kulaklık)",
+      "method": "POST",
+      "path": "/api/listings",
+      "requires_auth": true,
+      "token": "{{sellerToken}}",
+      "payload": {
+        "productId": "{{secondProductId}}",
+        "sellerId": "{{sellerId}}",
+        "price": 1499.9,
+        "stock": 200,
+        "condition": 0
+      },
+      "save_response": {
+        "secondListingId": "id"
+      },
+      "auth_role": "seller"
+    },
+    {
+      "id": "get_all_listings",
+      "description": "Tüm listing'leri listeleme",
+      "method": "GET",
+      "path": "/api/listings",
+      "requires_auth": false,
+      "save_response": {}
+    },
+    {
+      "id": "get_listing_by_id",
+      "description": "Listing detayı getirme",
+      "method": "GET",
+      "path": "/api/listings/{{listingId}}",
+      "requires_auth": false,
+      "save_response": {}
+    },
+    {
+      "id": "seller_update_listing",
+      "description": "Satıcı listing güncelleme",
+      "method": "PUT",
+      "path": "/api/listings/{{listingId}}",
+      "requires_auth": true,
+      "token": "{{sellerToken}}",
+      "payload": {
+        "price": 22999.99,
+        "stock": 45,
+        "condition": 0,
+        "isActive": true
+      },
+      "save_response": {},
+      "auth_role": "seller"
+    },
+    {
+      "id": "seller_get_my_listings",
+      "description": "Satıcı kendi listing'lerini listeleme",
+      "method": "GET",
+      "path": "/api/seller/listings",
+      "requires_auth": true,
+      "token": "{{sellerToken}}",
+      "save_response": {},
+      "auth_role": "seller"
+    },
+    {
+      "id": "seller_update_stock",
+      "description": "Satıcı stok güncelleme",
+      "method": "PATCH",
+      "path": "/api/seller/listings/{{listingId}}/stock",
+      "requires_auth": true,
+      "token": "{{sellerToken}}",
+      "payload": {
+        "stockQuantity": 60
+      },
+      "save_response": {},
+      "auth_role": "seller"
+    },
+    {
+      "id": "seller_get_low_stock",
+      "description": "Satıcı düşük stok uyarısı",
+      "method": "GET",
+      "path": "/api/seller/listings/low-stock",
+      "requires_auth": true,
+      "token": "{{sellerToken}}",
+      "save_response": {},
+      "auth_role": "seller"
+    },
+    {
+      "id": "customer_track_product_view",
+      "description": "Müşteri ürün görüntüleme kaydı",
+      "method": "POST",
+      "path": "/api/recentlyviewed/{{productId}}",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_track_second_product_view",
+      "description": "Müşteri ikinci ürün görüntüleme kaydı",
+      "method": "POST",
+      "path": "/api/recentlyviewed/{{secondProductId}}",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_get_recently_viewed",
+      "description": "Müşteri son görüntülenen ürünler",
+      "method": "GET",
+      "path": "/api/recentlyviewed?count=10",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_ask_question",
+      "description": "Müşteri ürün sorusu sorma",
+      "method": "POST",
+      "path": "/api/products/{{productId}}/questions",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "payload": {
+        "questionText": "Bu telefonun garanti süresi ne kadar? Türkiye garantisi var mı?"
+      },
+      "save_response": {
+        "questionId": "id"
+      }
+    },
+    {
+      "id": "get_product_questions",
+      "description": "Ürün sorularını listeleme",
+      "method": "GET",
+      "path": "/api/products/{{productId}}/questions?page=1&pageSize=10",
+      "requires_auth": false,
+      "save_response": {}
+    },
+    {
+      "id": "seller_answer_question",
+      "description": "Satıcı soruyu yanıtlama",
+      "method": "POST",
+      "path": "/api/products/{{productId}}/questions/{{questionId}}/answers",
+      "requires_auth": true,
+      "token": "{{sellerToken}}",
+      "payload": {
+        "answerText": "Merhaba, ürünümüz 2 yıl Türkiye garantili olup, yetkili servislerde geçerlidir."
+      },
+      "save_response": {
+        "answerId": "id"
+      },
+      "auth_role": "seller"
+    },
+    {
+      "id": "customer_upvote_question",
+      "description": "Müşteri soruya oy verme",
+      "method": "POST",
+      "path": "/api/products/{{productId}}/questions/{{questionId}}/upvote",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_create_comparison",
+      "description": "Müşteri karşılaştırma listesi oluşturma",
+      "method": "POST",
+      "path": "/api/comparison",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "payload": {
+        "name": "Telefon Karşılaştırması"
+      },
+      "save_response": {
+        "comparisonId": "id"
+      }
+    },
+    {
+      "id": "customer_add_product_to_comparison",
+      "description": "Karşılaştırmaya ürün ekleme",
+      "method": "POST",
+      "path": "/api/comparison/{{comparisonId}}/products/{{productId}}",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_get_comparison",
+      "description": "Karşılaştırma detayı",
+      "method": "GET",
+      "path": "/api/comparison/{{comparisonId}}",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_get_all_comparisons",
+      "description": "Tüm karşılaştırmaları listeleme",
+      "method": "GET",
+      "path": "/api/comparison",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_add_to_cart",
+      "description": "Müşteri sepete telefon ekleme",
+      "method": "POST",
+      "path": "/api/cart/add",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "payload": {
+        "userId": "{{customerId}}",
+        "listingId": "{{listingId}}",
+        "quantity": 1
+      },
+      "save_response": {
+        "cartItemId": "items.0.cartItemId"
+      }
+    },
+    {
+      "id": "customer_add_second_item_to_cart",
+      "description": "Müşteri sepete kulaklık ekleme",
+      "method": "POST",
+      "path": "/api/cart/add",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "payload": {
+        "userId": "{{customerId}}",
+        "listingId": "{{secondListingId}}",
+        "quantity": 2
+      },
+      "save_response": {}
+    },
+    {
+      "id": "customer_get_my_cart",
+      "description": "Müşteri sepet görüntüleme",
+      "method": "GET",
+      "path": "/api/cart/my",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_get_cart_by_user_id",
+      "description": "Müşteri sepet (userId ile)",
+      "method": "GET",
+      "path": "/api/cart/{{customerId}}",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_update_cart_quantity",
+      "description": "Müşteri sepet miktarı güncelleme",
+      "method": "PUT",
+      "path": "/api/cart/{{customerId}}/item/{{cartItemId}}",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "payload": {
+        "quantity": 2
+      },
+      "save_response": {}
+    },
+    {
+      "id": "customer_update_cart_quantity_back",
+      "description": "Müşteri sepet miktarını geri alma",
+      "method": "PUT",
+      "path": "/api/cart/{{customerId}}/item/{{cartItemId}}",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "payload": {
+        "quantity": 1
+      },
+      "save_response": {}
+    },
+    {
+      "id": "customer_get_loyalty_points",
+      "description": "Müşteri sadakat puanı sorgulama",
+      "method": "GET",
+      "path": "/api/loyalty/points",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_estimate_earn",
+      "description": "Müşteri sipariş için puan tahmini",
+      "method": "GET",
+      "path": "/api/loyalty/estimate-earn?orderAmount=25000",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "get_active_campaigns",
+      "description": "Aktif kampanyaları listeleme",
+      "method": "GET",
+      "path": "/api/campaign/active",
+      "requires_auth": false,
+      "save_response": {}
+    },
+    {
+      "id": "customer_checkout",
+      "description": "Müşteri sipariş oluşturma (checkout)",
+      "method": "POST",
+      "path": "/api/order/checkout",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "payload": {
+        "shippingAddressId": "{{addressId}}",
+        "billingAddressId": "{{billingAddressId}}",
+        "customerNote": "Lütfen dikkatli paketleyiniz. Hediye paketi olmasın."
+      },
+      "save_response": {
+        "orderId": "id",
+        "orderNumber": "orderNumber"
+      }
+    },
+    {
+      "id": "customer_get_order_by_id",
+      "description": "Müşteri sipariş detayı getirme",
+      "method": "GET",
+      "path": "/api/order/{{orderId}}",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {
+        "sellerOrderId": "sellerOrders.0.id"
+      }
+    },
+    {
+      "id": "customer_get_order_by_number",
+      "description": "Müşteri sipariş numarasıyla getirme",
+      "method": "GET",
+      "path": "/api/order/number/{{orderNumber}}",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_get_my_orders",
+      "description": "Müşteri siparişlerini listeleme",
+      "method": "GET",
+      "path": "/api/order?page=1&pageSize=10",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_create_payment_intent",
+      "description": "Müşteri ödeme niyeti oluşturma",
+      "method": "POST",
+      "path": "/api/payment/intents",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "payload": {
+        "orderId": "{{orderId}}",
+        "method": 3,
+        "currency": "TRY",
+        "cardDetails": {
+          "cardNumber": "5528790000000008",
+          "expiryDate": "12/30",
+          "cvv": "123",
+          "cardHolderName": "Ayşe Demir Yılmaz"
+        },
+        "returnUrl": "https://exodus.com/payment/callback"
+      },
+      "save_response": {
+        "paymentIntentId": "id"
+      }
+    },
+    {
+      "id": "customer_get_payment_intent",
+      "description": "Müşteri ödeme niyeti detayı",
+      "method": "GET",
+      "path": "/api/payment/intents/{{paymentIntentId}}",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_get_payment_by_order",
+      "description": "Sipariş bazında ödeme sorgulama",
+      "method": "GET",
+      "path": "/api/payment/order/{{orderId}}",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_authorize_payment",
+      "description": "Müşteri ödeme yetkilendirme",
+      "method": "POST",
+      "path": "/api/payment/intents/{{paymentIntentId}}/authorize",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_simulate_payment_success",
+      "description": "Ödeme başarılı simülasyonu",
+      "method": "POST",
+      "path": "/api/payment/intents/{{paymentIntentId}}/simulate-success",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "payload": {
+        "reason": "Test ödeme simülasyonu"
+      },
+      "save_response": {}
+    },
+    {
+      "id": "customer_get_payment_events",
+      "description": "Ödeme olaylarını listeleme",
+      "method": "GET",
+      "path": "/api/payment/intents/{{paymentIntentId}}/events",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "seller_get_orders",
+      "description": "Satıcı siparişlerini listeleme",
+      "method": "GET",
+      "path": "/api/seller/orders",
+      "requires_auth": true,
+      "token": "{{sellerToken}}",
+      "save_response": {},
+      "auth_role": "seller"
+    },
+    {
+      "id": "seller_confirm_order",
+      "description": "Satıcı sipariş onaylama",
+      "method": "POST",
+      "path": "/api/seller/orders/{{sellerOrderId}}/confirm",
+      "requires_auth": true,
+      "token": "{{sellerToken}}",
+      "save_response": {},
+      "auth_role": "seller"
+    },
+    {
+      "id": "seller_ship_order",
+      "description": "Satıcı sipariş kargolama",
+      "method": "POST",
+      "path": "/api/seller/orders/{{sellerOrderId}}/ship",
+      "requires_auth": true,
+      "token": "{{sellerToken}}",
+      "payload": {
+        "carrier": "Yurtiçi Kargo",
+        "trackingNumber": "TR1234567890"
+      },
+      "save_response": {},
+      "auth_role": "seller"
+    },
+    {
+      "id": "get_shipment_by_seller_order",
+      "description": "Kargo bilgisi getirme",
+      "method": "GET",
+      "path": "/api/shipments/seller-orders/{{sellerOrderId}}",
+      "requires_auth": true,
+      "token": "{{sellerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "get_shipment_timeline",
+      "description": "Kargo zaman çizelgesi",
+      "method": "GET",
+      "path": "/api/shipments/seller-orders/{{sellerOrderId}}/timeline",
+      "requires_auth": true,
+      "token": "{{sellerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "deliver_shipment",
+      "description": "Kargo teslim edildi işareti",
+      "method": "PATCH",
+      "path": "/api/shipments/seller-orders/{{sellerOrderId}}/deliver",
+      "requires_auth": true,
+      "token": "{{sellerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_get_notifications",
+      "description": "Müşteri bildirimlerini listeleme",
+      "method": "GET",
+      "path": "/api/notification?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {
+        "notificationId": "items.0.id"
+      }
+    },
+    {
+      "id": "customer_get_unread_count",
+      "description": "Müşteri okunmamış bildirim sayısı",
+      "method": "GET",
+      "path": "/api/notification/unread-count",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_mark_notification_read",
+      "description": "Müşteri bildirimi okundu işaretle",
+      "method": "PATCH",
+      "path": "/api/notification/{{notificationId}}/read",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_mark_all_read",
+      "description": "Müşteri tüm bildirimleri okundu işaretle",
+      "method": "PATCH",
+      "path": "/api/notification/read-all",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_get_loyalty_transactions",
+      "description": "Müşteri sadakat puan hareketleri",
+      "method": "GET",
+      "path": "/api/loyalty/transactions?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_calculate_loyalty_value",
+      "description": "Müşteri puan değeri hesaplama",
+      "method": "GET",
+      "path": "/api/loyalty/calculate-value?points=100",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_create_seller_review",
+      "description": "Müşteri satıcı değerlendirmesi",
+      "method": "POST",
+      "path": "/api/sellers/{{sellerId}}/reviews",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "payload": {
+        "rating": 5,
+        "comment": "Çok hızlı kargo ve dikkatli paketleme. Ürün tam açıklandığı gibi geldi. Teşekkürler!",
+        "orderId": "{{orderId}}"
+      },
+      "save_response": {
+        "sellerReviewId": "id"
+      }
+    },
+    {
+      "id": "get_seller_reviews",
+      "description": "Satıcı değerlendirmelerini listeleme",
+      "method": "GET",
+      "path": "/api/sellers/{{sellerId}}/reviews?page=1&pageSize=10",
+      "requires_auth": false,
+      "save_response": {}
+    },
+    {
+      "id": "get_seller_rating_summary",
+      "description": "Satıcı puan özeti",
+      "method": "GET",
+      "path": "/api/sellers/{{sellerId}}/rating-summary",
+      "requires_auth": false,
+      "save_response": {}
+    },
+    {
+      "id": "seller_reply_to_review",
+      "description": "Satıcı değerlendirmeye yanıt",
+      "method": "POST",
+      "path": "/api/sellers/{{sellerId}}/reviews/{{sellerReviewId}}/reply",
+      "requires_auth": true,
+      "token": "{{sellerToken}}",
+      "payload": {
+        "text": "Değerli müşterimiz, güzel yorumunuz için teşekkür ederiz. Bizi tercih ettiğiniz için mutluyuz!"
+      },
+      "save_response": {},
+      "auth_role": "seller"
+    },
+    {
+      "id": "customer_create_support_ticket",
+      "description": "Müşteri destek talebi oluşturma",
+      "method": "POST",
+      "path": "/api/support/tickets",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "payload": {
+        "subject": "Fatura talebi",
+        "message": "Sipariş numaramla ilgili e-fatura talebim var. Kurumsal fatura düzenlenmesini rica ediyorum.",
+        "category": "Payment",
+        "priority": 1,
+        "orderId": "{{orderId}}"
+      },
+      "save_response": {
+        "ticketId": "id"
+      }
+    },
+    {
+      "id": "customer_get_my_tickets",
+      "description": "Müşteri destek taleplerini listeleme",
+      "method": "GET",
+      "path": "/api/support/tickets?page=1&pageSize=10",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_get_ticket_detail",
+      "description": "Müşteri destek talebi detayı",
+      "method": "GET",
+      "path": "/api/support/tickets/{{ticketId}}",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_reply_to_ticket",
+      "description": "Müşteri destek talebine yanıt",
+      "method": "POST",
+      "path": "/api/support/tickets/{{ticketId}}/messages",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "payload": {
+        "message": "Firmamızın vergi numarası: 1234567890, Ticaret ünvanı: Demir Teknoloji Ltd. Şti."
+      },
+      "save_response": {}
+    },
+    {
+      "id": "admin_get_support_tickets",
+      "description": "Admin destek taleplerini listeleme",
+      "method": "GET",
+      "path": "/api/admin/support/tickets?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_reply_to_ticket",
+      "description": "Admin destek talebine yanıt",
+      "method": "POST",
+      "path": "/api/admin/support/tickets/{{ticketId}}/reply",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "payload": {
+        "message": "Sayın müşterimiz, faturanız en kısa sürede e-posta adresinize gönderilecektir. İyi günler dileriz.",
+        "isInternal": false
+      },
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_update_ticket_status",
+      "description": "Admin destek talebi durumu güncelleme",
+      "method": "PATCH",
+      "path": "/api/admin/support/tickets/{{ticketId}}/status",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "payload": {
+        "status": "Resolved"
+      },
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_support_statistics",
+      "description": "Admin destek istatistikleri",
+      "method": "GET",
+      "path": "/api/admin/support/statistics",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_all_users",
+      "description": "Admin tüm kullanıcıları listeleme",
+      "method": "GET",
+      "path": "/api/admin/users?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_user_by_id",
+      "description": "Admin kullanıcı detayı",
+      "method": "GET",
+      "path": "/api/admin/users/{{customerId}}",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_update_user",
+      "description": "Admin kullanıcı bilgisi güncelleme",
+      "method": "PUT",
+      "path": "/api/admin/users/{{customerId}}",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "payload": {
+        "name": "Ayşe Demir Yılmaz",
+        "email": "{{customerEmail}}",
+        "phone": "5321234567",
+        "isActive": true
+      },
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_user_stats",
+      "description": "Admin kullanıcı istatistikleri",
+      "method": "GET",
+      "path": "/api/admin/users/stats",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_all_orders",
+      "description": "Admin tüm siparişleri listeleme",
+      "method": "GET",
+      "path": "/api/admin/orders?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_order_detail",
+      "description": "Admin sipariş detayı",
+      "method": "GET",
+      "path": "/api/admin/orders/{{orderId}}",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_order_statistics",
+      "description": "Admin sipariş istatistikleri",
+      "method": "GET",
+      "path": "/api/admin/orders/statistics",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_payments",
+      "description": "Admin ödemeleri listeleme",
+      "method": "GET",
+      "path": "/api/admin/payments?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_payment_detail",
+      "description": "Admin ödeme detayı",
+      "method": "GET",
+      "path": "/api/admin/payments/{{paymentIntentId}}",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_payment_statistics",
+      "description": "Admin ödeme istatistikleri",
+      "method": "GET",
+      "path": "/api/admin/payments/statistics",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_listings",
+      "description": "Admin listing'leri listeleme",
+      "method": "GET",
+      "path": "/api/admin/listings?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_listing_detail",
+      "description": "Admin listing detayı",
+      "method": "GET",
+      "path": "/api/admin/listings/{{listingId}}",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_listing_statistics",
+      "description": "Admin listing istatistikleri",
+      "method": "GET",
+      "path": "/api/admin/listings/statistics",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_low_stock_listings",
+      "description": "Admin düşük stoklu listing'ler",
+      "method": "GET",
+      "path": "/api/admin/listings/low-stock?threshold=10&limit=50",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_sellers",
+      "description": "Admin satıcı listesi",
+      "method": "GET",
+      "path": "/api/admin/sellers?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_seller_detail",
+      "description": "Admin satıcı detayı",
+      "method": "GET",
+      "path": "/api/admin/sellers/{{sellerId}}",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_seller_statistics",
+      "description": "Admin satıcı istatistikleri",
+      "method": "GET",
+      "path": "/api/admin/sellers/statistics",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_seller_earnings",
+      "description": "Admin satıcı kazançları",
+      "method": "GET",
+      "path": "/api/admin/sellers/{{sellerId}}/earnings",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_update_seller_commission",
+      "description": "Admin satıcı komisyon güncelleme",
+      "method": "PATCH",
+      "path": "/api/admin/sellers/{{sellerId}}/commission",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "payload": {
+        "commissionRate": 8.5
+      },
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_create_campaign",
+      "description": "Admin kampanya oluşturma",
+      "method": "POST",
+      "path": "/api/admin/campaigns",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "payload": {
+        "name": "Yaz İndirimi Kampanyası",
+        "description": "Tüm elektronik ürünlerde %15 indirim",
+        "type": 0,
+        "startDate": "2025-06-01T00:00:00Z",
+        "endDate": "2025-09-01T00:00:00Z",
+        "isActive": true,
+        "maxUsageCount": 1000,
+        "maxUsagePerUser": 3,
+        "minimumOrderAmount": 500,
+        "discountPercentage": 15,
+        "maxDiscountAmount": 5000,
+        "couponCode": "YAZ2025",
+        "requiresCouponCode": true,
+        "scope": 0,
+        "priority": 1,
+        "isStackable": false,
+        "categoryIds": [
+          "{{categoryId}}"
+        ]
+      },
+      "save_response": {
+        "campaignId": "id"
+      },
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_campaigns",
+      "description": "Admin kampanya listesi",
+      "method": "GET",
+      "path": "/api/admin/campaigns?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_campaign_detail",
+      "description": "Admin kampanya detayı",
+      "method": "GET",
+      "path": "/api/admin/campaigns/{{campaignId}}",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_validate_coupon",
+      "description": "Admin kupon kodu doğrulama",
+      "method": "GET",
+      "path": "/api/admin/campaigns/validate-coupon/YAZ2025",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_campaign_statistics",
+      "description": "Admin kampanya istatistikleri",
+      "method": "GET",
+      "path": "/api/admin/campaigns/statistics",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "customer_validate_coupon",
+      "description": "Müşteri kupon doğrulama",
+      "method": "GET",
+      "path": "/api/campaign/validate-coupon?code=YAZ2025",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_get_applicable_campaigns",
+      "description": "Müşteri uygulanabilir kampanyalar",
+      "method": "GET",
+      "path": "/api/campaign/applicable",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "admin_create_banner",
+      "description": "Admin banner oluşturma",
+      "method": "POST",
+      "path": "/api/admin/banners",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "payload": {
+        "title": "Yaz Kampanyası",
+        "description": "Tüm elektronik ürünlerde %15'e varan indirimler",
+        "imageUrl": "https://cdn.exodus.com/banners/yaz-kampanya.jpg",
+        "linkUrl": "/kampanyalar/yaz-2025",
+        "position": 0,
+        "displayOrder": 1,
+        "isActive": true,
+        "startDate": "2025-06-01T00:00:00Z",
+        "endDate": "2025-09-01T00:00:00Z"
+      },
+      "save_response": {
+        "bannerId": "id"
+      },
+      "auth_role": "admin"
+    },
+    {
+      "id": "get_active_banners",
+      "description": "Aktif bannerları listeleme (public)",
+      "method": "GET",
+      "path": "/api/banners",
+      "requires_auth": false,
+      "save_response": {}
+    },
+    {
+      "id": "track_banner_view",
+      "description": "Banner görüntüleme takibi",
+      "method": "POST",
+      "path": "/api/admin/banners/{{bannerId}}/view",
+      "requires_auth": false,
+      "save_response": {}
+    },
+    {
+      "id": "track_banner_click",
+      "description": "Banner tıklama takibi",
+      "method": "POST",
+      "path": "/api/admin/banners/{{bannerId}}/click",
+      "requires_auth": false,
+      "save_response": {}
+    },
+    {
+      "id": "admin_get_banner_statistics",
+      "description": "Admin banner istatistikleri",
+      "method": "GET",
+      "path": "/api/admin/banners/statistics",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_create_tax_rate",
+      "description": "Admin vergi oranı oluşturma",
+      "method": "POST",
+      "path": "/api/admin/taxes",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "payload": {
+        "name": "KDV %20",
+        "rate": 20.0,
+        "country": "TR",
+        "isActive": true,
+        "isDefault": true
+      },
+      "save_response": {
+        "taxRateId": "id"
+      },
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_tax_rates",
+      "description": "Admin vergi oranları listesi",
+      "method": "GET",
+      "path": "/api/admin/taxes",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_update_tax_rate",
+      "description": "Admin vergi oranı güncelleme",
+      "method": "PUT",
+      "path": "/api/admin/taxes/{{taxRateId}}",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "payload": {
+        "name": "KDV %20 (Standart)",
+        "rate": 20.0,
+        "country": "TR",
+        "isActive": true,
+        "isDefault": true
+      },
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_create_carrier",
+      "description": "Admin kargo firması oluşturma",
+      "method": "POST",
+      "path": "/api/admin/shipments/carriers",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "payload": {
+        "name": "Yurtiçi Kargo",
+        "code": "YK",
+        "trackingUrlTemplate": "https://www.yurticikargo.com/tr/online-servisler/gonderi-sorgula?code={trackingNumber}",
+        "isActive": true
+      },
+      "save_response": {
+        "carrierId": "id"
+      },
+      "auth_role": "admin",
+      "on_conflict_get": "/api/admin/shipments/carriers"
+    },
+    {
+      "id": "admin_get_carriers",
+      "description": "Admin kargo firmaları listesi",
+      "method": "GET",
+      "path": "/api/admin/shipments/carriers",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_shipments",
+      "description": "Admin kargo listesi",
+      "method": "GET",
+      "path": "/api/admin/shipments?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_shipment_statistics",
+      "description": "Admin kargo istatistikleri",
+      "method": "GET",
+      "path": "/api/admin/shipments/statistics",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_create_region",
+      "description": "Admin bölge oluşturma",
+      "method": "POST",
+      "path": "/api/admin/regions",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "payload": {
+        "name": "Marmara Bölgesi",
+        "code": "MAR",
+        "type": 0,
+        "isActive": true
+      },
+      "save_response": {
+        "regionId": "id"
+      },
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_regions",
+      "description": "Admin bölge listesi",
+      "method": "GET",
+      "path": "/api/admin/regions",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_region_tree",
+      "description": "Admin bölge ağacı",
+      "method": "GET",
+      "path": "/api/admin/regions/tree",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_create_home_widget",
+      "description": "Admin ana sayfa widget oluşturma",
+      "method": "POST",
+      "path": "/api/admin/home-widgets",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "payload": {
+        "title": "Çok Satanlar",
+        "type": 0,
+        "position": 0,
+        "displayOrder": 1,
+        "isActive": true,
+        "configuration": {
+          "limit": "10",
+          "sortBy": "sales"
+        },
+        "name": "Ana Sayfa Ürün Slider"
+      },
+      "save_response": {
+        "widgetId": "id"
+      },
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_widgets",
+      "description": "Admin widget listesi",
+      "method": "GET",
+      "path": "/api/admin/home-widgets",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_preview_homepage",
+      "description": "Admin ana sayfa önizleme",
+      "method": "GET",
+      "path": "/api/admin/home-widgets/preview",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_widget_types",
+      "description": "Admin widget tipleri",
+      "method": "GET",
+      "path": "/api/admin/home-widgets/types",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_create_page",
+      "description": "Admin sayfa oluşturma",
+      "method": "POST",
+      "path": "/api/admin/content/pages",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "payload": {
+        "title": "Hakkımızda",
+        "slug": "hakkimizda",
+        "content": "<h1>Exodus Marketplace</h1><p>Türkiye'nin en güvenilir online alışveriş platformu.</p>",
+        "metaTitle": "Hakkımızda - Exodus",
+        "metaDescription": "Exodus Marketplace hakkında bilgi edinin.",
+        "isPublished": true,
+        "showInHeader": true,
+        "showInFooter": true,
+        "displayOrder": 1
+      },
+      "save_response": {
+        "pageId": "id"
+      },
+      "auth_role": "admin",
+      "on_conflict_get": "/api/admin/content/pages"
+    },
+    {
+      "id": "admin_get_pages",
+      "description": "Admin sayfa listesi",
+      "method": "GET",
+      "path": "/api/admin/content/pages",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "get_public_page",
+      "description": "Public sayfa getirme",
+      "method": "GET",
+      "path": "/api/pages/hakkimizda",
+      "requires_auth": false,
+      "save_response": {}
+    },
+    {
+      "id": "get_header_navigation",
+      "description": "Header navigasyon menüsü",
+      "method": "GET",
+      "path": "/api/pages/navigation/header",
+      "requires_auth": false,
+      "save_response": {}
+    },
+    {
+      "id": "get_footer_navigation",
+      "description": "Footer navigasyon menüsü",
+      "method": "GET",
+      "path": "/api/pages/navigation/footer",
+      "requires_auth": false,
+      "save_response": {}
+    },
+    {
+      "id": "admin_create_email_template",
+      "description": "Admin e-posta şablonu oluşturma",
+      "method": "POST",
+      "path": "/api/admin/email-templates",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "payload": {
+        "code": "ORDER_CONFIRMATION",
+        "name": "Sipariş Onayı",
+        "subject": "Siparişiniz Alındı - {{orderNumber}}",
+        "htmlBody": "<h1>Merhaba {{customerName}}</h1><p>{{orderNumber}} numaralı siparişiniz alınmıştır.</p>",
+        "textBody": "Merhaba {{customerName}}, {{orderNumber}} numaralı siparişiniz alınmıştır.",
+        "isActive": true
+      },
+      "save_response": {
+        "emailTemplateId": "id"
+      },
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_email_templates",
+      "description": "Admin e-posta şablonları listesi",
+      "method": "GET",
+      "path": "/api/admin/email-templates",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_preview_email_template",
+      "description": "Admin e-posta şablonu önizleme",
+      "method": "POST",
+      "path": "/api/admin/email-templates/{{emailTemplateId}}/preview",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "payload": {
+        "orderNumber": "ORD-2025-001",
+        "customerName": "Ayşe Demir"
+      },
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_email_template_types",
+      "description": "Admin e-posta şablon tipleri",
+      "method": "GET",
+      "path": "/api/admin/email-templates/types",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_create_gift_card",
+      "description": "Admin hediye kartı oluşturma",
+      "method": "POST",
+      "path": "/api/admin/gift-cards",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "payload": {
+        "initialBalance": 500.0,
+        "currency": "TRY",
+        "expiresAt": "2026-12-31T23:59:59Z",
+        "recipientEmail": "{{customerEmail}}",
+        "recipientName": "Ayşe Demir",
+        "message": "İyi alışverişler dileriz!",
+        "isActive": true
+      },
+      "save_response": {
+        "giftCardId": "id",
+        "giftCardCode": "code"
+      },
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_gift_cards",
+      "description": "Admin hediye kartları listesi",
+      "method": "GET",
+      "path": "/api/admin/gift-cards",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_gift_card_by_code",
+      "description": "Admin hediye kartı koda göre sorgulama",
+      "method": "GET",
+      "path": "/api/admin/gift-cards/code/{{giftCardCode}}",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_gift_card_statistics",
+      "description": "Admin hediye kartı istatistikleri",
+      "method": "GET",
+      "path": "/api/admin/gift-cards/statistics",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_send_notification",
+      "description": "Admin bildirim gönderme",
+      "method": "POST",
+      "path": "/api/admin/notifications/send",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "payload": {
+        "userId": "{{customerId}}",
+        "title": "Hoş geldiniz!",
+        "message": "Exodus Marketplace'e hoş geldiniz. İlk siparişinizde %10 indirim fırsatını kaçırmayın!",
+        "type": 0,
+        "actionUrl": "/kampanyalar"
+      },
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_notification_statistics",
+      "description": "Admin bildirim istatistikleri",
+      "method": "GET",
+      "path": "/api/admin/notifications/statistics",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_invoices",
+      "description": "Admin fatura listesi",
+      "method": "GET",
+      "path": "/api/admin/invoices?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_invoice_by_order",
+      "description": "Admin sipariş bazlı fatura",
+      "method": "GET",
+      "path": "/api/admin/invoices/by-order/{{orderId}}",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_invoice_statistics",
+      "description": "Admin fatura istatistikleri",
+      "method": "GET",
+      "path": "/api/admin/invoices/statistics",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_reviews",
+      "description": "Admin değerlendirmeler listesi",
+      "method": "GET",
+      "path": "/api/admin/reviews?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_review_statistics",
+      "description": "Admin değerlendirme istatistikleri",
+      "method": "GET",
+      "path": "/api/admin/reviews/statistics",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_seller_reviews_list",
+      "description": "Admin satıcı değerlendirmeleri",
+      "method": "GET",
+      "path": "/api/admin/seller-reviews/seller/{{sellerId}}?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_seller_review_summary",
+      "description": "Admin satıcı değerlendirme özeti",
+      "method": "GET",
+      "path": "/api/admin/seller-reviews/seller/{{sellerId}}/summary",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_pending_questions",
+      "description": "Admin bekleyen sorular",
+      "method": "GET",
+      "path": "/api/admin/product-qa/pending?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_loyalty_top_users",
+      "description": "Admin sadakat en iyi kullanıcılar",
+      "method": "GET",
+      "path": "/api/admin/loyalty/top-users?count=20",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_loyalty_user_points",
+      "description": "Admin kullanıcı sadakat puanı",
+      "method": "GET",
+      "path": "/api/admin/loyalty/users/{{customerId}}",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_adjust_loyalty_points",
+      "description": "Admin kullanıcı puan düzenleme",
+      "method": "POST",
+      "path": "/api/admin/loyalty/users/{{customerId}}/adjust",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "payload": {
+        "points": 500,
+        "reason": "Müşteri memnuniyeti bonusu"
+      },
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_wishlists",
+      "description": "Admin dilek listesi",
+      "method": "GET",
+      "path": "/api/admin/wishlists?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_wishlist_statistics",
+      "description": "Admin dilek listesi istatistikleri",
+      "method": "GET",
+      "path": "/api/admin/wishlists/statistics",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_popular_wishlist_products",
+      "description": "Admin popüler dilek listesi ürünleri",
+      "method": "GET",
+      "path": "/api/admin/wishlists/popular-products?limit=20",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_dashboard",
+      "description": "Admin dashboard ana sayfa",
+      "method": "GET",
+      "path": "/api/admin/dashboard",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_dashboard_overview",
+      "description": "Admin dashboard genel bakış",
+      "method": "GET",
+      "path": "/api/admin/dashboard/overview",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_dashboard_sales",
+      "description": "Admin dashboard satış istatistikleri",
+      "method": "GET",
+      "path": "/api/admin/dashboard/sales",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_dashboard_orders",
+      "description": "Admin dashboard sipariş istatistikleri",
+      "method": "GET",
+      "path": "/api/admin/dashboard/orders",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_dashboard_users",
+      "description": "Admin dashboard kullanıcı istatistikleri",
+      "method": "GET",
+      "path": "/api/admin/dashboard/users",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_dashboard_products",
+      "description": "Admin dashboard ürün istatistikleri",
+      "method": "GET",
+      "path": "/api/admin/dashboard/products",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_dashboard_activities",
+      "description": "Admin dashboard son aktiviteler",
+      "method": "GET",
+      "path": "/api/admin/dashboard/activities",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_sales_report",
+      "description": "Admin satış raporu",
+      "method": "GET",
+      "path": "/api/admin/dashboard/reports/sales",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_inventory_report",
+      "description": "Admin envanter raporu",
+      "method": "GET",
+      "path": "/api/admin/dashboard/reports/inventory",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_customer_report",
+      "description": "Admin müşteri raporu",
+      "method": "GET",
+      "path": "/api/admin/dashboard/reports/customers",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_reports_sales",
+      "description": "Admin raporlar satış",
+      "method": "GET",
+      "path": "/api/admin/reports/sales",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_reports_products",
+      "description": "Admin raporlar ürün",
+      "method": "GET",
+      "path": "/api/admin/reports/products",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_reports_sellers",
+      "description": "Admin raporlar satıcı",
+      "method": "GET",
+      "path": "/api/admin/reports/sellers",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_reports_customers",
+      "description": "Admin raporlar müşteri",
+      "method": "GET",
+      "path": "/api/admin/reports/customers",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_reports_categories",
+      "description": "Admin raporlar kategori",
+      "method": "GET",
+      "path": "/api/admin/reports/categories",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_reports_refunds",
+      "description": "Admin raporlar iade",
+      "method": "GET",
+      "path": "/api/admin/reports/refunds",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_reports_dashboard",
+      "description": "Admin raporlar dashboard",
+      "method": "GET",
+      "path": "/api/admin/reports/dashboard",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_audit_logs",
+      "description": "Admin denetim kayıtları",
+      "method": "GET",
+      "path": "/api/admin/audit?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_audit_user_activity",
+      "description": "Admin kullanıcı denetim kayıtları",
+      "method": "GET",
+      "path": "/api/admin/audit/user/{{customerId}}?days=30",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_audit_statistics",
+      "description": "Admin denetim istatistikleri",
+      "method": "GET",
+      "path": "/api/admin/audit/statistics?days=30",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "customer_get_my_audit_logs",
+      "description": "Müşteri kendi denetim kayıtları",
+      "method": "GET",
+      "path": "/api/audit/my-logs?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "admin_get_settings",
+      "description": "Admin tüm ayarlar",
+      "method": "GET",
+      "path": "/api/admin/settings",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_general_settings",
+      "description": "Admin genel ayarlar",
+      "method": "GET",
+      "path": "/api/admin/settings/general",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_shipping_settings",
+      "description": "Admin kargo ayarları",
+      "method": "GET",
+      "path": "/api/admin/settings/shipping",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_commission_settings",
+      "description": "Admin komisyon ayarları",
+      "method": "GET",
+      "path": "/api/admin/settings/commission",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "get_public_settings",
+      "description": "Herkese açık ayarlar",
+      "method": "GET",
+      "path": "/api/settings",
+      "requires_auth": false,
+      "save_response": {}
+    },
+    {
+      "id": "get_public_shipping_info",
+      "description": "Herkese açık kargo bilgisi",
+      "method": "GET",
+      "path": "/api/settings/shipping",
+      "requires_auth": false,
+      "save_response": {}
+    },
+    {
+      "id": "admin_get_seller_payouts",
+      "description": "Admin satıcı ödemeleri listesi",
+      "method": "GET",
+      "path": "/api/admin/seller-payouts?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_seller_payout_statistics",
+      "description": "Admin satıcı ödeme istatistikleri",
+      "method": "GET",
+      "path": "/api/admin/seller-payouts/statistics",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_return_shipments",
+      "description": "Admin iade kargoları listesi",
+      "method": "GET",
+      "path": "/api/admin/return-shipments?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_return_shipment_statistics",
+      "description": "Admin iade kargo istatistikleri",
+      "method": "GET",
+      "path": "/api/admin/return-shipments/statistics",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_affiliates",
+      "description": "Admin affiliate listesi",
+      "method": "GET",
+      "path": "/api/admin/affiliates?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_affiliate_statistics",
+      "description": "Admin affiliate istatistikleri",
+      "method": "GET",
+      "path": "/api/admin/affiliates/statistics?days=30",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_affiliate_payouts",
+      "description": "Admin affiliate ödemeleri",
+      "method": "GET",
+      "path": "/api/admin/affiliates/payouts?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "seller_create_campaign",
+      "description": "Satıcı kampanya oluşturma",
+      "method": "POST",
+      "path": "/api/seller/campaigns",
+      "requires_auth": true,
+      "token": "{{sellerToken}}",
+      "payload": {
+        "name": "Mağazama Özel Kulaklık İndirimi",
+        "description": "Kablosuz kulaklıklarda %10 indirim",
+        "type": 0,
+        "startDate": "2025-06-15T00:00:00Z",
+        "endDate": "2025-07-15T00:00:00Z",
+        "isActive": true,
+        "maxUsageCount": 100,
+        "maxUsagePerUser": 1,
+        "discountPercentage": 10,
+        "maxDiscountAmount": 300,
+        "couponCode": "KULAKLIK10",
+        "requiresCouponCode": true,
+        "scope": 1,
+        "productIds": [
+          "{{secondProductId}}"
+        ]
+      },
+      "save_response": {},
+      "auth_role": "seller"
+    },
+    {
+      "id": "seller_get_my_campaigns",
+      "description": "Satıcı kampanyalarını listeleme",
+      "method": "GET",
+      "path": "/api/seller/campaigns",
+      "requires_auth": true,
+      "token": "{{sellerToken}}",
+      "save_response": {},
+      "auth_role": "seller"
+    },
+    {
+      "id": "seller_get_dashboard",
+      "description": "Satıcı dashboard",
+      "method": "GET",
+      "path": "/api/auth/seller/dashboard",
+      "requires_auth": true,
+      "token": "{{sellerToken}}",
+      "save_response": {},
+      "auth_role": "seller"
+    },
+    {
+      "id": "customer_get_notification_preferences",
+      "description": "Müşteri bildirim tercihleri",
+      "method": "GET",
+      "path": "/api/profile/notification-preferences",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_update_notification_preferences",
+      "description": "Müşteri bildirim tercihlerini güncelleme",
+      "method": "PUT",
+      "path": "/api/profile/notification-preferences",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "payload": {
+        "emailOrderUpdates": true,
+        "emailPaymentUpdates": true,
+        "emailShipmentUpdates": true,
+        "emailPromotions": false,
+        "emailNewsletter": false,
+        "pushOrderUpdates": true,
+        "pushShipmentUpdates": true,
+        "smsOrderUpdates": true,
+        "smsShipmentUpdates": true,
+        "smsPromotions": false
+      },
+      "save_response": {}
+    },
+    {
+      "id": "customer_2fa_status",
+      "description": "Müşteri 2FA durumu",
+      "method": "GET",
+      "path": "/api/twofactor/status",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_remove_from_recently_viewed",
+      "description": "Müşteri son görüntülenenden kaldırma",
+      "method": "DELETE",
+      "path": "/api/recentlyviewed/{{secondProductId}}",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_remove_from_comparison",
+      "description": "Karşılaştırmadan ürün kaldırma",
+      "method": "DELETE",
+      "path": "/api/comparison/{{comparisonId}}/products/{{productId}}",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_delete_comparison",
+      "description": "Karşılaştırmayı silme",
+      "method": "DELETE",
+      "path": "/api/comparison/{{comparisonId}}",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "customer_close_ticket",
+      "description": "Müşteri destek talebini kapatma",
+      "method": "POST",
+      "path": "/api/support/tickets/{{ticketId}}/close",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "payload": {
+        "reason": "Fatura talebim karşılandı, teşekkürler."
+      },
+      "save_response": {}
+    },
+    {
+      "id": "customer_delete_billing_address",
+      "description": "Müşteri fatura adresini silme",
+      "method": "DELETE",
+      "path": "/api/address/{{billingAddressId}}",
+      "requires_auth": true,
+      "token": "{{customerToken}}",
+      "save_response": {}
+    },
+    {
+      "id": "admin_toggle_category_active",
+      "description": "Admin kategori aktiflik değiştirme",
+      "method": "PATCH",
+      "path": "/api/admin/categories/{{subCategoryId}}/toggle-active",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_toggle_brand_featured",
+      "description": "Admin marka öne çıkan değiştirme",
+      "method": "PATCH",
+      "path": "/api/admin/brands/{{brandId}}/toggle-featured",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_toggle_banner_active",
+      "description": "Admin banner aktiflik değiştirme",
+      "method": "PATCH",
+      "path": "/api/admin/banners/{{bannerId}}/toggle-active",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_all_products",
+      "description": "Admin tüm ürünler",
+      "method": "GET",
+      "path": "/api/admin/products",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_refunds",
+      "description": "Admin iade listesi",
+      "method": "GET",
+      "path": "/api/admin/orders/refunds?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_failed_payments",
+      "description": "Admin başarısız ödemeler",
+      "method": "GET",
+      "path": "/api/admin/payments/failed?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_payment_events",
+      "description": "Admin ödeme olayları",
+      "method": "GET",
+      "path": "/api/admin/payments/events?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_seller_applications",
+      "description": "Admin satıcı başvuruları",
+      "method": "GET",
+      "path": "/api/admin/sellers/applications",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_review_reports",
+      "description": "Admin değerlendirme raporları",
+      "method": "GET",
+      "path": "/api/admin/reviews/reports?page=1&pageSize=20",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_seo_settings",
+      "description": "Admin SEO ayarları",
+      "method": "GET",
+      "path": "/api/admin/content/seo",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_header_menu",
+      "description": "Admin header menü",
+      "method": "GET",
+      "path": "/api/admin/content/menu/header",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    },
+    {
+      "id": "admin_get_footer_menu",
+      "description": "Admin footer menü",
+      "method": "GET",
+      "path": "/api/admin/content/menu/footer",
+      "requires_auth": true,
+      "token": "{{adminToken}}",
+      "save_response": {},
+      "auth_role": "admin"
+    }
+  ]
+}

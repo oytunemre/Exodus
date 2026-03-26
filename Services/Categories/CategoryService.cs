@@ -122,7 +122,11 @@ namespace Exodus.Services.Categories
             if (dto.Name != null)
             {
                 category.Name = dto.Name;
-                category.Slug = GenerateSlug(dto.Name);
+                var slug = GenerateSlug(dto.Name);
+                var slugExists = await _context.Categories.AnyAsync(c => c.Slug == slug && c.Id != id);
+                if (slugExists)
+                    slug = $"{slug}-{DateTime.UtcNow.Ticks}";
+                category.Slug = slug;
             }
 
             if (dto.Description != null)

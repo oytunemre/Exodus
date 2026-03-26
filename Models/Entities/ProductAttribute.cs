@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Exodus.Models.Entities;
 
@@ -39,6 +40,7 @@ public class ProductAttribute : BaseEntity
 public class ProductAttributeValue : BaseEntity
 {
     public int AttributeId { get; set; }
+    [JsonIgnore]
     public ProductAttribute Attribute { get; set; } = null!;
 
     [Required]

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Exodus.Services.Common;
 
@@ -36,11 +37,17 @@ public class ExceptionHandlingMiddleware
             context.Response.StatusCode = 500;
             context.Response.ContentType = "application/json";
 
+            // Show full exception chain in development for easier debugging
+            var env = context.RequestServices.GetService<IWebHostEnvironment>();
+            var detail = env?.IsDevelopment() == true
+                ? $"{ex.Message} | InnerException: {ex.InnerException?.Message} | {ex.InnerException?.InnerException?.Message}"
+                : ex.Message;
+
             var problem = new ProblemDetails
             {
                 Status = 500,
                 Title = "Server error",
-                Detail = ex.Message
+                Detail = detail
             };
 
             await context.Response.WriteAsJsonAsync(problem);

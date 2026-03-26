@@ -8,7 +8,6 @@ public class PaymentEvent : BaseEntity
 {
     public int PaymentIntentId { get; set; }
 
-    [ForeignKey("PaymentIntentId")]
     public PaymentIntent PaymentIntent { get; set; } = null!;
 
     public PaymentStatus Status { get; set; }
