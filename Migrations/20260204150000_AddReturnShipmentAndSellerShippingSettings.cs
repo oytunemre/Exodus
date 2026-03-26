@@ -52,12 +52,6 @@ namespace Exodus.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_ReturnShipments_Refunds_RefundId",
-                        column: x => x.RefundId,
-                        principalTable: "Refunds",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
                         name: "FK_ReturnShipments_SellerOrders_SellerOrderId",
                         column: x => x.SellerOrderId,
                         principalTable: "SellerOrders",

@@ -797,6 +797,9 @@ namespace Exodus.Migrations
                 CREATE INDEX [IX_ProductAttributeMappings_AttributeId] ON [ProductAttributeMappings] ([AttributeId]);
                 CREATE INDEX [IX_ProductAttributeMappings_AttributeValueId] ON [ProductAttributeMappings] ([AttributeValueId]);
                 CREATE UNIQUE INDEX [IX_ProductAttributeMappings_ProductId_AttributeId_AttributeValueId] ON [ProductAttributeMappings] ([ProductId], [AttributeId], [AttributeValueId]) WHERE [IsDeleted] = 0;
+
+                ALTER TABLE [ReturnShipments] ADD CONSTRAINT [FK_ReturnShipments_Refunds_RefundId]
+                    FOREIGN KEY ([RefundId]) REFERENCES [Refunds] ([Id]) ON DELETE NO ACTION;
             ");
         }
 
