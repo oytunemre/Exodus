@@ -131,7 +131,7 @@ namespace Exodus.Controllers.Seller
             _context.Listings.Add(listing);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetMyListings), new { Id = listing.Id });
+            return CreatedAtAction(nameof(GetMyListings), new { Id = listing.Id }, new { listing.Id, listing.ProductId, listing.SellerId, listing.Price, listing.StockQuantity, listing.Condition, listing.IsActive });
         }
 
         /// <summary>

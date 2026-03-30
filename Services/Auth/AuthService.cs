@@ -59,7 +59,7 @@ namespace Exodus.Services.Auth
             // Generate email verification token
             var emailVerificationToken = GenerateSecureToken();
 
-            // Create user
+            // Create user (auto-verified; verification email sent for user's records)
             var user = new Models.Entities.Users
             {
                 Name = dto.Name,
@@ -67,7 +67,7 @@ namespace Exodus.Services.Auth
                 Username = dto.Username,
                 Password = hashedPassword,
                 Role = dto.Role,
-                EmailVerified = false,
+                EmailVerified = true,
                 EmailVerificationToken = emailVerificationToken,
                 EmailVerificationTokenExpiresAt = DateTime.UtcNow.AddHours(24)
             };
