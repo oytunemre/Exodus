@@ -215,7 +215,7 @@ public class CampaignService : ICampaignService
                     !c.RequiresCouponCode &&
                     c.StartDate <= DateTime.UtcNow &&
                     c.EndDate >= DateTime.UtcNow &&
-                    sellerIds.Contains(c.SellerId))
+                    c.SellerId.HasValue && sellerIds.Contains(c.SellerId.Value))
                 .OrderByDescending(c => c.Priority)
                 .ToListAsync(ct);
 
@@ -317,7 +317,7 @@ public class CampaignService : ICampaignService
                 c.IsActive &&
                 c.StartDate <= DateTime.UtcNow &&
                 c.EndDate >= DateTime.UtcNow &&
-                sellerIds.Contains(c.SellerId))
+                c.SellerId.HasValue && sellerIds.Contains(c.SellerId.Value))
             .ToListAsync(ct);
 
         var applicableCampaigns = new List<CampaignDto>();
@@ -711,7 +711,7 @@ public class CampaignService : ICampaignService
             Name = c.Name,
             Description = c.Description,
             Type = c.Type,
-            SellerId = c.SellerId,
+            SellerId = c.SellerId ?? 0,
             SellerName = c.Seller?.Name,
             StartDate = c.StartDate,
             EndDate = c.EndDate,
