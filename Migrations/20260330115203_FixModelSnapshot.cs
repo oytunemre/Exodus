@@ -19,15 +19,15 @@ namespace Exodus.Migrations
                 name: "FK_Listings_Users_SellerId",
                 table: "Listings");
 
-            migrationBuilder.RenameColumn(
-                name: "Total",
-                table: "Orders",
-                newName: "TotalAmount");
+            migrationBuilder.Sql(@"
+                IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'Orders') AND name = 'Total')
+                    EXEC sp_rename 'Orders.Total', 'TotalAmount', 'COLUMN';
+            ");
 
-            migrationBuilder.RenameColumn(
-                name: "Stock",
-                table: "Listings",
-                newName: "StockQuantity");
+            migrationBuilder.Sql(@"
+                IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'Listings') AND name = 'Stock')
+                    EXEC sp_rename 'Listings.Stock', 'StockQuantity', 'COLUMN';
+            ");
 
             migrationBuilder.AddColumn<string>(
                 name: "AvatarUrl",
@@ -3078,15 +3078,15 @@ namespace Exodus.Migrations
                 name: "TrackInventory",
                 table: "Listings");
 
-            migrationBuilder.RenameColumn(
-                name: "TotalAmount",
-                table: "Orders",
-                newName: "Total");
+            migrationBuilder.Sql(@"
+                IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'Orders') AND name = 'TotalAmount')
+                    EXEC sp_rename 'Orders.TotalAmount', 'Total', 'COLUMN';
+            ");
 
-            migrationBuilder.RenameColumn(
-                name: "StockQuantity",
-                table: "Listings",
-                newName: "Stock");
+            migrationBuilder.Sql(@"
+                IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'Listings') AND name = 'StockQuantity')
+                    EXEC sp_rename 'Listings.StockQuantity', 'Stock', 'COLUMN';
+            ");
 
             migrationBuilder.AlterColumn<string>(
                 name: "ProductName",
