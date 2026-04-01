@@ -46,7 +46,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Controllers + Enum String Converter
 builder.Services.AddControllers()
     .AddJsonOptions(o =>
-        o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+    {
+        o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        o.JsonSerializerOptions.NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString;
+    });
 
 // Swagger / OpenAPI
 builder.Services.AddEndpointsApiExplorer();

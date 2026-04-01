@@ -383,7 +383,8 @@
       "save_response": {
         "subCategoryId": "id"
       },
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "categoryId"
     },
     {
       "id": "get_public_categories",
@@ -601,7 +602,8 @@
         "categoryId": "{{subCategoryId}}"
       },
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "subCategoryId"
     },
     {
       "id": "seller_create_listing",
@@ -620,7 +622,8 @@
         "listingId": "id"
       },
       "auth_role": "seller",
-      "on_conflict_get": "/api/seller/listings"
+      "on_conflict_get": "/api/seller/listings",
+      "skip_if_state_null": "productId"
     },
     {
       "id": "seller_create_second_listing",
@@ -639,7 +642,8 @@
       "save_response": {
         "secondListingId": "id"
       },
-      "auth_role": "seller"
+      "auth_role": "seller",
+      "skip_if_state_null": "secondProductId"
     },
     {
       "id": "get_all_listings",
@@ -842,7 +846,8 @@
       },
       "save_response": {
         "cartItemId": "cartItemId"
-      }
+      },
+      "skip_if_state_null": "listingId"
     },
     {
       "id": "customer_add_second_item_to_cart",
@@ -856,7 +861,8 @@
         "listingId": "{{secondListingId}}",
         "quantity": 2
       },
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "secondListingId"
     },
     {
       "id": "customer_get_my_cart",
@@ -944,7 +950,8 @@
       "save_response": {
         "orderId": "id",
         "orderNumber": "orderNumber"
-      }
+      },
+      "skip_if_state_null": "addressId"
     },
     {
       "id": "customer_get_order_by_id",
@@ -998,7 +1005,8 @@
       },
       "save_response": {
         "paymentIntentId": "id"
-      }
+      },
+      "skip_if_state_null": "orderId"
     },
     {
       "id": "customer_get_payment_intent",
@@ -1193,7 +1201,8 @@
       },
       "save_response": {
         "sellerReviewId": "id"
-      }
+      },
+      "skip_if_state_null": "orderId"
     },
     {
       "id": "get_seller_reviews",
@@ -1221,7 +1230,7 @@
       "requires_auth": true,
       "token": "{{sellerToken}}",
       "payload": {
-        "text": "Değerli müşterimiz, güzel yorumunuz için teşekkür ederiz. Bizi tercih ettiğiniz için mutluyuz!"
+        "reply": "Değerli müşterimiz, güzel yorumunuz için teşekkür ederiz. Bizi tercih ettiğiniz için mutluyuz!"
       },
       "save_response": {},
       "auth_role": "seller",
@@ -1243,7 +1252,8 @@
       },
       "save_response": {
         "ticketId": "id"
-      }
+      },
+      "skip_if_state_null": "orderId"
     },
     {
       "id": "customer_get_my_tickets",
@@ -1564,7 +1574,8 @@
       "save_response": {
         "campaignId": "id"
       },
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "categoryId"
     },
     {
       "id": "admin_get_campaigns",
@@ -2053,7 +2064,8 @@
         "actionUrl": "/kampanyalar"
       },
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "customerId"
     },
     {
       "id": "admin_get_notification_statistics",
@@ -2576,7 +2588,8 @@
         ]
       },
       "save_response": {},
-      "auth_role": "seller"
+      "auth_role": "seller",
+      "skip_if_state_null": "secondProductId"
     },
     {
       "id": "seller_get_my_campaigns",
