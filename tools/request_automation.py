@@ -61,12 +61,15 @@ def _resolve(value: Any, variables: dict, state: dict) -> Any:
 
 
 def _get_nested(data: Any, path: str) -> Optional[Any]:
-    """'a.b.c' formatındaki path ile iç içe dict'ten değer çeker."""
+    """'a.b.c' veya 'a.0.c' formatındaki path ile iç içe dict/list'ten değer çeker."""
     keys = path.split(".")
     current = data
     for key in keys:
         if isinstance(current, dict):
             current = current.get(key)
+        elif isinstance(current, list) and key.isdigit():
+            idx = int(key)
+            current = current[idx] if idx < len(current) else None
         else:
             return None
         if current is None:

@@ -845,7 +845,7 @@
         "quantity": 1
       },
       "save_response": {
-        "cartItemId": "cartItemId"
+        "cartItemId": "items.0.cartItemId"
       },
       "skip_if_state_null": "listingId"
     },
