@@ -150,35 +150,37 @@ builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
+    var isDev = builder.Environment.IsDevelopment();
+
     // Global rate limit: 100 requests per minute per IP
     options.AddPolicy("fixed", context =>
         RateLimitPartition.GetFixedWindowLimiter(
             partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 100,
+                PermitLimit = isDev ? 10000 : 100,
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0
             }));
 
-    // Auth endpoints: 10 requests per minute per IP (brute force protection)
+    // Auth endpoints: brute force protection (relaxed in dev)
     options.AddPolicy("auth", context =>
         RateLimitPartition.GetFixedWindowLimiter(
             partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 10,
+                PermitLimit = isDev ? 10000 : 10,
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0
             }));
 
-    // Sensitive operations: 5 requests per minute
+    // Sensitive operations (relaxed in dev)
     options.AddPolicy("sensitive", context =>
         RateLimitPartition.GetFixedWindowLimiter(
             partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
             factory: _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 5,
+                PermitLimit = isDev ? 10000 : 5,
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0
             }));
