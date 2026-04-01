@@ -720,7 +720,8 @@
       "path": "/api/recentlyviewed/{{productId}}",
       "requires_auth": true,
       "token": "{{customerToken}}",
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "productId"
     },
     {
       "id": "customer_track_second_product_view",
@@ -729,7 +730,8 @@
       "path": "/api/recentlyviewed/{{secondProductId}}",
       "requires_auth": true,
       "token": "{{customerToken}}",
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "secondProductId"
     },
     {
       "id": "customer_get_recently_viewed",
@@ -752,7 +754,8 @@
       },
       "save_response": {
         "questionId": "id"
-      }
+      },
+      "skip_if_state_null": "productId"
     },
     {
       "id": "get_product_questions",
@@ -1648,12 +1651,12 @@
         "title": "Yaz Kampanyası",
         "description": "Tüm elektronik ürünlerde %15'e varan indirimler",
         "imageUrl": "https://cdn.exodus.com/banners/yaz-kampanya.jpg",
-        "linkUrl": "/kampanyalar/yaz-2025",
         "position": 0,
         "displayOrder": 1,
         "isActive": true,
         "startDate": "2025-06-01T00:00:00Z",
-        "endDate": "2025-09-01T00:00:00Z"
+        "endDate": "2025-09-01T00:00:00Z",
+        "targetUrl": "/kampanyalar/yaz-2025"
       },
       "save_response": {
         "bannerId": "id"
@@ -2037,7 +2040,8 @@
       "requires_auth": true,
       "token": "{{adminToken}}",
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "giftCardCode"
     },
     {
       "id": "admin_get_gift_card_statistics",
@@ -2190,7 +2194,7 @@
       "token": "{{adminToken}}",
       "payload": {
         "points": 500,
-        "reason": "Müşteri memnuniyeti bonusu"
+        "description": "Müşteri memnuniyeti bonusu"
       },
       "save_response": {},
       "auth_role": "admin",
