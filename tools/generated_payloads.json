@@ -310,7 +310,8 @@
       "path": "/api/address/{{addressId}}",
       "requires_auth": true,
       "token": "{{customerToken}}",
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "addressId"
     },
     {
       "id": "customer_update_address",
@@ -324,7 +325,8 @@
         "neighborhood": "Caferağa Mahallesi",
         "addressLine": "Moda Caddesi No:42 Daire:7 Kadıköy"
       },
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "addressId"
     },
     {
       "id": "customer_set_default_address",
@@ -333,7 +335,8 @@
       "path": "/api/address/{{billingAddressId}}/set-default",
       "requires_auth": true,
       "token": "{{customerToken}}",
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "billingAddressId"
     },
     {
       "id": "customer_profile_addresses",
@@ -404,7 +407,8 @@
       "method": "GET",
       "path": "/api/category/{{categoryId}}",
       "requires_auth": false,
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "categoryId"
     },
     {
       "id": "get_subcategories",
@@ -412,7 +416,8 @@
       "method": "GET",
       "path": "/api/category/{{categoryId}}/subcategories",
       "requires_auth": false,
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "categoryId"
     },
     {
       "id": "admin_update_category",
@@ -427,7 +432,8 @@
         "isActive": true
       },
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "categoryId"
     },
     {
       "id": "admin_create_brand",
@@ -494,7 +500,8 @@
       "save_response": {
         "attributeValueId": "id"
       },
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "attributeId"
     },
     {
       "id": "admin_get_attribute_values",
@@ -504,7 +511,8 @@
       "requires_auth": true,
       "token": "{{adminToken}}",
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "attributeId"
     },
     {
       "id": "seller_add_product",
@@ -559,7 +567,8 @@
       "method": "GET",
       "path": "/api/product/{{productId}}",
       "requires_auth": false,
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "productId"
     },
     {
       "id": "seller_update_product",
@@ -578,7 +587,8 @@
         ]
       },
       "save_response": {},
-      "auth_role": "seller"
+      "auth_role": "seller",
+      "skip_if_state_null": "productId"
     },
     {
       "id": "admin_update_product_category",
@@ -645,7 +655,8 @@
       "method": "GET",
       "path": "/api/listings/{{listingId}}",
       "requires_auth": false,
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "listingId"
     },
     {
       "id": "seller_update_listing",
@@ -661,7 +672,8 @@
         "isActive": true
       },
       "save_response": {},
-      "auth_role": "seller"
+      "auth_role": "seller",
+      "skip_if_state_null": "listingId"
     },
     {
       "id": "seller_get_my_listings",
@@ -684,7 +696,8 @@
         "stockQuantity": 60
       },
       "save_response": {},
-      "auth_role": "seller"
+      "auth_role": "seller",
+      "skip_if_state_null": "listingId"
     },
     {
       "id": "seller_get_low_stock",
@@ -743,7 +756,8 @@
       "method": "GET",
       "path": "/api/products/{{productId}}/questions?page=1&pageSize=10",
       "requires_auth": false,
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "productId"
     },
     {
       "id": "seller_answer_question",
@@ -758,7 +772,8 @@
       "save_response": {
         "answerId": "id"
       },
-      "auth_role": "seller"
+      "auth_role": "seller",
+      "skip_if_state_null": "questionId"
     },
     {
       "id": "customer_upvote_question",
@@ -767,7 +782,8 @@
       "path": "/api/products/{{productId}}/questions/{{questionId}}/upvote",
       "requires_auth": true,
       "token": "{{customerToken}}",
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "questionId"
     },
     {
       "id": "customer_create_comparison",
@@ -790,7 +806,8 @@
       "path": "/api/comparison/{{comparisonId}}/products/{{productId}}",
       "requires_auth": true,
       "token": "{{customerToken}}",
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "comparisonId"
     },
     {
       "id": "customer_get_comparison",
@@ -799,7 +816,8 @@
       "path": "/api/comparison/{{comparisonId}}",
       "requires_auth": true,
       "token": "{{customerToken}}",
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "comparisonId"
     },
     {
       "id": "customer_get_all_comparisons",
@@ -856,7 +874,8 @@
       "path": "/api/cart/{{customerId}}",
       "requires_auth": true,
       "token": "{{customerToken}}",
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "customerId"
     },
     {
       "id": "customer_update_cart_quantity",
@@ -868,7 +887,8 @@
       "payload": {
         "quantity": 2
       },
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "cartItemId"
     },
     {
       "id": "customer_update_cart_quantity_back",
@@ -880,7 +900,8 @@
       "payload": {
         "quantity": 1
       },
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "cartItemId"
     },
     {
       "id": "customer_get_loyalty_points",
@@ -934,7 +955,8 @@
       "token": "{{customerToken}}",
       "save_response": {
         "sellerOrderId": "sellerOrders.0.id"
-      }
+      },
+      "skip_if_state_null": "orderId"
     },
     {
       "id": "customer_get_order_by_number",
@@ -943,7 +965,8 @@
       "path": "/api/order/number/{{orderNumber}}",
       "requires_auth": true,
       "token": "{{customerToken}}",
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "orderNumber"
     },
     {
       "id": "customer_get_my_orders",
@@ -984,7 +1007,8 @@
       "path": "/api/payment/intents/{{paymentIntentId}}",
       "requires_auth": true,
       "token": "{{customerToken}}",
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "paymentIntentId"
     },
     {
       "id": "customer_get_payment_by_order",
@@ -993,7 +1017,8 @@
       "path": "/api/payment/order/{{orderId}}",
       "requires_auth": true,
       "token": "{{customerToken}}",
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "orderId"
     },
     {
       "id": "customer_authorize_payment",
@@ -1002,7 +1027,8 @@
       "path": "/api/payment/intents/{{paymentIntentId}}/authorize",
       "requires_auth": true,
       "token": "{{customerToken}}",
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "paymentIntentId"
     },
     {
       "id": "customer_simulate_payment_success",
@@ -1014,7 +1040,8 @@
       "payload": {
         "reason": "Test ödeme simülasyonu"
       },
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "paymentIntentId"
     },
     {
       "id": "customer_get_payment_events",
@@ -1023,7 +1050,8 @@
       "path": "/api/payment/intents/{{paymentIntentId}}/events",
       "requires_auth": true,
       "token": "{{customerToken}}",
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "paymentIntentId"
     },
     {
       "id": "seller_get_orders",
@@ -1043,7 +1071,8 @@
       "requires_auth": true,
       "token": "{{sellerToken}}",
       "save_response": {},
-      "auth_role": "seller"
+      "auth_role": "seller",
+      "skip_if_state_null": "sellerOrderId"
     },
     {
       "id": "seller_ship_order",
@@ -1057,7 +1086,8 @@
         "trackingNumber": "TR1234567890"
       },
       "save_response": {},
-      "auth_role": "seller"
+      "auth_role": "seller",
+      "skip_if_state_null": "sellerOrderId"
     },
     {
       "id": "get_shipment_by_seller_order",
@@ -1067,7 +1097,8 @@
       "requires_auth": true,
       "token": "{{sellerToken}}",
       "save_response": {},
-      "auth_role": "seller"
+      "auth_role": "seller",
+      "skip_if_state_null": "sellerOrderId"
     },
     {
       "id": "get_shipment_timeline",
@@ -1077,7 +1108,8 @@
       "requires_auth": true,
       "token": "{{sellerToken}}",
       "save_response": {},
-      "auth_role": "seller"
+      "auth_role": "seller",
+      "skip_if_state_null": "sellerOrderId"
     },
     {
       "id": "deliver_shipment",
@@ -1087,7 +1119,8 @@
       "requires_auth": true,
       "token": "{{sellerToken}}",
       "save_response": {},
-      "auth_role": "seller"
+      "auth_role": "seller",
+      "skip_if_state_null": "sellerOrderId"
     },
     {
       "id": "customer_get_notifications",
@@ -1116,7 +1149,8 @@
       "path": "/api/notification/{{notificationId}}/read",
       "requires_auth": true,
       "token": "{{customerToken}}",
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "notificationId"
     },
     {
       "id": "customer_mark_all_read",
@@ -1167,7 +1201,8 @@
       "method": "GET",
       "path": "/api/sellers/{{sellerId}}/reviews?page=1&pageSize=10",
       "requires_auth": false,
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "sellerId"
     },
     {
       "id": "get_seller_rating_summary",
@@ -1175,7 +1210,8 @@
       "method": "GET",
       "path": "/api/sellers/{{sellerId}}/rating-summary",
       "requires_auth": false,
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "sellerId"
     },
     {
       "id": "seller_reply_to_review",
@@ -1188,7 +1224,8 @@
         "text": "Değerli müşterimiz, güzel yorumunuz için teşekkür ederiz. Bizi tercih ettiğiniz için mutluyuz!"
       },
       "save_response": {},
-      "auth_role": "seller"
+      "auth_role": "seller",
+      "skip_if_state_null": "sellerReviewId"
     },
     {
       "id": "customer_create_support_ticket",
@@ -1224,7 +1261,8 @@
       "path": "/api/support/tickets/{{ticketId}}",
       "requires_auth": true,
       "token": "{{customerToken}}",
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "ticketId"
     },
     {
       "id": "customer_reply_to_ticket",
@@ -1236,7 +1274,8 @@
       "payload": {
         "message": "Firmamızın vergi numarası: 1234567890, Ticaret ünvanı: Demir Teknoloji Ltd. Şti."
       },
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "ticketId"
     },
     {
       "id": "admin_get_support_tickets",
@@ -1260,7 +1299,8 @@
         "isInternal": false
       },
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "ticketId"
     },
     {
       "id": "admin_update_ticket_status",
@@ -1273,7 +1313,8 @@
         "status": "Resolved"
       },
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "ticketId"
     },
     {
       "id": "admin_get_support_statistics",
@@ -1303,7 +1344,8 @@
       "requires_auth": true,
       "token": "{{adminToken}}",
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "customerId"
     },
     {
       "id": "admin_update_user",
@@ -1319,7 +1361,8 @@
         "isActive": true
       },
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "customerId"
     },
     {
       "id": "admin_get_user_stats",
@@ -1349,7 +1392,8 @@
       "requires_auth": true,
       "token": "{{adminToken}}",
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "orderId"
     },
     {
       "id": "admin_get_order_statistics",
@@ -1379,7 +1423,8 @@
       "requires_auth": true,
       "token": "{{adminToken}}",
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "paymentIntentId"
     },
     {
       "id": "admin_get_payment_statistics",
@@ -1409,7 +1454,8 @@
       "requires_auth": true,
       "token": "{{adminToken}}",
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "listingId"
     },
     {
       "id": "admin_get_listing_statistics",
@@ -1449,7 +1495,8 @@
       "requires_auth": true,
       "token": "{{adminToken}}",
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "sellerId"
     },
     {
       "id": "admin_get_seller_statistics",
@@ -1469,7 +1516,8 @@
       "requires_auth": true,
       "token": "{{adminToken}}",
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "sellerId"
     },
     {
       "id": "admin_update_seller_commission",
@@ -1482,7 +1530,8 @@
         "commissionRate": 8.5
       },
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "sellerId"
     },
     {
       "id": "admin_create_campaign",
@@ -1535,7 +1584,8 @@
       "requires_auth": true,
       "token": "{{adminToken}}",
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "campaignId"
     },
     {
       "id": "admin_validate_coupon",
@@ -1555,7 +1605,8 @@
       "requires_auth": true,
       "token": "{{adminToken}}",
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "campaignId"
     },
     {
       "id": "customer_validate_coupon",
@@ -1612,7 +1663,8 @@
       "method": "POST",
       "path": "/api/admin/banners/{{bannerId}}/view",
       "requires_auth": false,
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "bannerId"
     },
     {
       "id": "track_banner_click",
@@ -1620,7 +1672,8 @@
       "method": "POST",
       "path": "/api/admin/banners/{{bannerId}}/click",
       "requires_auth": false,
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "bannerId"
     },
     {
       "id": "admin_get_banner_statistics",
@@ -1676,7 +1729,8 @@
         "isDefault": true
       },
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "taxRateId"
     },
     {
       "id": "admin_create_carrier",
@@ -1919,7 +1973,8 @@
         "customerName": "Ayşe Demir"
       },
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "emailTemplateId"
     },
     {
       "id": "admin_get_email_template_types",
@@ -2028,7 +2083,8 @@
       "requires_auth": true,
       "token": "{{adminToken}}",
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "orderId"
     },
     {
       "id": "admin_get_invoice_statistics",
@@ -2068,7 +2124,8 @@
       "requires_auth": true,
       "token": "{{adminToken}}",
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "sellerId"
     },
     {
       "id": "admin_get_seller_review_summary",
@@ -2078,7 +2135,8 @@
       "requires_auth": true,
       "token": "{{adminToken}}",
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "sellerId"
     },
     {
       "id": "admin_get_pending_questions",
@@ -2108,7 +2166,8 @@
       "requires_auth": true,
       "token": "{{adminToken}}",
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "customerId"
     },
     {
       "id": "admin_adjust_loyalty_points",
@@ -2122,7 +2181,8 @@
         "reason": "Müşteri memnuniyeti bonusu"
       },
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "customerId"
     },
     {
       "id": "admin_get_wishlists",
@@ -2342,7 +2402,8 @@
       "requires_auth": true,
       "token": "{{adminToken}}",
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "customerId"
     },
     {
       "id": "admin_get_audit_statistics",
@@ -2583,7 +2644,8 @@
       "path": "/api/recentlyviewed/{{secondProductId}}",
       "requires_auth": true,
       "token": "{{customerToken}}",
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "secondProductId"
     },
     {
       "id": "customer_remove_from_comparison",
@@ -2592,7 +2654,8 @@
       "path": "/api/comparison/{{comparisonId}}/products/{{productId}}",
       "requires_auth": true,
       "token": "{{customerToken}}",
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "comparisonId"
     },
     {
       "id": "customer_delete_comparison",
@@ -2601,7 +2664,8 @@
       "path": "/api/comparison/{{comparisonId}}",
       "requires_auth": true,
       "token": "{{customerToken}}",
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "comparisonId"
     },
     {
       "id": "customer_close_ticket",
@@ -2613,7 +2677,8 @@
       "payload": {
         "reason": "Fatura talebim karşılandı, teşekkürler."
       },
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "ticketId"
     },
     {
       "id": "customer_delete_billing_address",
@@ -2622,7 +2687,8 @@
       "path": "/api/address/{{billingAddressId}}",
       "requires_auth": true,
       "token": "{{customerToken}}",
-      "save_response": {}
+      "save_response": {},
+      "skip_if_state_null": "billingAddressId"
     },
     {
       "id": "admin_toggle_category_active",
@@ -2632,7 +2698,8 @@
       "requires_auth": true,
       "token": "{{adminToken}}",
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "subCategoryId"
     },
     {
       "id": "admin_toggle_brand_featured",
@@ -2642,7 +2709,8 @@
       "requires_auth": true,
       "token": "{{adminToken}}",
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "brandId"
     },
     {
       "id": "admin_toggle_banner_active",
@@ -2652,7 +2720,8 @@
       "requires_auth": true,
       "token": "{{adminToken}}",
       "save_response": {},
-      "auth_role": "admin"
+      "auth_role": "admin",
+      "skip_if_state_null": "bannerId"
     },
     {
       "id": "admin_get_all_products",
