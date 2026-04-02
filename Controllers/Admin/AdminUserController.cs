@@ -276,7 +276,9 @@ namespace Exodus.Controllers.Admin
                 throw new NotFoundException("User not found");
 
             // Prevent deleting yourself
-            var currentUserId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0");
+            var currentUserIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(currentUserIdClaim, out var currentUserId))
+                throw new UnauthorizedException("Invalid user token");
             if (id == currentUserId)
                 throw new BadRequestException("Cannot delete your own account");
 

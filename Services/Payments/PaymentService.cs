@@ -301,8 +301,16 @@ public class PaymentService : IPaymentService
         // In a real implementation, verify the signature
         // For now, just parse and process the webhook
 
-        var webhookEvent = JsonSerializer.Deserialize<WebhookEvent>(payload,
-            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        WebhookEvent? webhookEvent;
+        try
+        {
+            webhookEvent = JsonSerializer.Deserialize<WebhookEvent>(payload,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            throw new BadRequestException("Invalid webhook payload: malformed JSON");
+        }
 
         if (webhookEvent == null || string.IsNullOrEmpty(webhookEvent.ExternalReference))
             throw new BadRequestException("Invalid webhook payload");

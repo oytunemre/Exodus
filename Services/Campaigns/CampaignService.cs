@@ -587,10 +587,12 @@ public class CampaignService : ICampaignService
         switch (campaign.Type)
         {
             case CampaignType.PercentageDiscount:
+                if (!campaign.DiscountPercentage.HasValue)
+                    throw new BadRequestException("Campaign is missing required DiscountPercentage.");
                 foreach (var item in items)
                 {
                     var lineTotal = item.UnitPrice * item.Quantity;
-                    var discount = lineTotal * (campaign.DiscountPercentage!.Value / 100);
+                    var discount = lineTotal * (campaign.DiscountPercentage.Value / 100);
 
                     if (campaign.MaxDiscountAmount.HasValue)
                         discount = Math.Min(discount, campaign.MaxDiscountAmount.Value);
@@ -609,8 +611,10 @@ public class CampaignService : ICampaignService
                 break;
 
             case CampaignType.FixedAmountDiscount:
+                if (!campaign.DiscountAmount.HasValue)
+                    throw new BadRequestException("Campaign is missing required DiscountAmount.");
                 var totalAmount = items.Sum(i => i.UnitPrice * i.Quantity);
-                totalDiscount = Math.Min(campaign.DiscountAmount!.Value, totalAmount);
+                totalDiscount = Math.Min(campaign.DiscountAmount.Value, totalAmount);
 
                 // Distribute discount proportionally
                 foreach (var item in items)
@@ -632,9 +636,11 @@ public class CampaignService : ICampaignService
                 break;
 
             case CampaignType.BuyXGetYFree:
+                if (!campaign.BuyQuantity.HasValue || !campaign.GetQuantity.HasValue)
+                    throw new BadRequestException("Campaign is missing required BuyQuantity or GetQuantity.");
                 // 1 Al 1 Bedava logic
-                var buyQty = campaign.BuyQuantity!.Value;
-                var freeQty = campaign.GetQuantity!.Value;
+                var buyQty = campaign.BuyQuantity.Value;
+                var freeQty = campaign.GetQuantity.Value;
 
                 foreach (var item in items)
                 {
@@ -657,9 +663,11 @@ public class CampaignService : ICampaignService
                 break;
 
             case CampaignType.BuyXPayY:
+                if (!campaign.BuyQuantity.HasValue || !campaign.GetQuantity.HasValue)
+                    throw new BadRequestException("Campaign is missing required BuyQuantity or GetQuantity.");
                 // 3 Al 2 Ode logic
-                var buyCount = campaign.BuyQuantity!.Value;
-                var payCount = campaign.GetQuantity!.Value;
+                var buyCount = campaign.BuyQuantity.Value;
+                var payCount = campaign.GetQuantity.Value;
 
                 foreach (var item in items)
                 {

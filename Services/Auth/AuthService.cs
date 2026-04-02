@@ -465,7 +465,7 @@ namespace Exodus.Services.Auth
             if (user == null)
                 throw new NotFoundException("Invalid reset token");
 
-            if (user.PasswordResetTokenExpiresAt < DateTime.UtcNow)
+            if (!user.PasswordResetTokenExpiresAt.HasValue || user.PasswordResetTokenExpiresAt < DateTime.UtcNow)
                 throw new BadRequestException("Reset token has expired. Please request a new one.");
 
             // Update password

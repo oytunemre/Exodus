@@ -23,7 +23,7 @@ public class CampaignController : ControllerBase
     private int? GetUserId()
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return userIdClaim != null ? int.Parse(userIdClaim) : null;
+        return int.TryParse(userIdClaim, out var id) ? id : null;
     }
 
     /// <summary>
@@ -46,7 +46,7 @@ public class CampaignController : ControllerBase
     [Authorize]
     public async Task<ActionResult<CampaignDto>> ValidateCoupon([FromQuery] string code, CancellationToken ct)
     {
-        var userId = GetUserId()!.Value;
+        var userId = GetUserId() ?? throw new Exodus.Services.Common.UnauthorizedException("Invalid user token");
         var campaign = await _campaignService.ValidateCouponCodeAsync(code, userId, ct);
 
         if (campaign == null)
@@ -62,7 +62,7 @@ public class CampaignController : ControllerBase
     [Authorize]
     public async Task<ActionResult<List<CampaignDto>>> GetApplicableCampaigns(CancellationToken ct)
     {
-        var userId = GetUserId()!.Value;
+        var userId = GetUserId() ?? throw new Exodus.Services.Common.UnauthorizedException("Invalid user token");
 
         // Get cart items
         var cart = await _cartService.GetCartAsync(userId);
@@ -93,7 +93,7 @@ public class CampaignController : ControllerBase
         [FromBody] ApplyCampaignDto? dto,
         CancellationToken ct)
     {
-        var userId = GetUserId()!.Value;
+        var userId = GetUserId() ?? throw new Exodus.Services.Common.UnauthorizedException("Invalid user token");
 
         // Get cart items
         var cart = await _cartService.GetCartAsync(userId);
