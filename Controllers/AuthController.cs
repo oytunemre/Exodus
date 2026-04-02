@@ -195,9 +195,12 @@ namespace Exodus.Controllers
             user.EmailVerified = true;
             user.EmailVerificationToken = null;
             user.EmailVerificationTokenExpiresAt = null;
+            // Also reset lockout — repeated automation runs cause account lockout
+            user.FailedLoginAttempts = 0;
+            user.LockoutEndTime = null;
             await _context.SaveChangesAsync();
 
-            return Ok(new { Message = "Email verified" });
+            return Ok(new { Message = "Email verified and lockout reset" });
         }
     }
 }

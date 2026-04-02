@@ -250,6 +250,20 @@ class ExodusAutomation:
                 except Exception as e:
                     print(f"  ⚠ Login fallback exception: {e}")
 
+            # Başarılı register → force-verify (yeni kayıt da EmailVerified=true olsun)
+            if response.status_code < 400 and "/auth/register" in resolved_path:
+                email = resolved_payload.get("email", "")
+                if email:
+                    try:
+                        self.session.post(
+                            f"{self.base_url}/api/auth/dev/force-verify",
+                            json={"email": email},
+                            headers={"Content-Type": "application/json"},
+                            timeout=10,
+                        )
+                    except Exception:
+                        pass  # Dev endpoint yoksa görmezden gel
+
             # State'e değerleri kaydet
             if save_response and isinstance(response_data, dict) and response.status_code < 400:
                 for state_key, response_path in save_response.items():
