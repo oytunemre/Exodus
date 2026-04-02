@@ -271,6 +271,7 @@ public class CancelPaymentDto
 
 public class Confirm3DSecureDto
 {
+    [System.ComponentModel.DataAnnotations.Required]
     public required string AuthenticationResult { get; set; }
 }
 
