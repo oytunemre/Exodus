@@ -141,11 +141,19 @@ class ExodusAutomation:
         raw_payload = step.get("payload", {})
         save_response = step.get("save_response", {})
         skip_if_null = step.get("skip_if_state_null", None)
+        skip_if_not_null = step.get("skip_if_state_not_null", None)
 
-        # State bağımlılık kontrolü
+        # State bağımlılık kontrolü — null ise atla
         if skip_if_null and self.state.get(skip_if_null) is None:
             print(f"\n  [{step_id}]  → ATLANDI (state.{skip_if_null} = null)")
             result = {"step_id": step_id, "skipped": True, "reason": f"state.{skip_if_null} is null"}
+            self.results.append(result)
+            return result
+
+        # State bağımlılık kontrolü — null değilse atla (token zaten var)
+        if skip_if_not_null and self.state.get(skip_if_not_null) is not None:
+            print(f"\n  [{step_id}]  → ATLANDI (state.{skip_if_not_null} zaten mevcut)")
+            result = {"step_id": step_id, "skipped": True, "reason": f"state.{skip_if_not_null} already set"}
             self.results.append(result)
             return result
 

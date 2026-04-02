@@ -140,7 +140,44 @@ def fix():
 
     print(f"  {dep_fixed} adıma state bağımlılığı eklendi")
 
-    # ── 6. _sandbox_disabled state key'ini None olarak başlat ─────────────
+    # ── 6. Register payload'larında role alanını zorla ────────────────────
+    print("\n[6] Register role alanları düzeltiliyor...")
+    role_fixed = 0
+    role_map = {
+        "register_admin":    "Admin",
+        "register_seller":   "Seller",
+        "register_customer": "Customer",
+    }
+    for step in data["flow"]:
+        step_id = step.get("id", "")
+        if step_id in role_map:
+            payload = step.get("payload", {})
+            expected_role = role_map[step_id]
+            if payload.get("role") != expected_role:
+                payload["role"] = expected_role
+                step["payload"] = payload
+                role_fixed += 1
+                print(f"  {step_id}: role = {expected_role}")
+    print(f"  {role_fixed} register adımının role'ü düzeltildi")
+
+    # ── 7. Explicit login adımlarını token zaten varsa atla ───────────────
+    print("\n[7] Explicit login adımları — token varsa atlama ekleniyor...")
+    login_skip_map = {
+        "login_admin":    "adminToken",
+        "login_seller":   "sellerToken",
+        "login_customer": "customerToken",
+    }
+    login_fixed = 0
+    for step in data["flow"]:
+        step_id = step.get("id", "")
+        if step_id in login_skip_map:
+            # skip_if_state_not_null yoksa ekle
+            if "skip_if_state_not_null" not in step:
+                step["skip_if_state_not_null"] = login_skip_map[step_id]
+                login_fixed += 1
+    print(f"  {login_fixed} explicit login adımına skip_if_state_not_null eklendi")
+
+    # ── 8. _sandbox_disabled state key'ini None olarak başlat ─────────────
     # Bu key hiçbir zaman doldurulmaz → sandbox adımları her zaman atlanır
     if "_sandbox_disabled" not in data["state"]:
         data["state"]["_sandbox_disabled"] = None
