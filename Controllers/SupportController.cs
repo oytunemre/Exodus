@@ -109,7 +109,7 @@ public class SupportController : ControllerBase
                         m.Attachments,
                         m.IsSystemMessage,
                         IsFromSupport = m.SenderId != userId,
-                        SenderName = m.Sender?.Name ?? "Unknown",
+                        SenderName = m.Sender == null ? "Unknown" : m.Sender.Name,
                         m.CreatedAt
                     })
                     .ToList()
