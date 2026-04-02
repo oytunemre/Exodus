@@ -176,12 +176,12 @@ namespace Exodus.Controllers
         }
 
         /// <summary>
-        /// [Development only] Force-verify email for automation testing.
-        /// Sets EmailVerified=true for the given email without requiring a token.
+        /// [Development only] Force-verify email + fix role for automation testing.
+        /// Accepts: { "email": "...", "role": "Admin|Seller|Customer" }
         /// </summary>
         [HttpPost("dev/force-verify")]
         [AllowAnonymous]
-        public async Task<ActionResult> DevForceVerifyEmail([FromBody] EmailRequestDto dto)
+        public async Task<ActionResult> DevForceVerifyEmail([FromBody] DevForceVerifyDto dto)
         {
             if (!_env.IsDevelopment())
                 return NotFound();
@@ -195,12 +195,16 @@ namespace Exodus.Controllers
             user.EmailVerified = true;
             user.EmailVerificationToken = null;
             user.EmailVerificationTokenExpiresAt = null;
-            // Also reset lockout — repeated automation runs cause account lockout
             user.FailedLoginAttempts = 0;
             user.LockoutEndTime = null;
+
+            // Update role if provided (fixes users registered with wrong role)
+            if (dto.Role.HasValue)
+                user.Role = dto.Role.Value;
+
             await _context.SaveChangesAsync();
 
-            return Ok(new { Message = "Email verified and lockout reset" });
+            return Ok(new { Message = $"Email verified, lockout reset, role={user.Role}" });
         }
     }
 }

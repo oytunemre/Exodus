@@ -210,12 +210,16 @@ class ExodusAutomation:
             if response.status_code == 409 and "/auth/register" in resolved_path:
                 email = resolved_payload.get("email", resolved_payload.get("emailOrUsername", ""))
                 password = resolved_payload.get("password", "")
+                role = resolved_payload.get("role")  # e.g. "Admin", "Seller", "Customer"
                 print(f"  → 409 Conflict (kullanıcı zaten var), email verify + login deneniyor...")
                 try:
-                    # Step 1: Force-verify email via dev endpoint (idempotent, safe to call)
+                    # Step 1: Force-verify + fix role via dev endpoint (idempotent)
+                    verify_body = {"email": email}
+                    if role:
+                        verify_body["role"] = role
                     self.session.post(
                         f"{self.base_url}/api/auth/dev/force-verify",
-                        json={"email": email},
+                        json=verify_body,
                         headers={"Content-Type": "application/json", "Accept": "application/json"},
                         timeout=10,
                     )
@@ -258,14 +262,18 @@ class ExodusAutomation:
                 except Exception as e:
                     print(f"  ⚠ Login fallback exception: {e}")
 
-            # Başarılı register → force-verify (yeni kayıt da EmailVerified=true olsun)
+            # Başarılı register → force-verify + role fix (yeni kayıt da hazır olsun)
             if response.status_code < 400 and "/auth/register" in resolved_path:
                 email = resolved_payload.get("email", "")
+                role = resolved_payload.get("role")
                 if email:
                     try:
+                        verify_body = {"email": email}
+                        if role:
+                            verify_body["role"] = role
                         self.session.post(
                             f"{self.base_url}/api/auth/dev/force-verify",
-                            json={"email": email},
+                            json=verify_body,
                             headers={"Content-Type": "application/json"},
                             timeout=10,
                         )
