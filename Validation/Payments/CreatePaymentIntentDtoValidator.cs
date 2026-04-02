@@ -1,5 +1,4 @@
 ﻿using Exodus.Models.Dto.Payment;
-using Exodus.Models.Enums;
 using FluentValidation;
 
 namespace Exodus.Validation.Payments;
@@ -12,14 +11,7 @@ public class CreatePaymentIntentDtoValidator : AbstractValidator<CreatePaymentIn
         RuleFor(x => x.Currency).NotEmpty().Length(3);
         RuleFor(x => x.Method).IsInEnum();
 
-        // CardDetails required when paying by card or installment
-        RuleFor(x => x.CardDetails)
-            .NotNull().WithMessage("Card details are required for card payments.")
-            .When(x => x.Method == PaymentMethod.CreditCard
-                     || x.Method == PaymentMethod.DebitCard
-                     || x.Method == PaymentMethod.Installment);
-
-        // Validate nested CardDetails when present
+        // Validate nested CardDetails format only when CardDetails are provided
         When(x => x.CardDetails != null, () =>
         {
             RuleFor(x => x.CardDetails!.CardNumber)

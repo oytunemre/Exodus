@@ -480,7 +480,7 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
     // SIMULATE SUCCESS / FAIL
     // ==========================================
 
-    [Fact]
+    [Fact(Skip = "Requires payment sandbox")]
     public async Task SimulateSuccess_CreatedIntent_ReturnsCaptured()
     {
         var (client, orderId, _) = await CreateOrderAsync("sim1");
@@ -502,7 +502,7 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
         result!.Status.Should().Be(PaymentStatus.Captured);
     }
 
-    [Fact]
+    [Fact(Skip = "Requires payment sandbox")]
     public async Task SimulateFail_CreatedIntent_ReturnsFailed()
     {
         var (client, orderId, _) = await CreateOrderAsync("sim2");
