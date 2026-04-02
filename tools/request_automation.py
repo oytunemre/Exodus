@@ -151,6 +151,16 @@ class ExodusAutomation:
 
         # Path parametrelerini çöz
         resolved_path = _resolve_path_params(path, self.variables, self.state)
+
+        # Çözülemeyen path parametresi varsa adımı atla
+        import re as _re
+        if _re.search(r'\{[a-zA-Z]\w*\}', resolved_path):
+            unresolved = _re.findall(r'\{([a-zA-Z]\w*)\}', resolved_path)
+            print(f"\n  [{step_id}]  → ATLANDI (çözülemeyen path parametresi: {unresolved})")
+            result = {"step_id": step_id, "skipped": True, "reason": f"unresolved path params: {unresolved}"}
+            self.results.append(result)
+            return result
+
         url = f"{self.base_url}{resolved_path}"
 
         # Payload'ı çöz
@@ -187,6 +197,47 @@ class ExodusAutomation:
                 response_data = response.json()
             except Exception:
                 response_data = response.text
+
+            # 409 Conflict on register → login fallback
+            if response.status_code == 409 and "/auth/register" in resolved_path:
+                print(f"  → 409 Conflict (kullanıcı zaten var), login deneniyor...")
+                login_payload = {
+                    "emailOrUsername": resolved_payload.get("email", resolved_payload.get("emailOrUsername", "")),
+                    "password": resolved_payload.get("password", ""),
+                }
+                try:
+                    login_resp = self.session.post(
+                        f"{self.base_url}/api/auth/login",
+                        json=login_payload,
+                        headers={"Content-Type": "application/json", "Accept": "application/json"},
+                        timeout=30,
+                    )
+                    if login_resp.status_code < 400:
+                        login_data = login_resp.json()
+                        if save_response and isinstance(login_data, dict):
+                            for state_key, resp_path in save_response.items():
+                                value = _get_nested(login_data, resp_path)
+                                if value is not None:
+                                    self.state[state_key] = value
+                                    print(f"  → state.{state_key} = {value} (login fallback)")
+                        response_data = login_data
+                        result = {
+                            "step_id": step_id,
+                            "method": method,
+                            "url": url,
+                            "payload": resolved_payload,
+                            "status_code": login_resp.status_code,
+                            "success": True,
+                            "response": login_data,
+                            "note": "409 conflict — login fallback kullanıldı",
+                        }
+                        print(f"  {_color('✓ login fallback başarılı', '92')}")
+                        self.results.append(result)
+                        return result
+                    else:
+                        print(f"  ⚠ Login fallback da başarısız: HTTP {login_resp.status_code}")
+                except Exception as e:
+                    print(f"  ⚠ Login fallback exception: {e}")
 
             # State'e değerleri kaydet
             if save_response and isinstance(response_data, dict) and response.status_code < 400:
