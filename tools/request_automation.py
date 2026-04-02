@@ -198,14 +198,21 @@ class ExodusAutomation:
             except Exception:
                 response_data = response.text
 
-            # 409 Conflict on register → login fallback
+            # 409 Conflict on register → force-verify (dev endpoint) then login fallback
             if response.status_code == 409 and "/auth/register" in resolved_path:
-                print(f"  → 409 Conflict (kullanıcı zaten var), login deneniyor...")
-                login_payload = {
-                    "emailOrUsername": resolved_payload.get("email", resolved_payload.get("emailOrUsername", "")),
-                    "password": resolved_payload.get("password", ""),
-                }
+                email = resolved_payload.get("email", resolved_payload.get("emailOrUsername", ""))
+                password = resolved_payload.get("password", "")
+                print(f"  → 409 Conflict (kullanıcı zaten var), email verify + login deneniyor...")
                 try:
+                    # Step 1: Force-verify email via dev endpoint (idempotent, safe to call)
+                    self.session.post(
+                        f"{self.base_url}/api/auth/dev/force-verify",
+                        json={"email": email},
+                        headers={"Content-Type": "application/json", "Accept": "application/json"},
+                        timeout=10,
+                    )
+                    # Step 2: Login with the same credentials
+                    login_payload = {"emailOrUsername": email, "password": password}
                     login_resp = self.session.post(
                         f"{self.base_url}/api/auth/login",
                         json=login_payload,
@@ -229,13 +236,17 @@ class ExodusAutomation:
                             "status_code": login_resp.status_code,
                             "success": True,
                             "response": login_data,
-                            "note": "409 conflict — login fallback kullanıldı",
+                            "note": "409 conflict — force-verify + login fallback kullanıldı",
                         }
                         print(f"  {_color('✓ login fallback başarılı', '92')}")
                         self.results.append(result)
                         return result
                     else:
                         print(f"  ⚠ Login fallback da başarısız: HTTP {login_resp.status_code}")
+                        try:
+                            print(f"  ⚠ Yanıt: {login_resp.json()}")
+                        except Exception:
+                            print(f"  ⚠ Yanıt: {login_resp.text[:200]}")
                 except Exception as e:
                     print(f"  ⚠ Login fallback exception: {e}")
 

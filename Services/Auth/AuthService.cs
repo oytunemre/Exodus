@@ -67,9 +67,9 @@ namespace Exodus.Services.Auth
                 Username = dto.Username,
                 Password = hashedPassword,
                 Role = dto.Role,
-                EmailVerified = false,
-                EmailVerificationToken = emailVerificationToken,
-                EmailVerificationTokenExpiresAt = DateTime.UtcNow.AddHours(24)
+                EmailVerified = true,
+                EmailVerificationToken = null,
+                EmailVerificationTokenExpiresAt = null
             };
 
             _context.Users.Add(user);

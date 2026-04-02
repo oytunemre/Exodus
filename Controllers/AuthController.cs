@@ -18,15 +18,18 @@ namespace Exodus.Controllers
         private readonly IAuthService _authService;
         private readonly ITwoFactorService _twoFactorService;
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
         public AuthController(
             IAuthService authService,
             ITwoFactorService twoFactorService,
-            ApplicationDbContext context)
+            ApplicationDbContext context,
+            IWebHostEnvironment env)
         {
             _authService = authService;
             _twoFactorService = twoFactorService;
             _context = context;
+            _env = env;
         }
 
         /// <summary>
@@ -170,6 +173,31 @@ namespace Exodus.Controllers
         {
             await _authService.ResetPasswordAsync(dto.Token, dto.NewPassword);
             return Ok(new { Message = "Password reset successfully. You can now login with your new password." });
+        }
+
+        /// <summary>
+        /// [Development only] Force-verify email for automation testing.
+        /// Sets EmailVerified=true for the given email without requiring a token.
+        /// </summary>
+        [HttpPost("dev/force-verify")]
+        [AllowAnonymous]
+        public async Task<ActionResult> DevForceVerifyEmail([FromBody] EmailRequestDto dto)
+        {
+            if (!_env.IsDevelopment())
+                return NotFound();
+
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email.ToLower() == dto.Email.ToLower());
+
+            if (user == null)
+                return Ok(new { Message = "User not found — skipped" });
+
+            user.EmailVerified = true;
+            user.EmailVerificationToken = null;
+            user.EmailVerificationTokenExpiresAt = null;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { Message = "Email verified" });
         }
     }
 }
