@@ -225,10 +225,12 @@ class ExodusAutomation:
                 role = resolved_payload.get("role")  # e.g. "Admin", "Seller", "Customer"
                 print(f"  → 409 Conflict (kullanıcı zaten var), email verify + login deneniyor...")
                 try:
-                    # Step 1: Force-verify + fix role via dev endpoint (idempotent)
+                    # Step 1: Force-verify + fix role + reset password via dev endpoint (idempotent)
                     verify_body = {"email": email}
                     if role:
                         verify_body["role"] = role
+                    if password:
+                        verify_body["password"] = password
                     self.session.post(
                         f"{self.base_url}/api/auth/dev/force-verify",
                         json=verify_body,
@@ -316,6 +318,9 @@ class ExodusAutomation:
                         verify_body = {"email": email}
                         if role:
                             verify_body["role"] = role
+                        reg_password = resolved_payload.get("password", "")
+                        if reg_password:
+                            verify_body["password"] = reg_password
                         self.session.post(
                             f"{self.base_url}/api/auth/dev/force-verify",
                             json=verify_body,

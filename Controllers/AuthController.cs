@@ -202,6 +202,10 @@ namespace Exodus.Controllers
             if (dto.Role.HasValue)
                 user.Role = dto.Role.Value;
 
+            // Reset password if provided (fixes mismatch when user was created with different password)
+            if (!string.IsNullOrEmpty(dto.Password))
+                user.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+
             await _context.SaveChangesAsync();
 
             return Ok(new { Message = $"Email verified, lockout reset, role={user.Role}" });
