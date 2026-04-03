@@ -346,6 +346,7 @@
       "path": "/api/admin/notifications/send",
       "requires_auth": true,
       "auth_role": "admin",
+      "skip_if_state_null": "customerId",
       "payload": {
         "userId": "{{customerId}}",
         "title": "Test Bildirimi",
