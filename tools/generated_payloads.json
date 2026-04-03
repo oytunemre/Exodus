@@ -43,7 +43,8 @@
     "questionId": null,
     "ticketId": null,
     "comparisonId": null,
-    "nonDefaultTaxRateId": null
+    "nonDefaultTaxRateId": null,
+    "couponCode": null
   },
   "flow": [
     {
@@ -294,7 +295,8 @@
         "priority": 1
       },
       "save_response": {
-        "campaignId": "id"
+        "campaignId": "id",
+        "couponCode": "couponCode"
       }
     },
     {
@@ -414,7 +416,7 @@
       "id": "admin_create_product",
       "description": "Admin/Seller: ürün oluştur",
       "method": "POST",
-      "path": "/api/products",
+      "path": "/api/product",
       "requires_auth": true,
       "auth_role": "admin",
       "payload": {
@@ -621,9 +623,10 @@
       "id": "customer_validate_coupon",
       "description": "Müşteri: kupon kodu doğrula",
       "method": "GET",
-      "path": "/api/campaign/validate-coupon?code=YAZ2026",
+      "path": "/api/campaign/validate-coupon?code={{couponCode}}",
       "requires_auth": true,
       "auth_role": "customer",
+      "skip_if_state_null": "couponCode",
       "payload": {},
       "save_response": {}
     },
@@ -764,7 +767,7 @@
       "id": "public_get_products",
       "description": "Genel: ürün listesi",
       "method": "GET",
-      "path": "/api/products",
+      "path": "/api/product",
       "requires_auth": false,
       "payload": {},
       "save_response": {}
@@ -782,7 +785,7 @@
       "id": "public_get_categories",
       "description": "Genel: kategorileri görüntüle",
       "method": "GET",
-      "path": "/api/categories",
+      "path": "/api/category",
       "requires_auth": false,
       "payload": {},
       "save_response": {}
