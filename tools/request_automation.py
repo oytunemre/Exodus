@@ -309,6 +309,107 @@ class ExodusAutomation:
                     except Exception as e:
                         print(f"  ⚠ Product 409 fallback exception: {e}")
 
+            # 409 on brand creation → find existing brand by name and save ID
+            if response.status_code == 409 and "/brands" in resolved_path and save_response:
+                brand_name = resolved_payload.get("name", "")
+                if brand_name:
+                    try:
+                        brands_resp = self.session.get(
+                            f"{self.base_url}/api/admin/brands",
+                            headers={"Accept": "application/json", "Authorization": headers.get("Authorization", "")},
+                            timeout=10,
+                        )
+                        if brands_resp.status_code == 200:
+                            brands_data = brands_resp.json()
+                            brands_list = brands_data if isinstance(brands_data, list) else brands_data.get("items", brands_data.get("data", []))
+                            match = next((b for b in brands_list if b.get("name") == brand_name), None)
+                            if match:
+                                for state_key in save_response:
+                                    self.state[state_key] = match.get("id")
+                                    print(f"  → state.{state_key} = {match.get('id')} (409 brand fallback)")
+                                result = {
+                                    "step_id": step_id, "method": method, "url": url,
+                                    "payload": resolved_payload, "status_code": 200,
+                                    "success": True, "response": match,
+                                    "note": "409 conflict — existing brand ID saved",
+                                }
+                                print(f"  {_color('✓ brand fallback başarılı', '92')}")
+                                self.results.append(result)
+                                return result
+                    except Exception as e:
+                        print(f"  ⚠ Brand 409 fallback exception: {e}")
+
+            # 400 on campaign creation (coupon code already exists) → find existing campaign
+            if response.status_code == 400 and "/campaigns" in resolved_path and method == "POST" and save_response:
+                resp_msg = ""
+                if isinstance(response_data, dict):
+                    resp_msg = (response_data.get("message") or response_data.get("title") or "").lower()
+                if "coupon" in resp_msg or "already" in resp_msg or "exist" in resp_msg:
+                    coupon_code = resolved_payload.get("couponCode", "")
+                    campaign_name = resolved_payload.get("name", "")
+                    try:
+                        campaigns_resp = self.session.get(
+                            f"{self.base_url}/api/admin/campaigns",
+                            headers={"Accept": "application/json", "Authorization": headers.get("Authorization", "")},
+                            timeout=10,
+                        )
+                        if campaigns_resp.status_code == 200:
+                            campaigns_data = campaigns_resp.json()
+                            campaigns_list = campaigns_data if isinstance(campaigns_data, list) else campaigns_data.get("items", campaigns_data.get("data", []))
+                            match = next(
+                                (c for c in campaigns_list if (coupon_code and c.get("couponCode") == coupon_code) or c.get("name") == campaign_name),
+                                None
+                            )
+                            if match:
+                                for state_key in save_response:
+                                    self.state[state_key] = match.get("id")
+                                    print(f"  → state.{state_key} = {match.get('id')} (400 campaign fallback)")
+                                result = {
+                                    "step_id": step_id, "method": method, "url": url,
+                                    "payload": resolved_payload, "status_code": 200,
+                                    "success": True, "response": match,
+                                    "note": "400 conflict — existing campaign ID saved",
+                                }
+                                print(f"  {_color('✓ campaign fallback başarılı', '92')}")
+                                self.results.append(result)
+                                return result
+                    except Exception as e:
+                        print(f"  ⚠ Campaign 400 fallback exception: {e}")
+
+            # 400 on page creation (slug already exists) → treat as idempotent success
+            if response.status_code == 400 and "/content/pages" in resolved_path and method == "POST":
+                resp_msg = ""
+                if isinstance(response_data, dict):
+                    resp_msg = (response_data.get("message") or response_data.get("title") or "").lower()
+                if "slug" in resp_msg or "already" in resp_msg or "exist" in resp_msg:
+                    print(f"  → 400 Slug conflict, sayfa zaten mevcut — idempotent olarak geçildi")
+                    result = {
+                        "step_id": step_id, "method": method, "url": url,
+                        "payload": resolved_payload, "status_code": 200,
+                        "success": True, "response": response_data,
+                        "note": "400 slug conflict — treated as idempotent success",
+                    }
+                    print(f"  {_color('✓ page idempotent', '92')}")
+                    self.results.append(result)
+                    return result
+
+            # 400 on setting creation (key already exists) → treat as idempotent success
+            if response.status_code == 400 and "/settings" in resolved_path and method == "POST":
+                resp_msg = ""
+                if isinstance(response_data, dict):
+                    resp_msg = (response_data.get("message") or response_data.get("title") or "").lower()
+                if "already" in resp_msg or "exist" in resp_msg:
+                    print(f"  → 400 Setting conflict, ayar zaten mevcut — idempotent olarak geçildi")
+                    result = {
+                        "step_id": step_id, "method": method, "url": url,
+                        "payload": resolved_payload, "status_code": 200,
+                        "success": True, "response": response_data,
+                        "note": "400 key conflict — treated as idempotent success",
+                    }
+                    print(f"  {_color('✓ setting idempotent', '92')}")
+                    self.results.append(result)
+                    return result
+
             # Başarılı register → force-verify + role fix (yeni kayıt da hazır olsun)
             if response.status_code < 400 and "/auth/register" in resolved_path:
                 email = resolved_payload.get("email", "")
