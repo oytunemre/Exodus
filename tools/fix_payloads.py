@@ -140,6 +140,84 @@ def fix():
 
     print(f"  {dep_fixed} adıma state bağımlılığı eklendi")
 
+    # ── 6a. Login step path'lerini zorla (/api/auth/login) ─────────────────
+    print("\n[6a] Login step path'leri düzeltiliyor...")
+    login_path_fixed = 0
+    for step in data["flow"]:
+        if step.get("id") in ("login_admin", "login_seller", "login_customer"):
+            if step.get("path") != "/api/auth/login":
+                step["path"] = "/api/auth/login"
+                step["method"] = "POST"
+                login_path_fixed += 1
+    print(f"  {login_path_fixed} login step path'i düzeltildi")
+
+    # ── 6b. Register/login save_response: userId kaydet ────────────────────
+    print("\n[6b] save_response userId kaydı ekleniyor...")
+    id_save_map = {
+        "register_admin":    ("adminToken",    "token", "adminId",    "userId"),
+        "login_admin":       ("adminToken",    "token", "adminId",    "userId"),
+        "register_seller":   ("sellerToken",   "token", "sellerId",   "userId"),
+        "login_seller":      ("sellerToken",   "token", "sellerId",   "userId"),
+        "register_customer": ("customerToken", "token", "customerId", "userId"),
+        "login_customer":    ("customerToken", "token", "customerId", "userId"),
+    }
+    id_save_fixed = 0
+    for step in data["flow"]:
+        step_id_val = step.get("id", "")
+        if step_id_val in id_save_map:
+            tok_key, tok_path, id_key, id_path = id_save_map[step_id_val]
+            sr = step.get("save_response", {})
+            changed = False
+            if tok_key not in sr:
+                sr[tok_key] = tok_path; changed = True
+            if id_key not in sr:
+                sr[id_key] = id_path; changed = True
+            if changed:
+                step["save_response"] = sr; id_save_fixed += 1
+    print(f"  {id_save_fixed} adıma userId/token save_response eklendi")
+
+    # ── 6c. admin_send_notification payload fix ────────────────────────────
+    print("\n[6c] admin_send_notification payload düzeltiliyor...")
+    for step in data["flow"]:
+        if step.get("id") == "admin_send_notification":
+            payload = step.get("payload", {})
+            if not payload.get("title"):
+                payload["title"] = "Test Bildirimi"
+            if not payload.get("message"):
+                payload["message"] = "Bu bir test bildirimidir."
+            if "userId" not in payload or not payload["userId"]:
+                payload["userId"] = "{{adminId}}"
+            step["payload"] = payload
+            print("  admin_send_notification: title/message/userId eklendi")
+
+    # ── 6d. admin_create_home_widget payload fix ───────────────────────────
+    print("\n[6d] admin_create_home_widget payload düzeltiliyor...")
+    VALID_WIDGET_TYPES = {
+        "Banner", "BannerSlider", "ProductSlider", "ProductGrid",
+        "CategorySlider", "BrandSlider", "Countdown", "Html",
+        "Newsletter", "Testimonials", "FeaturedSellers"
+    }
+    VALID_WIDGET_POSITIONS = {"Top", "Main", "Sidebar", "Bottom", "Footer"}
+    for step in data["flow"]:
+        if step.get("id") == "admin_create_home_widget":
+            payload = step.get("payload", {})
+            if not payload.get("name"):
+                payload["name"] = "Test Widget"
+            if payload.get("type", "") not in VALID_WIDGET_TYPES:
+                payload["type"] = "ProductSlider"
+            if payload.get("position", "") not in VALID_WIDGET_POSITIONS:
+                payload["position"] = "Main"
+            step["payload"] = payload
+            print("  admin_create_home_widget: type/position/name düzeltildi")
+
+    # ── 6e. admin_delete_tax_rate → skip (default silinemez) ──────────────
+    print("\n[6e] admin_delete_tax_rate düzeltiliyor...")
+    for step in data["flow"]:
+        if step.get("id") == "admin_delete_tax_rate":
+            if "skip_if_state_null" not in step:
+                step["skip_if_state_null"] = "nonDefaultTaxRateId"
+                print("  admin_delete_tax_rate: skip_if_state_null eklendi")
+
     # ── 6. Register payload'larında role alanını zorla ────────────────────
     print("\n[6] Register role alanları düzeltiliyor...")
     role_fixed = 0

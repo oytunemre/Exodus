@@ -36,15 +36,24 @@ RESULTS_FILE = Path(__file__).parent / "automation_results.json"
 def _resolve(value: Any, variables: dict, state: dict) -> Any:
     """{{placeholder}} referanslarını variables + state ile değiştirir."""
     if isinstance(value, str):
-        # Tüm {{...}} referanslarını çöz
         import re
+        # Whole string is a single reference → preserve original type (int, float, etc.)
+        single = re.fullmatch(r'\{\{(\w+)\}\}', value)
+        if single:
+            key = single.group(1)
+            if key in state and state[key] is not None:
+                return state[key]
+            if key in variables and variables[key] is not None:
+                return variables[key]
+            return value  # Leave unresolved
+        # Multiple / mixed references → string substitution
         def replace_ref(m: re.Match) -> str:
             key = m.group(1)
             if key in state and state[key] is not None:
                 return str(state[key])
             if key in variables:
                 return str(variables[key])
-            return m.group(0)  # Çözülemediyse olduğu gibi bırak
+            return m.group(0)
         return re.sub(r'\{\{(\w+)\}\}', replace_ref, value)
 
     if isinstance(value, dict):
@@ -57,12 +66,15 @@ def _resolve(value: Any, variables: dict, state: dict) -> Any:
 
 
 def _get_nested(data: Any, path: str) -> Optional[Any]:
-    """'a.b.c' formatındaki path ile iç içe dict'ten değer çeker."""
+    """'a.b.c' veya 'items.0.id' formatındaki path ile değer çeker (dizi indeksi desteklenir)."""
     keys = path.split(".")
     current = data
     for key in keys:
         if isinstance(current, dict):
             current = current.get(key)
+        elif isinstance(current, list) and key.isdigit():
+            idx = int(key)
+            current = current[idx] if idx < len(current) else None
         else:
             return None
         if current is None:
@@ -261,6 +273,39 @@ class ExodusAutomation:
                             print(f"  ⚠ Yanıt: {login_resp.text[:200]}")
                 except Exception as e:
                     print(f"  ⚠ Login fallback exception: {e}")
+
+            # 409 on product creation → find existing product by name and save ID
+            if response.status_code == 409 and "/products" in resolved_path and save_response:
+                product_name = resolved_payload.get("productName", "")
+                if product_name:
+                    try:
+                        products_resp = self.session.get(
+                            f"{self.base_url}/api/products",
+                            headers={"Accept": "application/json"},
+                            timeout=10,
+                        )
+                        if products_resp.status_code == 200:
+                            products_list = products_resp.json()
+                            if isinstance(products_list, list):
+                                match = next(
+                                    (p for p in products_list if p.get("productName") == product_name),
+                                    None
+                                )
+                                if match:
+                                    for state_key in save_response:
+                                        self.state[state_key] = match.get("id")
+                                        print(f"  → state.{state_key} = {match.get('id')} (409 product fallback)")
+                                    result = {
+                                        "step_id": step_id, "method": method, "url": url,
+                                        "payload": resolved_payload, "status_code": 200,
+                                        "success": True, "response": match,
+                                        "note": "409 conflict — existing product ID saved",
+                                    }
+                                    print(f"  {_color('✓ product fallback başarılı', '92')}")
+                                    self.results.append(result)
+                                    return result
+                    except Exception as e:
+                        print(f"  ⚠ Product 409 fallback exception: {e}")
 
             # Başarılı register → force-verify + role fix (yeni kayıt da hazır olsun)
             if response.status_code < 400 and "/auth/register" in resolved_path:
