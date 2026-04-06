@@ -1,5 +1,6 @@
 using Exodus.Data;
 using Exodus.Models.Entities;
+using Exodus.Services.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace Exodus.Services.SellerReviews;
@@ -23,7 +24,7 @@ public class SellerReviewService : ISellerReviewService
             .FirstOrDefaultAsync(r => r.UserId == userId && r.SellerId == dto.SellerId && r.OrderId == dto.OrderId, ct);
 
         if (existingReview != null)
-            throw new InvalidOperationException("Bu siparis icin zaten bir degerlendirme yapilmis");
+            throw new BadRequestException("Bu siparis icin zaten bir degerlendirme yapilmis");
 
         var review = new SellerReview
         {

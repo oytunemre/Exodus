@@ -343,7 +343,7 @@ class ExodusAutomation:
             if response.status_code == 400 and "/campaigns" in resolved_path and method == "POST" and save_response:
                 resp_msg = ""
                 if isinstance(response_data, dict):
-                    resp_msg = (response_data.get("message") or response_data.get("title") or "").lower()
+                    resp_msg = (response_data.get("detail") or response_data.get("message") or response_data.get("title") or "").lower()
                 if "coupon" in resp_msg or "already" in resp_msg or "exist" in resp_msg:
                     coupon_code = resolved_payload.get("couponCode", "")
                     campaign_name = resolved_payload.get("name", "")
@@ -361,9 +361,14 @@ class ExodusAutomation:
                                 None
                             )
                             if match:
-                                for state_key in save_response:
-                                    self.state[state_key] = match.get("id")
-                                    print(f"  → state.{state_key} = {match.get('id')} (400 campaign fallback)")
+                                # Save campaignId and couponCode from the matched campaign
+                                for state_key, resp_path in save_response.items():
+                                    if state_key == "campaignId":
+                                        self.state[state_key] = match.get("id")
+                                        print(f"  → state.{state_key} = {match.get('id')} (400 campaign fallback)")
+                                    elif state_key == "couponCode":
+                                        self.state[state_key] = match.get("couponCode")
+                                        print(f"  → state.{state_key} = {match.get('couponCode')} (400 campaign fallback)")
                                 result = {
                                     "step_id": step_id, "method": method, "url": url,
                                     "payload": resolved_payload, "status_code": 200,
@@ -380,7 +385,7 @@ class ExodusAutomation:
             if response.status_code == 400 and "/content/pages" in resolved_path and method == "POST":
                 resp_msg = ""
                 if isinstance(response_data, dict):
-                    resp_msg = (response_data.get("message") or response_data.get("title") or "").lower()
+                    resp_msg = (response_data.get("detail") or response_data.get("message") or response_data.get("title") or "").lower()
                 if "slug" in resp_msg or "already" in resp_msg or "exist" in resp_msg:
                     print(f"  → 400 Slug conflict, sayfa zaten mevcut — idempotent olarak geçildi")
                     result = {
@@ -397,7 +402,7 @@ class ExodusAutomation:
             if response.status_code == 400 and "/settings" in resolved_path and method == "POST":
                 resp_msg = ""
                 if isinstance(response_data, dict):
-                    resp_msg = (response_data.get("message") or response_data.get("title") or "").lower()
+                    resp_msg = (response_data.get("detail") or response_data.get("message") or response_data.get("title") or "").lower()
                 if "already" in resp_msg or "exist" in resp_msg:
                     print(f"  → 400 Setting conflict, ayar zaten mevcut — idempotent olarak geçildi")
                     result = {
@@ -543,7 +548,7 @@ class ExodusAutomation:
                     sc = r.get("status_code", 0)
                     print(f"    • [{r['step_id']}]  HTTP {sc}")
                     if isinstance(r.get("response"), dict):
-                        msg = r["response"].get("message") or r["response"].get("title", "")
+                        msg = r["response"].get("detail") or r["response"].get("message") or r["response"].get("title", "")
                         if msg:
                             print(f"       {msg}")
 
