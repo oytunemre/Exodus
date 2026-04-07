@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Exodus.Models.Dto.CartDto;
 using Exodus.Services.Carts;
+using Exodus.Services.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,7 +28,7 @@ public class CartController : ControllerBase
             ?? User.FindFirst("sub")?.Value;
 
         if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
-            throw new UnauthorizedAccessException("User ID not found in token");
+            throw new UnauthorizedException("User ID not found in token");
 
         return userId;
     }
@@ -39,7 +40,7 @@ public class CartController : ControllerBase
     {
         var currentUserId = GetCurrentUserId();
         if (currentUserId != requestedUserId)
-            throw new UnauthorizedAccessException("You do not have access to this cart");
+            throw new UnauthorizedException("You do not have access to this cart");
     }
 
     [HttpGet("{userId:int}")]
@@ -63,7 +64,7 @@ public class CartController : ControllerBase
     {
         var currentUserId = GetCurrentUserId();
         if (dto.UserId != currentUserId)
-            throw new UnauthorizedAccessException("You can only add items to your own cart");
+            throw new UnauthorizedException("You can only add items to your own cart");
 
         var cart = await _cartService.AddToCartAsync(dto);
         return Ok(cart);

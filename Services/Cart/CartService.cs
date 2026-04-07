@@ -1,6 +1,7 @@
 ﻿using Exodus.Data;
 using Exodus.Models.Dto.CartDto;
 using Exodus.Models.Entities;
+using Exodus.Services.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace Exodus.Services.Carts;
@@ -37,7 +38,7 @@ public class CartService : ICartService
     public async Task<CartResponseDto> AddToCartAsync(AddToCartDto dto)
     {
         if (dto.Quantity <= 0)
-            throw new InvalidOperationException("Quantity 0 veya negatif olamaz.");
+            throw new BadRequestException("Quantity 0 veya negatif olamaz.");
 
         var strategy = _db.Database.CreateExecutionStrategy();
 
@@ -51,9 +52,9 @@ public class CartService : ICartService
                     .Include(l => l.Product)
                     .FirstOrDefaultAsync(l => l.Id == dto.ListingId);
 
-                if (listing is null) throw new KeyNotFoundException("Listing bulunamadı.");
-                if (!listing.IsActive) throw new InvalidOperationException("Listing aktif değil.");
-                if (listing.StockQuantity < dto.Quantity) throw new InvalidOperationException("Yetersiz stok.");
+                if (listing is null) throw new NotFoundException("Listing bulunamadı.");
+                if (!listing.IsActive) throw new BadRequestException("Listing aktif değil.");
+                if (listing.StockQuantity < dto.Quantity) throw new BadRequestException("Yetersiz stok.");
 
                 var cart = await GetOrCreateCartEntityAsync(dto.UserId);
 
@@ -64,7 +65,7 @@ public class CartService : ICartService
                 {
                     var newQty = existingItem.Quantity + dto.Quantity;
                     if (listing.StockQuantity < newQty)
-                        throw new InvalidOperationException("Sepetteki toplam adet stoğu aşıyor.");
+                        throw new BadRequestException("Sepetteki toplam adet stoğu aşıyor.");
 
                     existingItem.Quantity = newQty;
                 }
@@ -90,7 +91,7 @@ public class CartService : ICartService
 
                     var newQty = item.Quantity + dto.Quantity;
                     if (listing.StockQuantity < newQty)
-                        throw new InvalidOperationException("Sepetteki toplam adet stoğu aşıyor.");
+                        throw new BadRequestException("Sepetteki toplam adet stoğu aşıyor.");
 
                     item.Quantity = newQty;
                     await _db.SaveChangesAsync();
@@ -118,7 +119,7 @@ public class CartService : ICartService
             .FirstOrDefaultAsync(i => i.Id == cartItemId && i.Cart.UserId == userId);
 
         if (item is null)
-            throw new KeyNotFoundException("CartItem bulunamadı.");
+            throw new NotFoundException("CartItem bulunamadı.");
 
         if (quantity <= 0)
         {
@@ -132,9 +133,9 @@ public class CartService : ICartService
         }
 
         var listing = await _db.Listings.FirstOrDefaultAsync(l => l.Id == item.ListingId);
-        if (listing is null) throw new KeyNotFoundException("Listing bulunamadı.");
-        if (!listing.IsActive) throw new InvalidOperationException("Listing aktif değil.");
-        if (listing.StockQuantity < quantity) throw new InvalidOperationException("Yetersiz stok.");
+        if (listing is null) throw new NotFoundException("Listing bulunamadı.");
+        if (!listing.IsActive) throw new BadRequestException("Listing aktif değil.");
+        if (listing.StockQuantity < quantity) throw new BadRequestException("Yetersiz stok.");
 
         item.Quantity = quantity;
 
@@ -153,7 +154,7 @@ public class CartService : ICartService
             .FirstOrDefaultAsync(i => i.Id == cartItemId && i.Cart.UserId == userId);
 
         if (item is null)
-            throw new KeyNotFoundException("CartItem bulunamadı.");
+            throw new NotFoundException("CartItem bulunamadı.");
 
         var cartId = item.CartId;
 
@@ -176,7 +177,7 @@ public class CartService : ICartService
 
         var userExists = await _db.Users.AnyAsync(u => u.Id == userId);
         if (!userExists)
-            throw new KeyNotFoundException("User bulunamadı.");
+            throw new NotFoundException("User bulunamadı.");
 
         cart = new Cart { UserId = userId };
 

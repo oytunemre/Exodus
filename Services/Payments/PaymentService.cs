@@ -492,7 +492,7 @@ public class PaymentService : IPaymentService
     public async Task<IyzicoPaymentResponseDto> ProcessWithGatewayAsync(ProcessGatewayPaymentDto dto, CancellationToken ct = default)
     {
         if (_paymentGateway == null)
-            throw new InvalidOperationException("Payment gateway is not configured");
+            throw new BadRequestException("Payment gateway is not configured");
 
         var order = await _db.Orders
             .Include(o => o.Buyer)
@@ -582,7 +582,7 @@ public class PaymentService : IPaymentService
     public async Task<Iyzico3DSResponseDto> Initialize3DSPaymentAsync(ProcessGatewayPaymentDto dto, CancellationToken ct = default)
     {
         if (_paymentGateway == null)
-            throw new InvalidOperationException("Payment gateway is not configured");
+            throw new BadRequestException("Payment gateway is not configured");
 
         var order = await _db.Orders
             .Include(o => o.Buyer)
@@ -644,7 +644,7 @@ public class PaymentService : IPaymentService
     public async Task<IyzicoPaymentResponseDto> Complete3DSPaymentAsync(string paymentToken, CancellationToken ct = default)
     {
         if (_paymentGateway == null)
-            throw new InvalidOperationException("Payment gateway is not configured");
+            throw new BadRequestException("Payment gateway is not configured");
 
         var result = await _paymentGateway.Complete3DSPaymentAsync(paymentToken, ct);
 
@@ -722,7 +722,7 @@ public class PaymentService : IPaymentService
     public async Task<BinCheckResponseDto> CheckBinAsync(string binNumber, CancellationToken ct = default)
     {
         if (_paymentGateway == null)
-            throw new InvalidOperationException("Payment gateway is not configured");
+            throw new BadRequestException("Payment gateway is not configured");
 
         var result = await _paymentGateway.CheckBinAsync(binNumber, ct);
 
@@ -744,7 +744,7 @@ public class PaymentService : IPaymentService
     public async Task<InstallmentResponseDto> GetInstallmentOptionsAsync(string binNumber, decimal price, CancellationToken ct = default)
     {
         if (_paymentGateway == null)
-            throw new InvalidOperationException("Payment gateway is not configured");
+            throw new BadRequestException("Payment gateway is not configured");
 
         var result = await _paymentGateway.GetInstallmentOptionsAsync(binNumber, price, ct);
 

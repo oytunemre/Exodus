@@ -123,7 +123,7 @@ namespace Exodus.Services.Orders
                             {
                                 ListingId = listing.Id,
                                 ProductId = listing.ProductId,
-                                ProductName = listing.Product.ProductName,
+                                ProductName = listing.Product?.ProductName ?? string.Empty,
                                 UnitPrice = unitPrice,
                                 Quantity = cartItem.Quantity,
                                 LineTotal = lineTotal
