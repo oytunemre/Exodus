@@ -6,6 +6,7 @@ using Exodus.Models.Enums;
 using Exodus.Services.Common;
 using Exodus.Services.Notifications;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Exodus.Services.Orders
 {
@@ -13,11 +14,13 @@ namespace Exodus.Services.Orders
     {
         private readonly ApplicationDbContext _db;
         private readonly INotificationService _notificationService;
+        private readonly ILogger<OrderService> _logger;
 
-        public OrderService(ApplicationDbContext db, INotificationService notificationService)
+        public OrderService(ApplicationDbContext db, INotificationService notificationService, ILogger<OrderService> logger)
         {
             _db = db;
             _notificationService = notificationService;
+            _logger = logger;
         }
 
         public async Task<OrderDetailResponseDto> CheckoutAsync(int userId, CreateOrderDto dto)
@@ -169,9 +172,13 @@ namespace Exodus.Services.Orders
 
                     return await GetByIdAsync(userId, order.Id);
                 }
-                catch
+                catch (Exception ex)
                 {
                     await tx.RollbackAsync();
+                    _logger.LogError(ex,
+                        "CheckoutAsync failed. UserId={UserId}, InnerException={InnerMessage}",
+                        userId,
+                        ex.InnerException?.Message ?? "none");
                     throw;
                 }
             });
