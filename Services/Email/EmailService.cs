@@ -79,6 +79,25 @@ namespace Exodus.Services.Email
             await SendEmailAsync(email, subject, body);
         }
 
+        public async Task SendPaymentSuccessAsync(string email, int orderId, decimal amount, string currency)
+        {
+            var subject = "Payment Successful - Exodus";
+            var body = $@"
+                <h2>Payment Confirmed!</h2>
+                <p>Your payment has been processed successfully.</p>
+                <table style='border-collapse:collapse; margin:16px 0;'>
+                    <tr><td style='padding:8px; border:1px solid #ddd;'><strong>Order No</strong></td><td style='padding:8px; border:1px solid #ddd;'>#{orderId}</td></tr>
+                    <tr><td style='padding:8px; border:1px solid #ddd;'><strong>Amount</strong></td><td style='padding:8px; border:1px solid #ddd;'>{amount:N2} {currency}</td></tr>
+                    <tr><td style='padding:8px; border:1px solid #ddd;'><strong>Date</strong></td><td style='padding:8px; border:1px solid #ddd;'>{DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC</td></tr>
+                </table>
+                <p>You can track your order from your account.</p>
+                <br/>
+                <p>Thank you for shopping with us!</p>
+            ";
+
+            await SendEmailAsync(email, subject, body);
+        }
+
         private async Task SendEmailAsync(string to, string subject, string htmlBody)
         {
             if (_env.IsDevelopment())

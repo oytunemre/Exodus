@@ -5,5 +5,6 @@ namespace Exodus.Services.Email
         Task SendEmailVerificationAsync(string email, string token);
         Task SendPasswordResetAsync(string email, string token);
         Task SendAccountLockedAsync(string email, DateTime lockoutEndTime);
+        Task SendPaymentSuccessAsync(string email, int orderId, decimal amount, string currency);
     }
 }

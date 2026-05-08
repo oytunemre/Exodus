@@ -1,7 +1,9 @@
 using Exodus.Data;
+using Exodus.Infrastructure.Messaging;
 using Exodus.Models.Dto.Payment;
 using Exodus.Models.Entities;
 using Exodus.Models.Enums;
+using Exodus.Models.Events;
 using Exodus.Services.Common;
 using Exodus.Services.Notifications;
 using Exodus.Services.PaymentGateway;
@@ -14,17 +16,20 @@ public class PaymentService : IPaymentService
 {
     private readonly ApplicationDbContext _db;
     private readonly INotificationService _notificationService;
+    private readonly IRabbitMQPublisher _rabbitMQPublisher;
     private readonly IPaymentGateway? _paymentGateway;
     private readonly ILogger<PaymentService> _logger;
 
     public PaymentService(
         ApplicationDbContext db,
         INotificationService notificationService,
+        IRabbitMQPublisher rabbitMQPublisher,
         ILogger<PaymentService> logger,
         IPaymentGateway? paymentGateway = null)
     {
         _db = db;
         _notificationService = notificationService;
+        _rabbitMQPublisher = rabbitMQPublisher;
         _logger = logger;
         _paymentGateway = paymentGateway;
     }
@@ -147,8 +152,11 @@ public class PaymentService : IPaymentService
         // Update order status
         await UpdateOrderPaymentStatusAsync(intent.OrderId, true, ct);
 
-        // Send notification
-        var order = await _db.Orders.FindAsync(new object[] { intent.OrderId }, ct);
+        // Send notification + publish to RabbitMQ
+        var order = await _db.Orders
+            .Include(o => o.Buyer)
+            .FirstOrDefaultAsync(o => o.Id == intent.OrderId, ct);
+
         if (order != null)
         {
             await _notificationService.SendPaymentUpdateAsync(
@@ -157,6 +165,15 @@ public class PaymentService : IPaymentService
                 "Payment Successful",
                 $"Your payment of {intent.Amount:N2} {intent.Currency} has been processed successfully."
             );
+
+            await _rabbitMQPublisher.PublishPaymentSuccessAsync(new PaymentSuccessEvent
+            {
+                OrderId = order.Id,
+                UserId = order.BuyerId,
+                UserEmail = order.Buyer?.Email ?? string.Empty,
+                Amount = intent.Amount,
+                Currency = intent.Currency
+            }, ct);
         }
 
         return Map(intent);

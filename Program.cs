@@ -34,6 +34,7 @@ using Exodus.Services.RecentlyViewedProducts;
 using Exodus.Services.SellerReviews;
 using Exodus.Services.Loyalty;
 using Exodus.Services.Comparison;
+using Exodus.Infrastructure.Messaging;
 using Exodus.Models.Dto;
 using System.Threading.RateLimiting;
 
@@ -239,6 +240,11 @@ builder.Services.AddScoped<ILoyaltyService, LoyaltyService>();
 
 // Product Comparison Service
 builder.Services.AddScoped<IProductComparisonService, ProductComparisonService>();
+
+// RabbitMQ Messaging
+builder.Services.Configure<RabbitMQSettings>(builder.Configuration.GetSection("RabbitMQ"));
+builder.Services.AddSingleton<IRabbitMQPublisher, RabbitMQPublisher>();
+builder.Services.AddHostedService<PaymentSuccessConsumer>();
 
 // --------------------
 // BUILD
