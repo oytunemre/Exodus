@@ -158,7 +158,16 @@ namespace Exodus.Services.Orders
                         UserType = "Customer"
                     });
 
-                    await _db.SaveChangesAsync();
+                    try
+                    {
+                        await _db.SaveChangesAsync();
+                    }
+                    catch (DbUpdateConcurrencyException)
+                    {
+                        // Another checkout changed the stock in the meantime
+                        throw new ConflictException("Stok bu sırada değişti. Lütfen sepetinizi kontrol edip tekrar deneyin.");
+                    }
+
                     await tx.CommitAsync();
 
                     // Send notification
@@ -348,7 +357,29 @@ namespace Exodus.Services.Orders
             if (order.Status != OrderStatus.Delivered && order.Status != OrderStatus.Completed)
                 throw new BadRequestException("Sadece teslim edilmiş siparişler için iade talebinde bulunabilirsiniz.");
 
-            var refundAmount = dto.Amount ?? order.TotalAmount;
+            if (dto.SellerOrderId.HasValue)
+            {
+                var belongsToOrder = await _db.SellerOrders
+                    .AnyAsync(so => so.Id == dto.SellerOrderId.Value && so.OrderId == orderId);
+                if (!belongsToOrder)
+                    throw new BadRequestException("Satıcı siparişi bu siparişe ait değil.");
+            }
+
+            if (dto.Amount.HasValue && dto.Amount.Value <= 0)
+                throw new BadRequestException("İade tutarı sıfırdan büyük olmalıdır.");
+
+            var pendingOrApprovedTotal = await _db.Refunds
+                .Where(r => r.OrderId == orderId && r.Status != RefundStatus.Rejected)
+                .SumAsync(r => r.Amount);
+
+            var remainingAmount = order.TotalAmount - pendingOrApprovedTotal;
+            if (remainingAmount <= 0)
+                throw new BadRequestException("Bu sipariş için iade edilebilecek tutar kalmadı.");
+
+            var refundAmount = dto.Amount ?? remainingAmount;
+
+            if (refundAmount > remainingAmount)
+                throw new BadRequestException($"İade tutarı kalan tutarı aşamaz. Kalan: {remainingAmount}");
 
             var refund = new Refund
             {
@@ -356,7 +387,7 @@ namespace Exodus.Services.Orders
                 OrderId = orderId,
                 SellerOrderId = dto.SellerOrderId,
                 Status = RefundStatus.Pending,
-                Type = dto.Amount.HasValue && dto.Amount < order.TotalAmount ? RefundType.Partial : RefundType.Full,
+                Type = refundAmount < order.TotalAmount ? RefundType.Partial : RefundType.Full,
                 Reason = dto.Reason,
                 Description = dto.Description,
                 Amount = refundAmount,
@@ -491,7 +522,54 @@ namespace Exodus.Services.Orders
                 throw new NotFoundException("Satıcı siparişi bulunamadı.");
 
             sellerOrder.Status = MapOrderStatusToSellerStatus(newStatus);
+
+            await SyncOrderStatusWithSellerOrdersAsync(sellerOrder.OrderId);
+
             await _db.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Derives the parent order status from its seller orders: the order only moves forward
+        /// once every seller order reached that stage.
+        /// </summary>
+        private async Task SyncOrderStatusWithSellerOrdersAsync(int orderId)
+        {
+            var order = await _db.Orders
+                .Include(o => o.SellerOrders)
+                .FirstOrDefaultAsync(o => o.Id == orderId);
+
+            if (order == null)
+                return;
+
+            if (order.Status is OrderStatus.Refunded or OrderStatus.PartialRefund or OrderStatus.Completed)
+                return;
+
+            var statuses = order.SellerOrders.Select(so => so.Status).ToList();
+            if (statuses.Count == 0)
+                return;
+
+            var active = statuses.Where(s => s != SellerOrderStatus.Cancelled).ToList();
+
+            var derived = active.Count == 0
+                ? OrderStatus.Cancelled
+                : MapSellerStatusToOrderStatus(active.Min());
+
+            if (order.Status == derived)
+                return;
+
+            order.Status = derived;
+
+            if (derived == OrderStatus.Cancelled)
+                order.CancelledAt ??= DateTime.UtcNow;
+
+            _db.OrderEvents.Add(new OrderEvent
+            {
+                OrderId = order.Id,
+                Status = derived,
+                Title = GetStatusTitle(derived),
+                Description = "Sipariş durumu satıcı siparişlerine göre güncellendi.",
+                UserType = "System"
+            });
         }
 
         public async Task AddOrderEventAsync(int orderId, OrderStatus status, string title, string? description = null, int? userId = null, string? userType = null)

@@ -44,13 +44,11 @@ public class FullMarketplaceFlowTests : IClassFixture<CustomWebApplicationFactor
         category!.Name.Should().Be("Smartphones");
 
         // --- Step 2: Seller registers and creates a product ---
-        var seller = await TestHelper.RegisterUserAsync(client,
+        var seller = await TestHelper.RegisterAndLoginWithRoleAsync(client, UserRole.Seller,
             name: "Seller Shop",
             email: "sellershop@example.com",
             username: "sellershop",
-            password: "SellerPass123!",
-            role: UserRole.Seller);
-        TestHelper.SetAuthToken(client, seller.Token!);
+            password: "SellerPass123!");
 
         var productDto = new AddProductDto
         {
@@ -131,13 +129,11 @@ public class FullMarketplaceFlowTests : IClassFixture<CustomWebApplicationFactor
         var client = _factory.CreateClient();
 
         // --- Seller 1 creates a product and listing ---
-        var seller1 = await TestHelper.RegisterUserAsync(client,
+        var seller1 = await TestHelper.RegisterAndLoginWithRoleAsync(client, UserRole.Seller,
             name: "Seller One",
             email: "seller1flow@example.com",
             username: "seller1flow",
-            password: "Seller1Pass123!",
-            role: UserRole.Seller);
-        TestHelper.SetAuthToken(client, seller1.Token!);
+            password: "Seller1Pass123!");
 
         var product1 = new AddProductDto
         {
@@ -160,13 +156,11 @@ public class FullMarketplaceFlowTests : IClassFixture<CustomWebApplicationFactor
         var lst1 = await lst1Resp.Content.ReadFromJsonAsync<ListingResponseDto>(TestHelper.JsonOptions);
 
         // --- Seller 2 creates a product and listing ---
-        var seller2 = await TestHelper.RegisterUserAsync(client,
+        var seller2 = await TestHelper.RegisterAndLoginWithRoleAsync(client, UserRole.Seller,
             name: "Seller Two",
             email: "seller2flow@example.com",
             username: "seller2flow",
-            password: "Seller2Pass123!",
-            role: UserRole.Seller);
-        TestHelper.SetAuthToken(client, seller2.Token!);
+            password: "Seller2Pass123!");
 
         var product2 = new AddProductDto
         {
@@ -220,13 +214,11 @@ public class FullMarketplaceFlowTests : IClassFixture<CustomWebApplicationFactor
         var client = _factory.CreateClient();
 
         // Seller creates product and listing
-        var seller = await TestHelper.RegisterUserAsync(client,
+        var seller = await TestHelper.RegisterAndLoginWithRoleAsync(client, UserRole.Seller,
             name: "Price Seller",
             email: "priceseller@example.com",
             username: "priceseller",
-            password: "PriceSeller123!",
-            role: UserRole.Seller);
-        TestHelper.SetAuthToken(client, seller.Token!);
+            password: "PriceSeller123!");
 
         var product = new AddProductDto
         {
@@ -291,13 +283,13 @@ public class FullMarketplaceFlowTests : IClassFixture<CustomWebApplicationFactor
         var client = _factory.CreateClient();
 
         // Register all three roles
-        var admin = await TestHelper.RegisterUserAsync(client,
+        var admin = await TestHelper.RegisterAndLoginWithRoleAsync(client, UserRole.Admin,
             name: "Role Admin", email: "roleadmin@test.com",
-            username: "roleadmin", password: "RoleAdmin123!", role: UserRole.Admin);
+            username: "roleadmin", password: "RoleAdmin123!");
 
-        var seller = await TestHelper.RegisterUserAsync(client,
+        var seller = await TestHelper.RegisterAndLoginWithRoleAsync(client, UserRole.Seller,
             name: "Role Seller", email: "roleseller@test.com",
-            username: "roleseller", password: "RoleSeller123!", role: UserRole.Seller);
+            username: "roleseller", password: "RoleSeller123!");
 
         var customer = await TestHelper.RegisterUserAsync(client,
             name: "Role Customer", email: "rolecustomer@test.com",
@@ -348,10 +340,9 @@ public class FullMarketplaceFlowTests : IClassFixture<CustomWebApplicationFactor
         var client = _factory.CreateClient();
 
         // Create a seller with a product/listing
-        var seller = await TestHelper.RegisterUserAsync(client,
+        var seller = await TestHelper.RegisterAndLoginWithRoleAsync(client, UserRole.Seller,
             name: "Isolation Seller", email: "isoseller@test.com",
-            username: "isoseller", password: "IsoSeller123!", role: UserRole.Seller);
-        TestHelper.SetAuthToken(client, seller.Token!);
+            username: "isoseller", password: "IsoSeller123!");
 
         var prodDto = new AddProductDto
         {
