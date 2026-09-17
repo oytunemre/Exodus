@@ -7,6 +7,7 @@ using Exodus.Models.Enums;
 using Exodus.Services.Campaigns;
 using Exodus.Services.Common;
 using Exodus.Services.Files;
+using Exodus.Services.Orders;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -149,6 +150,58 @@ public class BugFixRegressionTests : IClassFixture<CustomWebApplicationFactory>
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
+    [Fact]
+    public async Task RequestRefund_GeneratesRefundNumberWithinColumnLength()
+    {
+        var client = _factory.CreateClient();
+        var auth = await TestHelper.RegisterAndLoginAsCustomerAsync(client, "refundnumber");
+        var orderId = await SeedDeliveredOrderAsync(auth.UserId, total: 500m);
+
+        var response = await client.PostAsJsonAsync($"/api/order/{orderId}/refund", new
+        {
+            Reason = "Hatalı ürün",
+            Amount = 100m
+        }, TestHelper.JsonOptions);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var refund = await db.Refunds.AsNoTracking().FirstAsync(r => r.OrderId == orderId);
+        refund.RefundNumber.Length.Should().BeLessThanOrEqualTo(20);
+    }
+
+    // ----------------------------------------------------------- seller order
+
+    [Theory]
+    [InlineData(OrderStatus.Confirmed, SellerOrderStatus.Confirmed)]
+    [InlineData(OrderStatus.Processing, SellerOrderStatus.Packed)]
+    [InlineData(OrderStatus.Shipped, SellerOrderStatus.Shipped)]
+    public async Task UpdateSellerOrderStatus_PersistsStatus_AndRollsUpToOrder(
+        OrderStatus requested, SellerOrderStatus expected)
+    {
+        var client = _factory.CreateClient();
+        var auth = await TestHelper.RegisterAndLoginAsCustomerAsync(client, "sellerstatus" + requested);
+        var orderId = await SeedDeliveredOrderAsync(auth.UserId, total: 250m);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var orders = scope.ServiceProvider.GetRequiredService<IOrderService>();
+
+        var sellerOrder = await db.SellerOrders.FirstAsync(so => so.OrderId == orderId);
+        var order = await db.Orders.FirstAsync(o => o.Id == orderId);
+        order.Status = OrderStatus.Pending;
+        sellerOrder.Status = SellerOrderStatus.Placed;
+        await db.SaveChangesAsync();
+
+        await orders.UpdateSellerOrderStatusAsync(sellerOrder.SellerId, sellerOrder.Id, requested);
+
+        var updated = await db.SellerOrders.AsNoTracking().FirstAsync(so => so.Id == sellerOrder.Id);
+        updated.Status.Should().Be(expected);
+        var updatedOrder = await db.Orders.AsNoTracking().FirstAsync(o => o.Id == orderId);
+        updatedOrder.Status.Should().Be(requested);
+    }
+
     // -------------------------------------------------------------- campaigns
 
     [Fact]
@@ -207,6 +260,45 @@ public class BugFixRegressionTests : IClassFixture<CustomWebApplicationFactory>
 
         lower.StatusCode.Should().Be(HttpStatusCode.OK);
         upper.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task CreateCampaign_TrimsAndUppercasesCouponCode()
+    {
+        var client = _factory.CreateClient();
+        await TestHelper.RegisterAndLoginAsAdminAsync(client, "couponntrim");
+
+        var createResponse = await client.PostAsJsonAsync("/api/admin/campaigns", new
+        {
+            Name = "Coupon Trim Campaign",
+            Type = CampaignType.PercentageDiscount,
+            StartDate = DateTime.UtcNow.AddDays(-1),
+            EndDate = DateTime.UtcNow.AddDays(30),
+            DiscountPercentage = 10m,
+            CouponCode = "  pAdDeD10  ",
+            RequiresCouponCode = true,
+            Scope = CampaignScope.AllProducts
+        }, TestHelper.JsonOptions);
+
+        createResponse.IsSuccessStatusCode.Should().BeTrue();
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var campaign = await db.Campaigns.AsNoTracking()
+            .FirstAsync(c => c.Name == "Coupon Trim Campaign");
+        campaign.CouponCode.Should().Be("PADDED10");
+    }
+
+    [Fact]
+    public async Task ValidateCoupon_WithUnknownCode_ReturnsProblemDetails()
+    {
+        var client = _factory.CreateClient();
+        await TestHelper.RegisterAndLoginAsCustomerAsync(client, "couponmissing");
+
+        var response = await client.GetAsync("/api/campaign/validate-coupon?code=doesnotexist");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.Content.Headers.ContentType!.MediaType.Should().Be("application/problem+json");
     }
 
     // ------------------------------------------------------------------ files

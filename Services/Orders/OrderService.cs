@@ -595,7 +595,7 @@ namespace Exodus.Services.Orders
 
         private string GenerateRefundNumber()
         {
-            return $"REF-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString("N")[..8].ToUpper()}";
+            return $"REF-{DateTime.UtcNow:yyMMdd}-{Guid.NewGuid().ToString("N")[..8].ToUpperInvariant()}";
         }
 
         private static string FormatAddressSnapshot(Address address)
@@ -624,11 +624,12 @@ namespace Exodus.Services.Orders
             return status switch
             {
                 OrderStatus.Pending => SellerOrderStatus.Placed,
-                OrderStatus.Processing => SellerOrderStatus.Confirmed,
+                OrderStatus.Confirmed => SellerOrderStatus.Confirmed,
+                OrderStatus.Processing => SellerOrderStatus.Packed,
                 OrderStatus.Shipped => SellerOrderStatus.Shipped,
-                OrderStatus.Delivered => SellerOrderStatus.Delivered,
+                OrderStatus.Delivered or OrderStatus.Completed => SellerOrderStatus.Delivered,
                 OrderStatus.Cancelled => SellerOrderStatus.Cancelled,
-                _ => SellerOrderStatus.Placed
+                _ => throw new BadRequestException($"Satıcı siparişi için geçersiz durum: {status}")
             };
         }
 
@@ -637,7 +638,8 @@ namespace Exodus.Services.Orders
             return status switch
             {
                 SellerOrderStatus.Placed => OrderStatus.Pending,
-                SellerOrderStatus.Confirmed => OrderStatus.Processing,
+                SellerOrderStatus.Confirmed => OrderStatus.Confirmed,
+                SellerOrderStatus.Packed => OrderStatus.Processing,
                 SellerOrderStatus.Shipped => OrderStatus.Shipped,
                 SellerOrderStatus.Delivered => OrderStatus.Delivered,
                 SellerOrderStatus.Cancelled => OrderStatus.Cancelled,

@@ -1,6 +1,7 @@
 using Exodus.Models.Dto.Campaign;
 using Exodus.Services.Campaigns;
 using Exodus.Services.Carts;
+using Exodus.Services.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -50,7 +51,7 @@ public class CampaignController : ControllerBase
         var campaign = await _campaignService.ValidateCouponCodeAsync(code, userId, ct);
 
         if (campaign == null)
-            return NotFound(new { message = "Gecersiz veya suresi dolmus kupon kodu" });
+            throw new NotFoundException("Gecersiz veya suresi dolmus kupon kodu");
 
         return Ok(campaign);
     }
