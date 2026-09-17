@@ -1,4 +1,5 @@
 using Exodus.Services.Audit;
+using Exodus.Services.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -43,7 +44,7 @@ namespace Exodus.Controllers
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
-                throw new UnauthorizedAccessException("Invalid user token");
+                throw new UnauthorizedException("Invalid user token");
             return userId;
         }
     }

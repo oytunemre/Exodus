@@ -68,6 +68,18 @@ namespace Exodus.Services.Profile
 
             // Update password
             user.Password = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+
+            // Invalidate existing sessions
+            var activeTokens = await _context.RefreshTokens
+                .Where(t => t.UserId == userId && !t.IsRevoked)
+                .ToListAsync();
+
+            foreach (var token in activeTokens)
+            {
+                token.IsRevoked = true;
+                token.RevokedAt = DateTime.UtcNow;
+            }
+
             await _context.SaveChangesAsync();
         }
 
@@ -82,7 +94,8 @@ namespace Exodus.Services.Profile
                     .Where(o => o.BuyerId == userId && o.Status == Models.Enums.OrderStatus.Delivered)
                     .SumAsync(o => o.TotalAmount),
                 AddressCount = await _context.Addresses.CountAsync(a => a.UserId == userId),
-                UnreadNotifications = await _context.Notifications.CountAsync(n => n.UserId == userId && !n.IsRead)
+                UnreadNotifications = await _context.Notifications.CountAsync(n => n.UserId == userId && !n.IsRead),
+                WishlistCount = await _context.WishlistItems.CountAsync(i => i.Wishlist.UserId == userId)
             };
 
             return stats;

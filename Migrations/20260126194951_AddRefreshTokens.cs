@@ -11,12 +11,15 @@ namespace Exodus.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<int>(
-                name: "Role",
-                table: "Users",
-                type: "int",
-                nullable: false,
-                defaultValue: 0);
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (
+                    SELECT 1 FROM sys.columns
+                    WHERE object_id = OBJECT_ID(N'[dbo].[Users]') AND name = 'Role'
+                )
+                BEGIN
+                    ALTER TABLE [dbo].[Users] ADD [Role] INT NOT NULL DEFAULT 0;
+                END
+            ");
 
             migrationBuilder.CreateTable(
                 name: "RefreshTokens",
@@ -57,9 +60,7 @@ namespace Exodus.Migrations
             migrationBuilder.DropTable(
                 name: "RefreshTokens");
 
-            migrationBuilder.DropColumn(
-                name: "Role",
-                table: "Users");
+            // [Users].[Role] is owned by the AddUserRoleField migration.
         }
     }
 }
