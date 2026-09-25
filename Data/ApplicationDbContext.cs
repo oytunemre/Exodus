@@ -146,6 +146,12 @@ namespace Exodus.Data
                 .HasForeignKey(l => l.SellerId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            // Row version is only supported by relational providers (in-memory tests ignore it)
+            if (Database.IsRelational())
+                modelBuilder.Entity<Listing>().Property(l => l.RowVersion).IsRowVersion();
+            else
+                modelBuilder.Entity<Listing>().Ignore(l => l.RowVersion);
+
             // Listing Condition enum to string
             modelBuilder.Entity<Listing>()
                .Property(l => l.Condition)

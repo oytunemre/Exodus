@@ -1,5 +1,6 @@
 using Exodus.Data;
 using Exodus.Models.Entities;
+using Exodus.Services.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace Exodus.Services.Loyalty;
@@ -45,6 +46,9 @@ public class LoyaltyService : ILoyaltyService
 
     public async Task<LoyaltyPointDto> EarnPointsAsync(int userId, int orderId, decimal orderAmount, CancellationToken ct = default)
     {
+        if (orderAmount <= 0)
+            throw new BadRequestException("Siparis tutari sifirdan buyuk olmalidir.");
+
         var loyalty = await GetOrCreateLoyaltyAsync(userId, ct);
         var points = await CalculateEarnablePointsAsync(orderAmount, loyalty.Tier, ct);
 
@@ -77,10 +81,13 @@ public class LoyaltyService : ILoyaltyService
 
     public async Task<LoyaltyPointDto> SpendPointsAsync(int userId, int points, int? orderId = null, CancellationToken ct = default)
     {
+        if (points <= 0)
+            throw new BadRequestException("Harcanacak puan sifirdan buyuk olmalidir.");
+
         var loyalty = await GetOrCreateLoyaltyAsync(userId, ct);
 
         if (loyalty.AvailablePoints < points)
-            throw new InvalidOperationException($"Yetersiz puan. Mevcut: {loyalty.AvailablePoints}, Istenen: {points}");
+            throw new BadRequestException($"Yetersiz puan. Mevcut: {loyalty.AvailablePoints}, Istenen: {points}");
 
         loyalty.AvailablePoints -= points;
         loyalty.SpentPoints += points;
@@ -105,10 +112,13 @@ public class LoyaltyService : ILoyaltyService
 
     public async Task<LoyaltyPointDto> RefundPointsAsync(int userId, int points, int orderId, CancellationToken ct = default)
     {
+        if (points <= 0)
+            throw new BadRequestException("Iade edilecek puan sifirdan buyuk olmalidir.");
+
         var loyalty = await GetOrCreateLoyaltyAsync(userId, ct);
 
         loyalty.AvailablePoints += points;
-        loyalty.SpentPoints -= points;
+        loyalty.SpentPoints = Math.Max(0, loyalty.SpentPoints - points);
 
         var transaction = new LoyaltyTransaction
         {
@@ -166,6 +176,9 @@ public class LoyaltyService : ILoyaltyService
     public async Task<LoyaltyPointDto> AdminAdjustPointsAsync(int userId, int points, string description, CancellationToken ct = default)
     {
         var loyalty = await GetOrCreateLoyaltyAsync(userId, ct);
+
+        if (loyalty.AvailablePoints + points < 0)
+            throw new BadRequestException($"Duzeltme kullanilabilir puani negatife dusuremez. Mevcut: {loyalty.AvailablePoints}");
 
         loyalty.AvailablePoints += points;
         if (points > 0) loyalty.TotalPoints += points;

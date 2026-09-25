@@ -6,21 +6,30 @@ namespace Exodus.Data;
 
 public static class DbSeeder
 {
-    public static async Task SeedAsync(ApplicationDbContext db)
+    public const string DemoPassword = "Demo123!";
+
+    public static async Task MigrateAsync(ApplicationDbContext db)
     {
         if (db.Database.IsRelational())
             await db.Database.MigrateAsync();
+    }
+
+    public static async Task SeedAsync(ApplicationDbContext db)
+    {
+        await MigrateAsync(db);
 
         // -------------------------
         // 1) USERS (>=5)
         // -------------------------
+        var demoPasswordHash = BCrypt.Net.BCrypt.HashPassword(DemoPassword);
+
         var usersToSeed = new List<Users>
         {
-            new Users { Name = "Ahmet Yılmaz",  Email = "ahmet@test.com",  Password = "123456", Username = "ahmety" },
-            new Users { Name = "Zeynep Kaya",   Email = "zeynep@test.com", Password = "123456", Username = "zeynepk" },
-            new Users { Name = "Mehmet Demir",  Email = "mehmet@test.com", Password = "123456", Username = "mehmetd" },
-            new Users { Name = "Elif Şahin",    Email = "elif@test.com",   Password = "123456", Username = "elifs" },
-            new Users { Name = "Can Arslan",    Email = "can@test.com",    Password = "123456", Username = "canars" }
+            new Users { Name = "Ahmet Yılmaz",  Email = "ahmet@test.com",  Password = demoPasswordHash, Username = "ahmety",  Role = UserRole.Customer, EmailVerified = true },
+            new Users { Name = "Zeynep Kaya",   Email = "zeynep@test.com", Password = demoPasswordHash, Username = "zeynepk", Role = UserRole.Seller,   EmailVerified = true },
+            new Users { Name = "Mehmet Demir",  Email = "mehmet@test.com", Password = demoPasswordHash, Username = "mehmetd", Role = UserRole.Seller,   EmailVerified = true },
+            new Users { Name = "Elif Şahin",    Email = "elif@test.com",   Password = demoPasswordHash, Username = "elifs",   Role = UserRole.Customer, EmailVerified = true },
+            new Users { Name = "Can Arslan",    Email = "can@test.com",    Password = demoPasswordHash, Username = "canars",  Role = UserRole.Customer, EmailVerified = true }
         };
 
         foreach (var u in usersToSeed)

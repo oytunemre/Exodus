@@ -211,11 +211,13 @@ public class AdminCampaignController : ControllerBase
         if (dto.EndDate <= dto.StartDate)
             throw new BadRequestException("End date must be after start date");
 
+        var couponCode = NormalizeCouponCode(dto.CouponCode);
+
         // Validate coupon code uniqueness
-        if (!string.IsNullOrEmpty(dto.CouponCode))
+        if (couponCode != null)
         {
             var codeExists = await _db.Campaigns.AnyAsync(c =>
-                c.CouponCode == dto.CouponCode && !c.IsDeleted);
+                c.CouponCode == couponCode && !c.IsDeleted);
             if (codeExists)
                 throw new BadRequestException("Coupon code already exists");
         }
@@ -246,7 +248,7 @@ public class AdminCampaignController : ControllerBase
             MaxDiscountAmount = dto.MaxDiscountAmount,
             BuyQuantity = dto.BuyQuantity,
             GetQuantity = dto.GetQuantity,
-            CouponCode = dto.CouponCode?.ToUpper(),
+            CouponCode = couponCode,
             RequiresCouponCode = dto.RequiresCouponCode,
             Scope = dto.Scope,
             Priority = dto.Priority,
@@ -307,11 +309,13 @@ public class AdminCampaignController : ControllerBase
         if (endDate <= startDate)
             throw new BadRequestException("End date must be after start date");
 
+        var couponCode = NormalizeCouponCode(dto.CouponCode);
+
         // Validate coupon code uniqueness
-        if (!string.IsNullOrEmpty(dto.CouponCode) && dto.CouponCode != campaign.CouponCode)
+        if (couponCode != null && couponCode != campaign.CouponCode)
         {
             var codeExists = await _db.Campaigns.AnyAsync(c =>
-                c.CouponCode == dto.CouponCode && c.Id != id && !c.IsDeleted);
+                c.CouponCode == couponCode && c.Id != id && !c.IsDeleted);
             if (codeExists)
                 throw new BadRequestException("Coupon code already exists");
         }
@@ -357,7 +361,7 @@ public class AdminCampaignController : ControllerBase
             campaign.MaxDiscountAmount = dto.MaxDiscountAmount;
 
         if (dto.CouponCode != null)
-            campaign.CouponCode = dto.CouponCode.ToUpper();
+            campaign.CouponCode = couponCode;
 
         if (dto.RequiresCouponCode.HasValue)
             campaign.RequiresCouponCode = dto.RequiresCouponCode.Value;
@@ -562,6 +566,9 @@ public class AdminCampaignController : ControllerBase
         return Ok(stats);
     }
 
+    private static string? NormalizeCouponCode(string? couponCode) =>
+        string.IsNullOrWhiteSpace(couponCode) ? null : couponCode.Trim().ToUpperInvariant();
+
     /// <summary>
     /// Validate coupon code
     /// </summary>
@@ -570,8 +577,10 @@ public class AdminCampaignController : ControllerBase
     {
         var now = DateTime.UtcNow;
 
+        var normalizedCode = NormalizeCouponCode(code);
+
         var campaign = await _db.Campaigns
-            .Where(c => c.CouponCode == code.ToUpper() && !c.IsDeleted)
+            .Where(c => c.CouponCode == normalizedCode && !c.IsDeleted)
             .FirstOrDefaultAsync();
 
         if (campaign == null)

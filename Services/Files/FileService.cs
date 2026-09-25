@@ -35,7 +35,7 @@ namespace Exodus.Services.Files
             var sanitizedFileName = _sanitizer.SanitizeFileName(Path.GetFileNameWithoutExtension(file.FileName));
             var fileName = $"{fileId}_{sanitizedFileName}{extension}";
 
-            var folderPath = Path.Combine(_environment.WebRootPath ?? "wwwroot", "uploads", folder);
+            var folderPath = GetFullPath(Path.Combine("uploads", folder));
             Directory.CreateDirectory(folderPath);
 
             var filePath = Path.Combine(folderPath, fileName);
@@ -117,7 +117,18 @@ namespace Exodus.Services.Files
             if (relativePath.StartsWith('/'))
                 relativePath = relativePath.Substring(1);
 
-            return Path.Combine(_environment.WebRootPath ?? "wwwroot", relativePath);
+            var webRoot = Path.GetFullPath(_environment.WebRootPath ?? "wwwroot");
+            var fullPath = Path.GetFullPath(Path.Combine(webRoot, relativePath));
+
+            // Reject traversal outside the web root (e.g. "../../appsettings.json")
+            var rootWithSeparator = webRoot.EndsWith(Path.DirectorySeparatorChar)
+                ? webRoot
+                : webRoot + Path.DirectorySeparatorChar;
+
+            if (!fullPath.StartsWith(rootWithSeparator, StringComparison.Ordinal))
+                throw new BadRequestException("Invalid file path");
+
+            return fullPath;
         }
 
         private void ValidateFile(IFormFile file)

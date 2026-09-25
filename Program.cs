@@ -44,7 +44,8 @@ var builder = WebApplication.CreateBuilder(args);
 // --------------------
 
 // Controllers + Enum String Converter
-builder.Services.AddControllers()
+builder.Services.AddControllers(options =>
+        options.Filters.Add<PaginationNormalizationFilter>())
     .AddJsonOptions(o =>
         o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
@@ -99,6 +100,15 @@ var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSetting
 if (jwtSettings == null)
     throw new InvalidOperationException("JWT settings are not configured properly");
 
+const int MinimumJwtSecretLength = 32;
+if (string.IsNullOrWhiteSpace(jwtSettings.SecretKey) || jwtSettings.SecretKey.Length < MinimumJwtSecretLength)
+    throw new InvalidOperationException(
+        $"JwtSettings:SecretKey is missing or shorter than {MinimumJwtSecretLength} characters. " +
+        "Configure it via environment variables or user secrets.");
+
+if (string.IsNullOrWhiteSpace(jwtSettings.Issuer) || string.IsNullOrWhiteSpace(jwtSettings.Audience))
+    throw new InvalidOperationException("JwtSettings:Issuer and JwtSettings:Audience must be configured.");
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -116,6 +126,24 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtSettings.Audience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
         ClockSkew = TimeSpan.Zero
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnChallenge = async challengeContext =>
+        {
+            challengeContext.HandleResponse();
+            await ProblemResponseWriter.WriteAsync(
+                challengeContext.HttpContext,
+                StatusCodes.Status401Unauthorized,
+                "Unauthorized",
+                "Authentication is required to access this resource.");
+        },
+        OnForbidden = forbiddenContext => ProblemResponseWriter.WriteAsync(
+            forbiddenContext.HttpContext,
+            StatusCodes.Status403Forbidden,
+            "Forbidden",
+            "You do not have permission to access this resource.")
     };
 });
 
@@ -151,6 +179,16 @@ builder.Services.AddRateLimiter(options =>
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
     // Global rate limit: 100 requests per minute per IP
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 100,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0
+            }));
+
     options.AddPolicy("fixed", context =>
         RateLimitPartition.GetFixedWindowLimiter(
             partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
@@ -290,7 +328,13 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     if (db.Database.IsRelational())
-        await DbSeeder.SeedAsync(db);
+    {
+        await DbSeeder.MigrateAsync(db);
+
+        // Demo data must never reach production
+        if (!app.Environment.IsProduction())
+            await DbSeeder.SeedAsync(db);
+    }
 }
 
 app.Run();
