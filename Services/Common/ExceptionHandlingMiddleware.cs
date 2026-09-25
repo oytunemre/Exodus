@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Exodus.Services.Common;
 
@@ -37,22 +36,7 @@ public class ExceptionHandlingMiddleware
             if (context.Response.HasStarted)
                 throw;
 
-            context.Response.Clear();
-            context.Response.StatusCode = statusCode;
-            context.Response.ContentType = "application/problem+json";
-
-            var problem = new ProblemDetails
-            {
-                Status = statusCode,
-                Title = title,
-                Detail = detail
-            };
-            problem.Extensions["traceId"] = context.TraceIdentifier;
-
-            await context.Response.WriteAsJsonAsync(
-                problem,
-                options: null,
-                contentType: "application/problem+json");
+            await ProblemResponseWriter.WriteAsync(context, statusCode, title, detail);
         }
     }
 

@@ -44,7 +44,8 @@ var builder = WebApplication.CreateBuilder(args);
 // --------------------
 
 // Controllers + Enum String Converter
-builder.Services.AddControllers()
+builder.Services.AddControllers(options =>
+        options.Filters.Add<PaginationNormalizationFilter>())
     .AddJsonOptions(o =>
         o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
@@ -125,6 +126,24 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtSettings.Audience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
         ClockSkew = TimeSpan.Zero
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnChallenge = async challengeContext =>
+        {
+            challengeContext.HandleResponse();
+            await ProblemResponseWriter.WriteAsync(
+                challengeContext.HttpContext,
+                StatusCodes.Status401Unauthorized,
+                "Unauthorized",
+                "Authentication is required to access this resource.");
+        },
+        OnForbidden = forbiddenContext => ProblemResponseWriter.WriteAsync(
+            forbiddenContext.HttpContext,
+            StatusCodes.Status403Forbidden,
+            "Forbidden",
+            "You do not have permission to access this resource.")
     };
 });
 

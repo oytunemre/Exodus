@@ -301,6 +301,119 @@ public class BugFixRegressionTests : IClassFixture<CustomWebApplicationFactory>
         response.Content.Headers.ContentType!.MediaType.Should().Be("application/problem+json");
     }
 
+    // ------------------------------------------------------------- pagination
+
+    [Theory]
+    [InlineData("page=0&pageSize=2")]
+    [InlineData("page=-3&pageSize=2")]
+    [InlineData("page=1&pageSize=0")]
+    public async Task AdminProductList_WithInvalidPaging_ReturnsNormalizedPage(string query)
+    {
+        var client = _factory.CreateClient();
+        await TestHelper.RegisterAndLoginAsAdminAsync(client, "pagingreg" + query.GetHashCode().ToString("x"));
+
+        var response = await client.GetAsync($"/api/admin/products?{query}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var body = await response.Content.ReadFromJsonAsync<PagedProbe>(TestHelper.JsonOptions);
+        body!.Page.Should().BeGreaterThanOrEqualTo(1);
+        body.PageSize.Should().BeGreaterThan(0);
+        body.TotalPages.Should().BeLessThan(int.MaxValue);
+    }
+
+    private sealed record PagedProbe(int Page, int PageSize, int TotalCount, int TotalPages);
+
+    // -------------------------------------------------------- framework errors
+
+    [Fact]
+    public async Task ProtectedEndpoint_WithoutToken_ReturnsProblemDetails()
+    {
+        var client = _factory.CreateClient();
+
+        var response = await client.GetAsync("/api/Profile");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        response.Content.Headers.ContentType!.MediaType.Should().Be("application/problem+json");
+    }
+
+    [Fact]
+    public async Task AdminEndpoint_WithCustomerToken_ReturnsProblemDetails()
+    {
+        var client = _factory.CreateClient();
+        await TestHelper.RegisterAndLoginAsCustomerAsync(client, "forbiddenreg");
+
+        var response = await client.GetAsync("/api/admin/brands");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.Content.Headers.ContentType!.MediaType.Should().Be("application/problem+json");
+    }
+
+    // -------------------------------------------------------------------- Q&A
+
+    [Fact]
+    public async Task GetQuestion_WithMismatchedProduct_ReturnsNotFound()
+    {
+        var client = _factory.CreateClient();
+        var auth = await TestHelper.RegisterAndLoginAsCustomerAsync(client, "qamismatch");
+
+        int questionId;
+        int otherProductId;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            var product = new Product { ProductName = "QA Product", ProductDescription = "QA" };
+            var otherProduct = new Product { ProductName = "Other Product", ProductDescription = "Other" };
+            db.Products.AddRange(product, otherProduct);
+            await db.SaveChangesAsync();
+
+            var question = new ProductQuestion
+            {
+                ProductId = product.Id,
+                AskedByUserId = auth.UserId,
+                QuestionText = "Bu ürün stokta mı?"
+            };
+            db.Set<ProductQuestion>().Add(question);
+            await db.SaveChangesAsync();
+
+            questionId = question.Id;
+            otherProductId = otherProduct.Id;
+        }
+
+        var response = await client.GetAsync($"/api/products/{otherProductId}/questions/{questionId}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    // --------------------------------------------------------- seller reviews
+
+    [Fact]
+    public async Task CreateSellerReview_WithoutPurchase_ReturnsForbidden()
+    {
+        var client = _factory.CreateClient();
+        var auth = await TestHelper.RegisterAndLoginAsCustomerAsync(client, "reviewnopurchase");
+
+        var sellerClient = _factory.CreateClient();
+        var seller = await TestHelper.RegisterAndLoginWithRoleAsync(
+            sellerClient, UserRole.Seller, "Review Seller",
+            "reviewseller@test.com", "reviewseller", "Test123!");
+
+        seller.UserId.Should().NotBe(auth.UserId);
+
+        var response = await client.PostAsJsonAsync($"/api/sellers/{seller.UserId}/reviews", new
+        {
+            Rating = 5,
+            Comment = "Satın almadan yorum"
+        }, TestHelper.JsonOptions);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+
+        using var scope = _factory.Services.CreateScope();
+        var verifyDb = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        (await verifyDb.Set<SellerReview>().CountAsync(r => r.UserId == auth.UserId)).Should().Be(0);
+    }
+
     // ------------------------------------------------------------------ files
 
     [Theory]
