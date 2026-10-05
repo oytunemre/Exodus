@@ -49,6 +49,10 @@ public class LoyaltyService : ILoyaltyService
         if (orderAmount <= 0)
             throw new BadRequestException("Siparis tutari sifirdan buyuk olmalidir.");
 
+        var ownsOrder = await _db.Orders.AnyAsync(o => o.Id == orderId && o.BuyerId == userId, ct);
+        if (!ownsOrder)
+            throw new BadRequestException("Gecerli bir siparis seciniz.");
+
         var loyalty = await GetOrCreateLoyaltyAsync(userId, ct);
         var points = await CalculateEarnablePointsAsync(orderAmount, loyalty.Tier, ct);
 
@@ -83,6 +87,15 @@ public class LoyaltyService : ILoyaltyService
     {
         if (points <= 0)
             throw new BadRequestException("Harcanacak puan sifirdan buyuk olmalidir.");
+
+        if (orderId.HasValue)
+        {
+            var ownsOrder = await _db.Orders
+                .AnyAsync(o => o.Id == orderId.Value && o.BuyerId == userId, ct);
+
+            if (!ownsOrder)
+                throw new BadRequestException("Gecerli bir siparis seciniz.");
+        }
 
         var loyalty = await GetOrCreateLoyaltyAsync(userId, ct);
 
@@ -162,11 +175,17 @@ public class LoyaltyService : ILoyaltyService
 
     public Task<decimal> CalculatePointValueAsync(int points, CancellationToken ct = default)
     {
+        if (points < 0)
+            throw new BadRequestException("Puan negatif olamaz.");
+
         return Task.FromResult(points * PointValueInTL);
     }
 
     public Task<int> CalculateEarnablePointsAsync(decimal orderAmount, LoyaltyTier tier, CancellationToken ct = default)
     {
+        if (orderAmount < 0)
+            throw new BadRequestException("Siparis tutari negatif olamaz.");
+
         var basePoints = (int)(orderAmount * BasePointsPerTL);
         var multiplier = TierMultipliers.GetValueOrDefault(tier, 1.0);
         var totalPoints = (int)(basePoints * multiplier);

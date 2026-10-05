@@ -46,6 +46,9 @@ namespace Exodus.Services.Orders
             {
                 billingAddress = await _db.Addresses
                     .FirstOrDefaultAsync(a => a.Id == dto.BillingAddressId && a.UserId == userId);
+
+                if (billingAddress == null)
+                    throw new BadRequestException("Geçerli bir fatura adresi seçiniz.");
             }
 
             var strategy = _db.Database.CreateExecutionStrategy();
@@ -331,6 +334,9 @@ namespace Exodus.Services.Orders
                     }
                 }
             }
+
+            foreach (var so in order.SellerOrders)
+                so.Status = SellerOrderStatus.Cancelled;
 
             order.Status = OrderStatus.Cancelled;
             order.CancellationReason = dto.Reason;

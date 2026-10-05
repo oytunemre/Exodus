@@ -42,7 +42,7 @@ public class UserService : IUserService
         {
             Name = dto.Name,
             Email = dto.Email,
-            Password = dto.Password,
+            Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             Username = dto.Username
         };
 
@@ -65,7 +65,8 @@ public class UserService : IUserService
 
         user.Name = dto.Name;
         user.Email = dto.Email;
-        user.Password = dto.Password;
+        if (!string.IsNullOrWhiteSpace(dto.Password))
+            user.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
         user.Username = dto.Username;
 
         await _db.SaveChangesAsync();
