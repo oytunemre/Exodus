@@ -172,9 +172,7 @@ public class AuthEndpointTests : IClassFixture<CustomWebApplicationFactory>
 
         var response = await client.PostAsJsonAsync("/api/auth/login", loginDto, TestHelper.JsonOptions);
 
-        // API returns 404 (NotFoundException) for invalid credentials
-        // to avoid revealing whether the user exists
-        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
     [Fact]
@@ -233,7 +231,7 @@ public class AuthEndpointTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
-    public async Task Register_AsSeller_ReturnSellerRole()
+    public async Task Register_RequestingSellerRole_CreatesCustomer()
     {
         var client = _client;
 
@@ -244,11 +242,11 @@ public class AuthEndpointTests : IClassFixture<CustomWebApplicationFactory>
             password: "SellerPass123!",
             role: UserRole.Seller);
 
-        auth.Role.Should().Be(UserRole.Seller);
+        auth.Role.Should().Be(UserRole.Customer);
     }
 
     [Fact]
-    public async Task Register_AsAdmin_ReturnAdminRole()
+    public async Task Register_RequestingAdminRole_CreatesCustomer()
     {
         var client = _client;
 
@@ -259,7 +257,11 @@ public class AuthEndpointTests : IClassFixture<CustomWebApplicationFactory>
             password: "AdminPass123!",
             role: UserRole.Admin);
 
-        auth.Role.Should().Be(UserRole.Admin);
+        auth.Role.Should().Be(UserRole.Customer);
+
+        TestHelper.SetAuthToken(client, auth.Token!);
+        var adminResponse = await client.GetAsync("/api/auth/admin/stats");
+        adminResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
     [Fact]
@@ -267,14 +269,11 @@ public class AuthEndpointTests : IClassFixture<CustomWebApplicationFactory>
     {
         var client = _client;
 
-        var auth = await TestHelper.RegisterUserAsync(client,
+        await TestHelper.RegisterAndLoginWithRoleAsync(client, UserRole.Admin,
             name: "Stats Admin",
             email: "statsadmin@example.com",
             username: "statsadmin",
-            password: "AdminPass123!",
-            role: UserRole.Admin);
-
-        TestHelper.SetAuthToken(client, auth.Token!);
+            password: "AdminPass123!");
 
         var response = await client.GetAsync("/api/auth/admin/stats");
 
@@ -305,14 +304,11 @@ public class AuthEndpointTests : IClassFixture<CustomWebApplicationFactory>
     {
         var client = _client;
 
-        var auth = await TestHelper.RegisterUserAsync(client,
+        await TestHelper.RegisterAndLoginWithRoleAsync(client, UserRole.Seller,
             name: "Dashboard Seller",
             email: "dashseller@example.com",
             username: "dashseller",
-            password: "SellerPass123!",
-            role: UserRole.Seller);
-
-        TestHelper.SetAuthToken(client, auth.Token!);
+            password: "SellerPass123!");
 
         var response = await client.GetAsync("/api/auth/seller/dashboard");
 

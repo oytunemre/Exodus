@@ -61,33 +61,46 @@ public static class TestHelper
             new AuthenticationHeaderValue("Bearer", token);
     }
 
-    public static async Task<AuthResponseDto> RegisterAndLoginAsAdminAsync(
+    /// <summary>
+    /// Registers a user and elevates it to <paramref name="role"/> in the database, because the
+    /// registration endpoint always creates Customer accounts. Returns a freshly issued token
+    /// carrying the elevated role.
+    /// </summary>
+    public static async Task<AuthResponseDto> RegisterAndLoginWithRoleAsync(
+        HttpClient client,
+        UserRole role,
+        string name,
+        string email,
+        string username,
+        string password)
+    {
+        var auth = await RegisterUserAsync(client, name, email, username, password);
+
+        var factory = CustomWebApplicationFactory.ForClient(client);
+        await factory.SetUserRoleAsync(auth.UserId, role);
+
+        var elevated = await LoginAsync(client, email, password);
+        SetAuthToken(client, elevated.Token!);
+        return elevated;
+    }
+
+    public static Task<AuthResponseDto> RegisterAndLoginAsAdminAsync(
         HttpClient client,
         string suffix = "")
-    {
-        var auth = await RegisterUserAsync(client,
+        => RegisterAndLoginWithRoleAsync(client, UserRole.Admin,
             name: "Admin User" + suffix,
             email: $"admin{suffix}@example.com",
             username: $"adminuser{suffix}",
-            password: "Admin123!@#",
-            role: UserRole.Admin);
-        SetAuthToken(client, auth.Token!);
-        return auth;
-    }
+            password: "Admin123!@#");
 
-    public static async Task<AuthResponseDto> RegisterAndLoginAsSellerAsync(
+    public static Task<AuthResponseDto> RegisterAndLoginAsSellerAsync(
         HttpClient client,
         string suffix = "")
-    {
-        var auth = await RegisterUserAsync(client,
+        => RegisterAndLoginWithRoleAsync(client, UserRole.Seller,
             name: "Seller User" + suffix,
             email: $"seller{suffix}@example.com",
             username: $"selleruser{suffix}",
-            password: "Seller123!@#",
-            role: UserRole.Seller);
-        SetAuthToken(client, auth.Token!);
-        return auth;
-    }
+            password: "Seller123!@#");
 
     public static async Task<AuthResponseDto> RegisterAndLoginAsCustomerAsync(
         HttpClient client,

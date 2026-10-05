@@ -79,6 +79,7 @@ public class ProductComparisonService : IProductComparisonService
     public async Task<ComparisonResponseDto> GetComparisonAsync(int userId, int comparisonId, CancellationToken ct = default)
     {
         var comparison = await _db.Set<ProductComparison>()
+            .AsNoTracking()
             .Include(c => c.Items).ThenInclude(i => i.Product).ThenInclude(p => p.Images)
             .FirstOrDefaultAsync(c => c.Id == comparisonId && c.UserId == userId, ct)
             ?? throw new NotFoundException("Karsilastirma listesi bulunamadi");

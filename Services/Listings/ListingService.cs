@@ -28,8 +28,11 @@ public class ListingService : IListingService
         return Map(listing);
     }
 
-    public async Task<ListingResponseDto> CreateAsync(AddListingDto dto)
+    public async Task<ListingResponseDto> CreateAsync(AddListingDto dto, int callerId, bool isAdmin)
     {
+        if (!isAdmin && dto.SellerId != callerId)
+            throw new ForbiddenException("You can only create listings for your own seller account.");
+
         var productExists = await _db.Products.AnyAsync(p => p.Id == dto.ProductId);
         if (!productExists) throw new BadRequestException("Product not found.");
 
@@ -55,10 +58,13 @@ public class ListingService : IListingService
         return Map(entity);
     }
 
-    public async Task<ListingResponseDto> UpdateAsync(int id, UpdateListingDto dto)
+    public async Task<ListingResponseDto> UpdateAsync(int id, UpdateListingDto dto, int callerId, bool isAdmin)
     {
         var listing = await _db.Listings.FirstOrDefaultAsync(l => l.Id == id);
         if (listing is null) throw new NotFoundException("Listing not found.");
+
+        if (!isAdmin && listing.SellerId != callerId)
+            throw new ForbiddenException("You can only modify your own listings.");
 
         if (dto.Price <= 0) throw new BadRequestException("Price must be > 0.");
         if (dto.Stock < 0) throw new BadRequestException("Stock must be >= 0.");
@@ -76,10 +82,13 @@ public class ListingService : IListingService
         return Map(listing);
     }
 
-    public async Task SoftDeleteAsync(int id)
+    public async Task SoftDeleteAsync(int id, int callerId, bool isAdmin)
     {
         var listing = await _db.Listings.FirstOrDefaultAsync(l => l.Id == id);
         if (listing is null) throw new NotFoundException("Listing not found.");
+
+        if (!isAdmin && listing.SellerId != callerId)
+            throw new ForbiddenException("You can only delete your own listings.");
 
         listing.IsDeleted = true;
         listing.DeletedDate = DateTime.UtcNow;

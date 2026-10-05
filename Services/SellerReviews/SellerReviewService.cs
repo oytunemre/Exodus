@@ -26,6 +26,14 @@ public class SellerReviewService : ISellerReviewService
         if (existingReview != null)
             throw new BadRequestException("Bu siparis icin zaten bir degerlendirme yapilmis");
 
+        var hasPurchase = await _db.SellerOrders
+            .AnyAsync(so => so.SellerId == dto.SellerId
+                && so.Order.BuyerId == userId
+                && (dto.OrderId == null || so.OrderId == dto.OrderId), ct);
+
+        if (!hasPurchase)
+            throw new ForbiddenException("Bu saticidan siparisiniz olmadan degerlendirme yapamazsiniz");
+
         var review = new SellerReview
         {
             SellerId = dto.SellerId,

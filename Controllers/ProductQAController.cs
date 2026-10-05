@@ -1,4 +1,5 @@
 using Exodus.Models.Entities;
+using Exodus.Services.Common;
 using Exodus.Services.ProductQA;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -50,6 +51,10 @@ public class ProductQAController : ControllerBase
     public async Task<IActionResult> GetQuestion(int productId, int questionId, CancellationToken ct)
     {
         var question = await _qaService.GetQuestionByIdAsync(questionId, ct);
+
+        if (question.ProductId != productId)
+            throw new NotFoundException("Soru bulunamadi");
+
         return Ok(question);
     }
 

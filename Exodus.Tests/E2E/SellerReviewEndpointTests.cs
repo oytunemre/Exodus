@@ -1,7 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
+using Exodus.Data;
+using Exodus.Models.Entities;
+using Exodus.Models.Enums;
 using Exodus.Services.SellerReviews;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Exodus.Tests.E2E;
@@ -60,7 +64,8 @@ public class SellerReviewEndpointTests : IClassFixture<CustomWebApplicationFacto
         var seller = await TestHelper.RegisterAndLoginAsSellerAsync(client, "srcreateseller");
 
         // Switch to customer to write a review
-        await TestHelper.RegisterAndLoginAsCustomerAsync(client, "srcreate");
+        var customer = await TestHelper.RegisterAndLoginAsCustomerAsync(client, "srcreate");
+        await SeedDeliveredOrderAsync(customer.UserId, seller.UserId);
 
         var dto = new CreateSellerReviewDto
         {
@@ -102,5 +107,32 @@ public class SellerReviewEndpointTests : IClassFixture<CustomWebApplicationFacto
         var response = await client.PostAsync("/api/sellers/1/reviews/1/report", null);
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    private async Task SeedDeliveredOrderAsync(int buyerId, int sellerId)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        db.Orders.Add(new Order
+        {
+            OrderNumber = "SR-" + Guid.NewGuid().ToString("N")[..12],
+            BuyerId = buyerId,
+            Status = OrderStatus.Delivered,
+            SubTotal = 100m,
+            TotalAmount = 100m,
+            DeliveredAt = DateTime.UtcNow,
+            SellerOrders = new List<SellerOrder>
+            {
+                new()
+                {
+                    SellerId = sellerId,
+                    Status = SellerOrderStatus.Delivered,
+                    SubTotal = 100m
+                }
+            }
+        });
+
+        await db.SaveChangesAsync();
     }
 }
