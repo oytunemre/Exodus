@@ -29,11 +29,13 @@ public class PaymentService : IPaymentService
         _paymentGateway = paymentGateway;
     }
 
-    public async Task<PaymentIntentResponseDto> CreateIntentAsync(CreatePaymentIntentDto dto, CancellationToken ct = default)
+    public async Task<PaymentIntentResponseDto> CreateIntentAsync(CreatePaymentIntentDto dto, int callerId, bool isAdmin, CancellationToken ct = default)
     {
         var order = await _db.Orders.FirstOrDefaultAsync(o => o.Id == dto.OrderId, ct);
         if (order is null)
             throw new NotFoundException($"Order not found. OrderId={dto.OrderId}");
+
+        EnsureOrderAccess(order, callerId, isAdmin);
 
         var existing = await _db.PaymentIntents.FirstOrDefaultAsync(p => p.OrderId == dto.OrderId, ct);
         if (existing is not null)
@@ -84,21 +86,23 @@ public class PaymentService : IPaymentService
         return Map(intent);
     }
 
-    public async Task<PaymentIntentResponseDto> GetByIdAsync(int paymentIntentId, CancellationToken ct = default)
+    public async Task<PaymentIntentResponseDto> GetByIdAsync(int paymentIntentId, int callerId, bool isAdmin, CancellationToken ct = default)
     {
         var intent = await _db.PaymentIntents.FirstOrDefaultAsync(x => x.Id == paymentIntentId, ct);
         if (intent is null)
             throw new NotFoundException($"PaymentIntent not found. Id={paymentIntentId}");
 
+        await EnsureIntentAccessAsync(intent, callerId, isAdmin, ct);
         return Map(intent);
     }
 
-    public async Task<PaymentIntentResponseDto> GetByOrderIdAsync(int orderId, CancellationToken ct = default)
+    public async Task<PaymentIntentResponseDto> GetByOrderIdAsync(int orderId, int callerId, bool isAdmin, CancellationToken ct = default)
     {
         var intent = await _db.PaymentIntents.FirstOrDefaultAsync(x => x.OrderId == orderId, ct);
         if (intent is null)
             throw new NotFoundException($"PaymentIntent not found for OrderId={orderId}");
 
+        await EnsureIntentAccessAsync(intent, callerId, isAdmin, ct);
         return Map(intent);
     }
 
@@ -162,9 +166,10 @@ public class PaymentService : IPaymentService
         return Map(intent);
     }
 
-    public async Task<PaymentIntentResponseDto> CancelAsync(int paymentIntentId, string? reason = null, CancellationToken ct = default)
+    public async Task<PaymentIntentResponseDto> CancelAsync(int paymentIntentId, string? reason, int callerId, bool isAdmin, CancellationToken ct = default)
     {
         var intent = await GetIntentAsync(paymentIntentId, ct);
+        await EnsureIntentAccessAsync(intent, callerId, isAdmin, ct);
         EnsureCanTransitionTo(intent, PaymentStatus.Cancelled);
 
         intent.Status = PaymentStatus.Cancelled;
@@ -262,9 +267,10 @@ public class PaymentService : IPaymentService
         };
     }
 
-    public async Task<PaymentIntentResponseDto> Confirm3DSecureAsync(int paymentIntentId, string authenticationResult, CancellationToken ct = default)
+    public async Task<PaymentIntentResponseDto> Confirm3DSecureAsync(int paymentIntentId, string authenticationResult, int callerId, bool isAdmin, CancellationToken ct = default)
     {
         var intent = await GetIntentAsync(paymentIntentId, ct);
+        await EnsureIntentAccessAsync(intent, callerId, isAdmin, ct);
 
         if (!intent.Requires3DSecure)
             throw new BadRequestException("This payment does not require 3D Secure");
@@ -345,8 +351,11 @@ public class PaymentService : IPaymentService
     public async Task<PaymentIntentResponseDto> SimulateFailAsync(int paymentIntentId, string? reason = null, CancellationToken ct = default)
         => await FailAsync(paymentIntentId, reason ?? "Simulated failure", ct);
 
-    public async Task<List<PaymentEventDto>> GetPaymentEventsAsync(int paymentIntentId, CancellationToken ct = default)
+    public async Task<List<PaymentEventDto>> GetPaymentEventsAsync(int paymentIntentId, int callerId, bool isAdmin, CancellationToken ct = default)
     {
+        var intent = await GetIntentAsync(paymentIntentId, ct);
+        await EnsureIntentAccessAsync(intent, callerId, isAdmin, ct);
+
         return await _db.PaymentEvents
             .Where(e => e.PaymentIntentId == paymentIntentId)
             .OrderByDescending(e => e.CreatedAt)
@@ -364,6 +373,25 @@ public class PaymentService : IPaymentService
     }
 
     // Private helpers
+
+    private static void EnsureOrderAccess(Order order, int callerId, bool isAdmin)
+    {
+        if (!isAdmin && order.BuyerId != callerId)
+            throw new ForbiddenException("You do not have access to this order's payment");
+    }
+
+    private async Task EnsureIntentAccessAsync(PaymentIntent intent, int callerId, bool isAdmin, CancellationToken ct)
+    {
+        if (isAdmin) return;
+
+        var buyerId = await _db.Orders
+            .Where(o => o.Id == intent.OrderId)
+            .Select(o => (int?)o.BuyerId)
+            .FirstOrDefaultAsync(ct);
+
+        if (buyerId != callerId)
+            throw new ForbiddenException("You do not have access to this payment");
+    }
 
     private async Task<PaymentIntent> GetIntentAsync(int paymentIntentId, CancellationToken ct)
     {
@@ -481,7 +509,7 @@ public class PaymentService : IPaymentService
 
     // Gateway Methods (iyzico integration)
 
-    public async Task<IyzicoPaymentResponseDto> ProcessWithGatewayAsync(ProcessGatewayPaymentDto dto, CancellationToken ct = default)
+    public async Task<IyzicoPaymentResponseDto> ProcessWithGatewayAsync(ProcessGatewayPaymentDto dto, int callerId, bool isAdmin, CancellationToken ct = default)
     {
         if (_paymentGateway == null)
             throw new InvalidOperationException("Payment gateway is not configured");
@@ -496,6 +524,8 @@ public class PaymentService : IPaymentService
 
         if (order is null)
             throw new NotFoundException($"Order not found. OrderId={dto.OrderId}");
+
+        EnsureOrderAccess(order, callerId, isAdmin);
 
         // Create or get existing payment intent
         var intent = await _db.PaymentIntents.FirstOrDefaultAsync(p => p.OrderId == dto.OrderId, ct);
@@ -571,7 +601,7 @@ public class PaymentService : IPaymentService
         };
     }
 
-    public async Task<Iyzico3DSResponseDto> Initialize3DSPaymentAsync(ProcessGatewayPaymentDto dto, CancellationToken ct = default)
+    public async Task<Iyzico3DSResponseDto> Initialize3DSPaymentAsync(ProcessGatewayPaymentDto dto, int callerId, bool isAdmin, CancellationToken ct = default)
     {
         if (_paymentGateway == null)
             throw new InvalidOperationException("Payment gateway is not configured");
@@ -586,6 +616,8 @@ public class PaymentService : IPaymentService
 
         if (order is null)
             throw new NotFoundException($"Order not found. OrderId={dto.OrderId}");
+
+        EnsureOrderAccess(order, callerId, isAdmin);
 
         // Create payment intent
         var intent = await _db.PaymentIntents.FirstOrDefaultAsync(p => p.OrderId == dto.OrderId, ct);

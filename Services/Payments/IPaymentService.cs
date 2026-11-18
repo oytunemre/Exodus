@@ -6,22 +6,22 @@ namespace Exodus.Services.Payments;
 public interface IPaymentService
 {
     // Payment Intent
-    Task<PaymentIntentResponseDto> CreateIntentAsync(CreatePaymentIntentDto dto, CancellationToken ct = default);
-    Task<PaymentIntentResponseDto> GetByIdAsync(int paymentIntentId, CancellationToken ct = default);
-    Task<PaymentIntentResponseDto> GetByOrderIdAsync(int orderId, CancellationToken ct = default);
+    Task<PaymentIntentResponseDto> CreateIntentAsync(CreatePaymentIntentDto dto, int callerId, bool isAdmin, CancellationToken ct = default);
+    Task<PaymentIntentResponseDto> GetByIdAsync(int paymentIntentId, int callerId, bool isAdmin, CancellationToken ct = default);
+    Task<PaymentIntentResponseDto> GetByOrderIdAsync(int orderId, int callerId, bool isAdmin, CancellationToken ct = default);
     Task<PaymentIntentResponseDto> GetByExternalReferenceAsync(string externalReference, CancellationToken ct = default);
 
     // Payment Processing
     Task<PaymentIntentResponseDto> AuthorizeAsync(int paymentIntentId, CancellationToken ct = default);
     Task<PaymentIntentResponseDto> CaptureAsync(int paymentIntentId, string? note = null, CancellationToken ct = default);
-    Task<PaymentIntentResponseDto> CancelAsync(int paymentIntentId, string? reason = null, CancellationToken ct = default);
+    Task<PaymentIntentResponseDto> CancelAsync(int paymentIntentId, string? reason, int callerId, bool isAdmin, CancellationToken ct = default);
     Task<PaymentIntentResponseDto> FailAsync(int paymentIntentId, string? reason = null, CancellationToken ct = default);
 
     // Refunds
     Task<RefundPaymentResponseDto> RefundAsync(int paymentIntentId, decimal? amount = null, string? reason = null, CancellationToken ct = default);
 
     // 3D Secure
-    Task<PaymentIntentResponseDto> Confirm3DSecureAsync(int paymentIntentId, string authenticationResult, CancellationToken ct = default);
+    Task<PaymentIntentResponseDto> Confirm3DSecureAsync(int paymentIntentId, string authenticationResult, int callerId, bool isAdmin, CancellationToken ct = default);
 
     // Webhook
     Task ProcessWebhookAsync(string provider, string payload, string? signature = null, CancellationToken ct = default);
@@ -34,11 +34,11 @@ public interface IPaymentService
     Task<PaymentIntentResponseDto> SimulateFailAsync(int paymentIntentId, string? reason = null, CancellationToken ct = default);
 
     // History
-    Task<List<PaymentEventDto>> GetPaymentEventsAsync(int paymentIntentId, CancellationToken ct = default);
+    Task<List<PaymentEventDto>> GetPaymentEventsAsync(int paymentIntentId, int callerId, bool isAdmin, CancellationToken ct = default);
 
     // iyzico Gateway Methods
-    Task<IyzicoPaymentResponseDto> ProcessWithGatewayAsync(ProcessGatewayPaymentDto dto, CancellationToken ct = default);
-    Task<Iyzico3DSResponseDto> Initialize3DSPaymentAsync(ProcessGatewayPaymentDto dto, CancellationToken ct = default);
+    Task<IyzicoPaymentResponseDto> ProcessWithGatewayAsync(ProcessGatewayPaymentDto dto, int callerId, bool isAdmin, CancellationToken ct = default);
+    Task<Iyzico3DSResponseDto> Initialize3DSPaymentAsync(ProcessGatewayPaymentDto dto, int callerId, bool isAdmin, CancellationToken ct = default);
     Task<IyzicoPaymentResponseDto> Complete3DSPaymentAsync(string paymentToken, CancellationToken ct = default);
     Task<BinCheckResponseDto> CheckBinAsync(string binNumber, CancellationToken ct = default);
     Task<InstallmentResponseDto> GetInstallmentOptionsAsync(string binNumber, decimal price, CancellationToken ct = default);

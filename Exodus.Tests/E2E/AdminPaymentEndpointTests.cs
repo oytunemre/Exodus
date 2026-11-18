@@ -218,10 +218,10 @@ public class AdminPaymentEndpointTests : IClassFixture<CustomWebApplicationFacto
         var (client, paymentId, _) = await CreatePaymentAsync("fp1");
 
         // Fail the payment
+        await TestHelper.RegisterAndLoginAsAdminAsync(client, "fp1");
+
         await client.PostAsJsonAsync($"/api/payment/intents/{paymentId}/simulate-fail",
             new SimulatePaymentDto { Reason = "Test failure" }, TestHelper.JsonOptions);
-
-        await TestHelper.RegisterAndLoginAsAdminAsync(client, "fp1");
 
         var response = await client.GetAsync("/api/admin/payments/failed");
 

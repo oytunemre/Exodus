@@ -19,13 +19,26 @@ public class PaymentController : ControllerBase
         _paymentService = paymentService;
     }
 
+    private int GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+            throw new UnauthorizedException("Invalid or missing user identity");
+
+        return userId;
+    }
+
+    private bool IsAdmin() => User.IsInRole("Admin");
+
     /// <summary>
     /// Create payment intent for order
     /// </summary>
     [HttpPost("intents")]
     public async Task<ActionResult<PaymentIntentResponseDto>> CreateIntent([FromBody] CreatePaymentIntentDto dto, CancellationToken ct)
     {
-        var result = await _paymentService.CreateIntentAsync(dto, ct);
+        var result = await _paymentService.CreateIntentAsync(dto, GetCurrentUserId(), IsAdmin(), ct);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
@@ -35,7 +48,7 @@ public class PaymentController : ControllerBase
     [HttpGet("intents/{id:int}")]
     public async Task<ActionResult<PaymentIntentResponseDto>> GetById(int id, CancellationToken ct)
     {
-        var result = await _paymentService.GetByIdAsync(id, ct);
+        var result = await _paymentService.GetByIdAsync(id, GetCurrentUserId(), IsAdmin(), ct);
         return Ok(result);
     }
 
@@ -45,7 +58,7 @@ public class PaymentController : ControllerBase
     [HttpGet("order/{orderId:int}")]
     public async Task<ActionResult<PaymentIntentResponseDto>> GetByOrderId(int orderId, CancellationToken ct)
     {
-        var result = await _paymentService.GetByOrderIdAsync(orderId, ct);
+        var result = await _paymentService.GetByOrderIdAsync(orderId, GetCurrentUserId(), IsAdmin(), ct);
         return Ok(result);
     }
 
@@ -53,6 +66,7 @@ public class PaymentController : ControllerBase
     /// Authorize payment (pre-capture)
     /// </summary>
     [HttpPost("intents/{id:int}/authorize")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<PaymentIntentResponseDto>> Authorize(int id, CancellationToken ct)
     {
         var result = await _paymentService.AuthorizeAsync(id, ct);
@@ -63,6 +77,7 @@ public class PaymentController : ControllerBase
     /// Capture authorized payment
     /// </summary>
     [HttpPost("intents/{id:int}/capture")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<PaymentIntentResponseDto>> Capture(int id, [FromBody] CapturePaymentDto? dto, CancellationToken ct)
     {
         var result = await _paymentService.CaptureAsync(id, dto?.Note, ct);
@@ -75,7 +90,7 @@ public class PaymentController : ControllerBase
     [HttpPost("intents/{id:int}/cancel")]
     public async Task<ActionResult<PaymentIntentResponseDto>> Cancel(int id, [FromBody] CancelPaymentDto? dto, CancellationToken ct)
     {
-        var result = await _paymentService.CancelAsync(id, dto?.Reason, ct);
+        var result = await _paymentService.CancelAsync(id, dto?.Reason, GetCurrentUserId(), IsAdmin(), ct);
         return Ok(result);
     }
 
@@ -83,6 +98,7 @@ public class PaymentController : ControllerBase
     /// Request refund for payment
     /// </summary>
     [HttpPost("intents/{id:int}/refund")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<RefundPaymentResponseDto>> Refund(int id, [FromBody] RefundPaymentDto dto, CancellationToken ct)
     {
         var result = await _paymentService.RefundAsync(id, dto.Amount, dto.Reason, ct);
@@ -95,7 +111,7 @@ public class PaymentController : ControllerBase
     [HttpPost("intents/{id:int}/3ds/confirm")]
     public async Task<ActionResult<PaymentIntentResponseDto>> Confirm3DSecure(int id, [FromBody] Confirm3DSecureDto dto, CancellationToken ct)
     {
-        var result = await _paymentService.Confirm3DSecureAsync(id, dto.AuthenticationResult, ct);
+        var result = await _paymentService.Confirm3DSecureAsync(id, dto.AuthenticationResult, GetCurrentUserId(), IsAdmin(), ct);
         return Ok(result);
     }
 
@@ -105,7 +121,7 @@ public class PaymentController : ControllerBase
     [HttpGet("intents/{id:int}/events")]
     public async Task<ActionResult<List<PaymentEventDto>>> GetEvents(int id, CancellationToken ct)
     {
-        var result = await _paymentService.GetPaymentEventsAsync(id, ct);
+        var result = await _paymentService.GetPaymentEventsAsync(id, GetCurrentUserId(), IsAdmin(), ct);
         return Ok(result);
     }
 
@@ -124,6 +140,8 @@ public class PaymentController : ControllerBase
     /// Simulate payment success (testing only)
     /// </summary>
     [HttpPost("intents/{id:int}/simulate-success")]
+    [Authorize(Policy = "AdminOnly")]
+    [DevelopmentOnly]
     public async Task<ActionResult<PaymentIntentResponseDto>> SimulateSuccess(int id, [FromBody] SimulatePaymentDto? dto, CancellationToken ct)
     {
         var result = await _paymentService.SimulateSuccessAsync(id, dto?.Reason, ct);
@@ -134,6 +152,8 @@ public class PaymentController : ControllerBase
     /// Simulate payment failure (testing only)
     /// </summary>
     [HttpPost("intents/{id:int}/simulate-fail")]
+    [Authorize(Policy = "AdminOnly")]
+    [DevelopmentOnly]
     public async Task<ActionResult<PaymentIntentResponseDto>> SimulateFail(int id, [FromBody] SimulatePaymentDto? dto, CancellationToken ct)
     {
         var result = await _paymentService.SimulateFailAsync(id, dto?.Reason, ct);
@@ -163,7 +183,7 @@ public class PaymentController : ControllerBase
     public async Task<ActionResult<IyzicoPaymentResponseDto>> ProcessWithGateway([FromBody] ProcessGatewayPaymentDto dto, CancellationToken ct)
     {
         dto.IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-        var result = await _paymentService.ProcessWithGatewayAsync(dto, ct);
+        var result = await _paymentService.ProcessWithGatewayAsync(dto, GetCurrentUserId(), IsAdmin(), ct);
         return Ok(result);
     }
 
@@ -174,7 +194,7 @@ public class PaymentController : ControllerBase
     public async Task<ActionResult<Iyzico3DSResponseDto>> Initialize3DSPayment([FromBody] ProcessGatewayPaymentDto dto, CancellationToken ct)
     {
         dto.IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-        var result = await _paymentService.Initialize3DSPaymentAsync(dto, ct);
+        var result = await _paymentService.Initialize3DSPaymentAsync(dto, GetCurrentUserId(), IsAdmin(), ct);
         return Ok(result);
     }
 

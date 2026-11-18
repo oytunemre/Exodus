@@ -115,4 +115,25 @@ public static class TestHelper
         SetAuthToken(client, auth.Token!);
         return auth;
     }
+
+    /// <summary>
+    /// Creates a new client authenticated as a freshly registered Admin (unique account per call).
+    /// </summary>
+    public static async Task<HttpClient> CreateAdminClientAsync(CustomWebApplicationFactory factory)
+    {
+        var client = factory.CreateClient();
+        await RegisterAndLoginAsAdminAsync(client, Guid.NewGuid().ToString("N")[..10]);
+        return client;
+    }
+
+    /// <summary>
+    /// Captures a payment intent through the admin-only simulate-success endpoint using its own admin client.
+    /// </summary>
+    public static async Task SimulatePaymentSuccessAsAdminAsync(CustomWebApplicationFactory factory, int paymentIntentId)
+    {
+        var admin = await CreateAdminClientAsync(factory);
+        var response = await admin.PostAsJsonAsync($"/api/payment/intents/{paymentIntentId}/simulate-success",
+            new Models.Dto.Payment.SimulatePaymentDto { Reason = "Test" }, JsonOptions);
+        response.EnsureSuccessStatusCode();
+    }
 }

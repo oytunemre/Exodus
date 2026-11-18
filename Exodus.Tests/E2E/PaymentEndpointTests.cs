@@ -279,6 +279,7 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task Authorize_CreatedIntent_ReturnsAuthorized()
     {
         var (client, orderId, _) = await CreateOrderAsync("auth1");
+        var admin = await TestHelper.CreateAdminClientAsync(_factory);
 
         var createDto = new CreatePaymentIntentDto
         {
@@ -289,7 +290,7 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
         var createResp = await client.PostAsJsonAsync("/api/payment/intents", createDto, TestHelper.JsonOptions);
         var created = await createResp.Content.ReadFromJsonAsync<PaymentIntentResponseDto>(TestHelper.JsonOptions);
 
-        var response = await client.PostAsync($"/api/payment/intents/{created!.Id}/authorize", null);
+        var response = await admin.PostAsync($"/api/payment/intents/{created!.Id}/authorize", null);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<PaymentIntentResponseDto>(TestHelper.JsonOptions);
@@ -316,6 +317,7 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task Capture_AuthorizedIntent_ReturnsCaptured()
     {
         var (client, orderId, _) = await CreateOrderAsync("cap1");
+        var admin = await TestHelper.CreateAdminClientAsync(_factory);
 
         var createDto = new CreatePaymentIntentDto
         {
@@ -327,11 +329,11 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
         var created = await createResp.Content.ReadFromJsonAsync<PaymentIntentResponseDto>(TestHelper.JsonOptions);
 
         // Authorize first
-        await client.PostAsync($"/api/payment/intents/{created!.Id}/authorize", null);
+        await admin.PostAsync($"/api/payment/intents/{created!.Id}/authorize", null);
 
         // Capture
         var captureDto = new CapturePaymentDto { Note = "Test capture" };
-        var response = await client.PostAsJsonAsync($"/api/payment/intents/{created.Id}/capture", captureDto, TestHelper.JsonOptions);
+        var response = await admin.PostAsJsonAsync($"/api/payment/intents/{created.Id}/capture", captureDto, TestHelper.JsonOptions);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<PaymentIntentResponseDto>(TestHelper.JsonOptions);
@@ -343,6 +345,7 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task Capture_CreatedIntent_ReturnsCaptured()
     {
         var (client, orderId, _) = await CreateOrderAsync("cap2");
+        var admin = await TestHelper.CreateAdminClientAsync(_factory);
 
         var createDto = new CreatePaymentIntentDto
         {
@@ -355,7 +358,7 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
 
         // Direct capture from Created state (allowed per state machine)
         var captureDto = new CapturePaymentDto { Note = "Direct capture" };
-        var response = await client.PostAsJsonAsync($"/api/payment/intents/{created!.Id}/capture", captureDto, TestHelper.JsonOptions);
+        var response = await admin.PostAsJsonAsync($"/api/payment/intents/{created!.Id}/capture", captureDto, TestHelper.JsonOptions);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<PaymentIntentResponseDto>(TestHelper.JsonOptions);
@@ -408,6 +411,7 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task Refund_CapturedIntent_FullRefund_ReturnsRefunded()
     {
         var (client, orderId, _) = await CreateOrderAsync("ref1");
+        var admin = await TestHelper.CreateAdminClientAsync(_factory);
 
         // Create and capture
         var createDto = new CreatePaymentIntentDto
@@ -420,13 +424,13 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
         var created = await createResp.Content.ReadFromJsonAsync<PaymentIntentResponseDto>(TestHelper.JsonOptions);
 
         // Authorize and capture
-        await client.PostAsync($"/api/payment/intents/{created!.Id}/authorize", null);
-        await client.PostAsJsonAsync($"/api/payment/intents/{created.Id}/capture",
+        await admin.PostAsync($"/api/payment/intents/{created!.Id}/authorize", null);
+        await admin.PostAsJsonAsync($"/api/payment/intents/{created.Id}/capture",
             new CapturePaymentDto { Note = "Captured" }, TestHelper.JsonOptions);
 
         // Full refund
         var refundDto = new RefundPaymentDto { Reason = "Customer return" };
-        var response = await client.PostAsJsonAsync($"/api/payment/intents/{created.Id}/refund", refundDto, TestHelper.JsonOptions);
+        var response = await admin.PostAsJsonAsync($"/api/payment/intents/{created.Id}/refund", refundDto, TestHelper.JsonOptions);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<RefundPaymentResponseDto>(TestHelper.JsonOptions);
@@ -439,6 +443,7 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task Refund_CapturedIntent_PartialRefund_ReturnsPartiallyRefunded()
     {
         var (client, orderId, _) = await CreateOrderAsync("ref2");
+        var admin = await TestHelper.CreateAdminClientAsync(_factory);
 
         // Create and capture
         var createDto = new CreatePaymentIntentDto
@@ -450,13 +455,13 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
         var createResp = await client.PostAsJsonAsync("/api/payment/intents", createDto, TestHelper.JsonOptions);
         var created = await createResp.Content.ReadFromJsonAsync<PaymentIntentResponseDto>(TestHelper.JsonOptions);
 
-        await client.PostAsync($"/api/payment/intents/{created!.Id}/authorize", null);
-        await client.PostAsJsonAsync($"/api/payment/intents/{created.Id}/capture",
+        await admin.PostAsync($"/api/payment/intents/{created!.Id}/authorize", null);
+        await admin.PostAsJsonAsync($"/api/payment/intents/{created.Id}/capture",
             new CapturePaymentDto { Note = "Captured" }, TestHelper.JsonOptions);
 
         // Partial refund
         var refundDto = new RefundPaymentDto { Amount = 30.00m, Reason = "Partial return" };
-        var response = await client.PostAsJsonAsync($"/api/payment/intents/{created.Id}/refund", refundDto, TestHelper.JsonOptions);
+        var response = await admin.PostAsJsonAsync($"/api/payment/intents/{created.Id}/refund", refundDto, TestHelper.JsonOptions);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<RefundPaymentResponseDto>(TestHelper.JsonOptions);
@@ -484,6 +489,7 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task SimulateSuccess_CreatedIntent_ReturnsCaptured()
     {
         var (client, orderId, _) = await CreateOrderAsync("sim1");
+        var admin = await TestHelper.CreateAdminClientAsync(_factory);
 
         var createDto = new CreatePaymentIntentDto
         {
@@ -495,7 +501,7 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
         var created = await createResp.Content.ReadFromJsonAsync<PaymentIntentResponseDto>(TestHelper.JsonOptions);
 
         var simDto = new SimulatePaymentDto { Reason = "Test simulation" };
-        var response = await client.PostAsJsonAsync($"/api/payment/intents/{created!.Id}/simulate-success", simDto, TestHelper.JsonOptions);
+        var response = await admin.PostAsJsonAsync($"/api/payment/intents/{created!.Id}/simulate-success", simDto, TestHelper.JsonOptions);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<PaymentIntentResponseDto>(TestHelper.JsonOptions);
@@ -506,6 +512,7 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task SimulateFail_CreatedIntent_ReturnsFailed()
     {
         var (client, orderId, _) = await CreateOrderAsync("sim2");
+        var admin = await TestHelper.CreateAdminClientAsync(_factory);
 
         var createDto = new CreatePaymentIntentDto
         {
@@ -517,7 +524,7 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
         var created = await createResp.Content.ReadFromJsonAsync<PaymentIntentResponseDto>(TestHelper.JsonOptions);
 
         var simDto = new SimulatePaymentDto { Reason = "Test failure" };
-        var response = await client.PostAsJsonAsync($"/api/payment/intents/{created!.Id}/simulate-fail", simDto, TestHelper.JsonOptions);
+        var response = await admin.PostAsJsonAsync($"/api/payment/intents/{created!.Id}/simulate-fail", simDto, TestHelper.JsonOptions);
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<PaymentIntentResponseDto>(TestHelper.JsonOptions);
@@ -533,6 +540,7 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task GetEvents_AfterCreateAndAuthorize_ReturnsEvents()
     {
         var (client, orderId, _) = await CreateOrderAsync("evt1");
+        var admin = await TestHelper.CreateAdminClientAsync(_factory);
 
         var createDto = new CreatePaymentIntentDto
         {
@@ -543,7 +551,7 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
         var createResp = await client.PostAsJsonAsync("/api/payment/intents", createDto, TestHelper.JsonOptions);
         var created = await createResp.Content.ReadFromJsonAsync<PaymentIntentResponseDto>(TestHelper.JsonOptions);
 
-        await client.PostAsync($"/api/payment/intents/{created!.Id}/authorize", null);
+        await admin.PostAsync($"/api/payment/intents/{created!.Id}/authorize", null);
 
         var response = await client.GetAsync($"/api/payment/intents/{created.Id}/events");
 
@@ -758,6 +766,7 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task Capture_CancelledIntent_ReturnsBadRequest()
     {
         var (client, orderId, _) = await CreateOrderAsync("sm1");
+        var admin = await TestHelper.CreateAdminClientAsync(_factory);
 
         var createDto = new CreatePaymentIntentDto
         {
@@ -774,7 +783,7 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
 
         // Try to capture cancelled intent
         var captureDto = new CapturePaymentDto { Note = "Should fail" };
-        var response = await client.PostAsJsonAsync($"/api/payment/intents/{created.Id}/capture", captureDto, TestHelper.JsonOptions);
+        var response = await admin.PostAsJsonAsync($"/api/payment/intents/{created.Id}/capture", captureDto, TestHelper.JsonOptions);
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
@@ -787,6 +796,7 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task FullLifecycle_CreateAuthorizeCapture_UpdatesOrderStatus()
     {
         var (client, orderId, _) = await CreateOrderAsync("lc1");
+        var admin = await TestHelper.CreateAdminClientAsync(_factory);
 
         // Create
         var createDto = new CreatePaymentIntentDto
@@ -800,12 +810,12 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
         created!.Status.Should().Be(PaymentStatus.Created);
 
         // Authorize
-        var authResp = await client.PostAsync($"/api/payment/intents/{created.Id}/authorize", null);
+        var authResp = await admin.PostAsync($"/api/payment/intents/{created.Id}/authorize", null);
         var authorized = await authResp.Content.ReadFromJsonAsync<PaymentIntentResponseDto>(TestHelper.JsonOptions);
         authorized!.Status.Should().Be(PaymentStatus.Authorized);
 
         // Capture
-        var captureResp = await client.PostAsJsonAsync($"/api/payment/intents/{created.Id}/capture",
+        var captureResp = await admin.PostAsJsonAsync($"/api/payment/intents/{created.Id}/capture",
             new CapturePaymentDto { Note = "Lifecycle capture" }, TestHelper.JsonOptions);
         var captured = await captureResp.Content.ReadFromJsonAsync<PaymentIntentResponseDto>(TestHelper.JsonOptions);
         captured!.Status.Should().Be(PaymentStatus.Captured);
@@ -826,6 +836,7 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
     public async Task FullLifecycle_CreateAuthorizeCaptureRefund()
     {
         var (client, orderId, _) = await CreateOrderAsync("lc2");
+        var admin = await TestHelper.CreateAdminClientAsync(_factory);
 
         // Create
         var createDto = new CreatePaymentIntentDto
@@ -838,18 +849,18 @@ public class PaymentEndpointTests : IClassFixture<CustomWebApplicationFactory>
         var created = await createResp.Content.ReadFromJsonAsync<PaymentIntentResponseDto>(TestHelper.JsonOptions);
 
         // Authorize -> Capture
-        await client.PostAsync($"/api/payment/intents/{created!.Id}/authorize", null);
-        await client.PostAsJsonAsync($"/api/payment/intents/{created.Id}/capture",
+        await admin.PostAsync($"/api/payment/intents/{created!.Id}/authorize", null);
+        await admin.PostAsJsonAsync($"/api/payment/intents/{created.Id}/capture",
             new CapturePaymentDto(), TestHelper.JsonOptions);
 
         // Partial refund
-        var refund1 = await client.PostAsJsonAsync($"/api/payment/intents/{created.Id}/refund",
+        var refund1 = await admin.PostAsJsonAsync($"/api/payment/intents/{created.Id}/refund",
             new RefundPaymentDto { Amount = 20.00m, Reason = "Partial return" }, TestHelper.JsonOptions);
         var refund1Result = await refund1.Content.ReadFromJsonAsync<RefundPaymentResponseDto>(TestHelper.JsonOptions);
         refund1Result!.Status.Should().Be(PaymentStatus.PartiallyRefunded);
 
         // Refund remaining
-        var refund2 = await client.PostAsJsonAsync($"/api/payment/intents/{created.Id}/refund",
+        var refund2 = await admin.PostAsJsonAsync($"/api/payment/intents/{created.Id}/refund",
             new RefundPaymentDto { Reason = "Full return" }, TestHelper.JsonOptions);
         var refund2Result = await refund2.Content.ReadFromJsonAsync<RefundPaymentResponseDto>(TestHelper.JsonOptions);
         refund2Result!.Status.Should().Be(PaymentStatus.Refunded);

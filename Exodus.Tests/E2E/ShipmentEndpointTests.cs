@@ -85,8 +85,7 @@ public class ShipmentEndpointTests : IClassFixture<CustomWebApplicationFactory>
         var payResp = await client.PostAsJsonAsync("/api/payment/intents", paymentDto, TestHelper.JsonOptions);
         var payment = await payResp.Content.ReadFromJsonAsync<PaymentIntentResponseDto>(TestHelper.JsonOptions);
 
-        await client.PostAsJsonAsync($"/api/payment/intents/{payment!.Id}/simulate-success",
-            new SimulatePaymentDto { Reason = "Test" }, TestHelper.JsonOptions);
+        await TestHelper.SimulatePaymentSuccessAsAdminAsync(_factory, payment!.Id);
 
         // Get seller order ID
         var orderDetailResp = await client.GetAsync($"/api/order/{order.Id}");
