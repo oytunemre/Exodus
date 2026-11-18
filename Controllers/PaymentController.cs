@@ -106,9 +106,11 @@ public class PaymentController : ControllerBase
     }
 
     /// <summary>
-    /// Confirm 3D Secure authentication
+    /// Confirm 3D Secure authentication (admin-only 3DS simulator; real 3DS completes via gateway/3ds/complete)
     /// </summary>
     [HttpPost("intents/{id:int}/3ds/confirm")]
+    [Authorize(Policy = "AdminOnly")]
+    [DevelopmentOnly]
     public async Task<ActionResult<PaymentIntentResponseDto>> Confirm3DSecure(int id, [FromBody] Confirm3DSecureDto dto, CancellationToken ct)
     {
         var result = await _paymentService.Confirm3DSecureAsync(id, dto.AuthenticationResult, GetCurrentUserId(), IsAdmin(), ct);

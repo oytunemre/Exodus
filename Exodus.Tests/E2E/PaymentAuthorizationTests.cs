@@ -35,7 +35,8 @@ public class PaymentAuthorizationTests : IClassFixture<CustomWebApplicationFacto
     /// Builds seller -> product -> listing -> customer -> cart -> address -> checkout -> payment intent.
     /// Returned client is authenticated as the order owner (customer).
     /// </summary>
-    private async Task<(HttpClient Client, int OrderId, int IntentId)> SetupOwnerWithIntentAsync(string suffix)
+    private async Task<(HttpClient Client, int OrderId, int IntentId)> SetupOwnerWithIntentAsync(
+        string suffix, decimal price = 100.00m, bool with3DSCard = false)
     {
         var client = _factory.CreateClient();
 
@@ -52,7 +53,7 @@ public class PaymentAuthorizationTests : IClassFixture<CustomWebApplicationFacto
         {
             ProductId = prod!.Id,
             SellerId = seller.UserId,
-            Price = 100.00m,
+            Price = price,
             Stock = 50,
             Condition = ListingCondition.New
         }, TestHelper.JsonOptions);
@@ -82,7 +83,16 @@ public class PaymentAuthorizationTests : IClassFixture<CustomWebApplicationFacto
         {
             OrderId = order!.Id,
             Method = PaymentMethod.CreditCard,
-            Currency = "TRY"
+            Currency = "TRY",
+            CardDetails = with3DSCard
+                ? new CardDetailsDto
+                {
+                    CardNumber = "5528790000000008",
+                    ExpiryDate = "12/30",
+                    Cvv = "123",
+                    CardHolderName = "Made Up"
+                }
+                : null
         }, TestHelper.JsonOptions);
         payResp.StatusCode.Should().Be(HttpStatusCode.Created);
         var intent = await payResp.Content.ReadFromJsonAsync<PaymentIntentResponseDto>(TestHelper.JsonOptions);
@@ -171,13 +181,45 @@ public class PaymentAuthorizationTests : IClassFixture<CustomWebApplicationFacto
     [Fact]
     public async Task Confirm3DSecure_ForForeignOrder_ReturnsForbidden()
     {
-        var (_, _, intentId) = await SetupOwnerWithIntentAsync("3d");
+        var (_, _, intentId) = await SetupOwnerWithIntentAsync("3d", 600m, with3DSCard: true);
         var other = await NewCustomerClientAsync("pauth3db");
 
         var response = await other.PostAsJsonAsync($"/api/payment/intents/{intentId}/3ds/confirm",
             new Confirm3DSecureDto { AuthenticationResult = "success" }, TestHelper.JsonOptions);
 
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task Confirm3DSecure_AsOwnerCustomer_ReturnsForbidden_AndIntentStaysPending()
+    {
+        var (owner, _, intentId) = await SetupOwnerWithIntentAsync("3do", 600m, with3DSCard: true);
+
+        var before = await (await owner.GetAsync($"/api/payment/intents/{intentId}"))
+            .Content.ReadFromJsonAsync<PaymentIntentResponseDto>(TestHelper.JsonOptions);
+        before!.Status.Should().Be(PaymentStatus.Pending);
+
+        var response = await owner.PostAsJsonAsync($"/api/payment/intents/{intentId}/3ds/confirm",
+            new Confirm3DSecureDto { AuthenticationResult = "success" }, TestHelper.JsonOptions);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        var after = await (await owner.GetAsync($"/api/payment/intents/{intentId}"))
+            .Content.ReadFromJsonAsync<PaymentIntentResponseDto>(TestHelper.JsonOptions);
+        after!.Status.Should().Be(PaymentStatus.Pending);
+    }
+
+    [Fact]
+    public async Task Confirm3DSecure_AsAdmin_InDevelopment_Captures()
+    {
+        var (_, _, intentId) = await SetupOwnerWithIntentAsync("3da", 600m, with3DSCard: true);
+        var admin = await TestHelper.CreateAdminClientAsync(_factory);
+
+        var response = await admin.PostAsJsonAsync($"/api/payment/intents/{intentId}/3ds/confirm",
+            new Confirm3DSecureDto { AuthenticationResult = "success" }, TestHelper.JsonOptions);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var result = await response.Content.ReadFromJsonAsync<PaymentIntentResponseDto>(TestHelper.JsonOptions);
+        result!.Status.Should().Be(PaymentStatus.Captured);
     }
 
     [Theory]
