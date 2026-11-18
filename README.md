@@ -173,17 +173,18 @@ In Production no demo data is seeded and the placeholder JWT key is not accepted
 
 ## Demo accounts
 
-Seeded automatically outside Production. All accounts use the password `Demo123!`.
+Seeded automatically outside Production (the admin only in Development). All accounts use the password `Demo123!`.
 
 | Role | Email |
 |------|-------|
+| Admin | `admin@test.com` (Development environment only) |
 | Seller | `zeynep@test.com` |
 | Seller | `mehmet@test.com` |
 | Customer | `ahmet@test.com` (default address included) |
 | Customer | `elif@test.com` (default address included) |
 | Customer | `can@test.com` (default address included) |
 
-The seed also creates 5 categories, 18 products, competing listings from both sellers (including low-stock and out-of-stock examples) and 5 demo orders. There is no seeded admin: register one via `POST /api/auth/register` with `"role": 2` (see `api-test.http`).
+The seed also creates 5 categories, 18 products, competing listings from both sellers (including low-stock and out-of-stock examples) and 5 demo orders. Registration (`POST /api/auth/register`) always creates a Customer and ignores any `role` value. The admin account is seeded only when `ASPNETCORE_ENVIRONMENT=Development` (never in Staging or Production); in Development use `admin@test.com` for admin endpoints.
 
 ## API Endpoints
 
@@ -295,17 +296,17 @@ Customer-facing endpoints verify that the caller owns the order (Admin bypasses)
 ### Seller
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
-| GET | `/api/seller/listings` | Get my listings | Seller |
-| POST | `/api/seller/listings` | Create listing | Seller |
-| PUT | `/api/seller/listings/{id}` | Update listing | Seller |
-| DELETE | `/api/seller/listings/{id}` | Delete listing | Seller |
-| PATCH | `/api/seller/listings/{id}/stock` | Update stock | Seller |
-| GET | `/api/seller/listings/low-stock` | Low stock items | Seller |
-| GET | `/api/seller/listings/out-of-stock` | Out-of-stock items | Seller |
-| GET | `/api/seller/orders` | Get my seller orders | Seller |
-| POST | `/api/seller/orders/{id}/confirm` | Confirm order | Seller |
-| POST | `/api/seller/orders/{id}/ship` | Ship order (carrier + trackingNumber required, creates the Shipment) | Seller |
-| PATCH | `/api/seller/orders/{id}/status` | Update status (Shipped/Delivered/Completed rejected; use ship / deliver) | Seller |
+| GET | `/api/seller/listings` | Get my listings | Seller (or Admin) |
+| POST | `/api/seller/listings` | Create listing | Seller (or Admin) |
+| PUT | `/api/seller/listings/{id}` | Update listing | Seller (or Admin) |
+| DELETE | `/api/seller/listings/{id}` | Delete listing | Seller (or Admin) |
+| PATCH | `/api/seller/listings/{id}/stock` | Update stock | Seller (or Admin) |
+| GET | `/api/seller/listings/low-stock` | Low stock items | Seller (or Admin) |
+| GET | `/api/seller/listings/out-of-stock` | Out-of-stock items | Seller (or Admin) |
+| GET | `/api/seller/orders` | Get my seller orders | Seller (or Admin) |
+| POST | `/api/seller/orders/{id}/confirm` | Confirm order | Seller (or Admin) |
+| POST | `/api/seller/orders/{id}/ship` | Ship order (carrier + trackingNumber required, creates the Shipment) | Seller (or Admin) |
+| PATCH | `/api/seller/orders/{id}/status` | Update status (Shipped/Delivered/Completed rejected; use ship / deliver) | Seller (or Admin) |
 
 Seller campaigns are under `/api/seller/campaigns`.
 
@@ -477,11 +478,14 @@ dotnet ef database update   # optional, the app also migrates on startup
 
 ### Test Flow Example
 
+Run in Development so the demo accounts exist (password `Demo123!`):
+
 ```
-Register (Seller) → Login → Get Token → Authorize in Swagger
-→ Create Category (Admin) → Create Product → Create Listing
-→ Register (Buyer) → Login → Add to Cart → Checkout
-→ Create Payment → (Admin) Simulate Success [Development] → Seller Ships (carrier + tracking) → Delivered
+Login as seller zeynep@test.com → browse her listings (GET /api/seller/listings)
+Login as customer ahmet@test.com → search (GET /api/listings/search) → Add to Cart → Checkout
+→ Create Payment Intent → Login as admin admin@test.com → Simulate Success [Development]
+→ Seller zeynep ships (POST /api/seller/orders/{id}/ship with carrier + trackingNumber)
+→ Delivered (PATCH /api/shipments/seller-orders/{id}/deliver)
 ```
 
 ## License

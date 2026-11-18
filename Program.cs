@@ -333,7 +333,7 @@ using (var scope = app.Services.CreateScope())
 
         // Demo data must never reach production
         if (!app.Environment.IsProduction())
-            await DbSeeder.SeedAsync(db);
+            await DbSeeder.SeedAsync(db, includeDevAdmin: app.Environment.IsDevelopment());
     }
 }
 

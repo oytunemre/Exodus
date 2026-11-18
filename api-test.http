@@ -1,11 +1,15 @@
 ### ============================================
 ### EXODUS MARKETPLACE - API TEST DOSYASI
-### Visual Studio 2022+ (.http dosya destegi)
+### Visual Studio 2022+ / VS Code REST Client
 ### ============================================
 ### KULLANIM:
-### 1. Ilk olarak "Register Admin" calistir
-### 2. Sonra "Login Admin" calistir (token otomatik yakalanir)
+### 1. Uygulamayi Development ortaminda calistir (dotnet run --launch-profile http);
+###    demo hesaplar otomatik seed edilir (sifre: Demo123!)
+### 2. 1.4-1.6 login isteklerini calistir (tokenlar otomatik yakalanir)
 ### 3. Diger endpointleri sirayla test et
+### Not: kayit (register) her zaman Customer olusturur, "role" alani yok sayilir.
+###      Admin: admin@test.com (sadece Development), Seller: zeynep@test.com / mehmet@test.com,
+###      Customer: ahmet@test.com / elif@test.com / can@test.com
 ### ============================================
 
 @baseUrl = http://localhost:5013
@@ -15,41 +19,18 @@
 ### 1. AUTH - Kimlik Dogrulama
 ### ============================================
 
-### 1.1 Admin Kayit
+### 1.1 Yeni Musteri Kaydi (role alani yok sayilir; her zaman Customer)
 POST {{baseUrl}}/api/auth/register
 Content-Type: {{contentType}}
 
 {
-    "name": "Admin User",
-    "email": "admin@test.com",
-    "username": "admin",
-    "password": "Admin123!",
-    "role": 2
+    "name": "New Customer",
+    "email": "new.customer@test.com",
+    "username": "newcustomer",
+    "password": "Customer123!"
 }
 
-### 1.2 Seller Kayit
-POST {{baseUrl}}/api/auth/register
-Content-Type: {{contentType}}
-
-{
-    "name": "Test Seller",
-    "email": "seller@test.com",
-    "username": "seller",
-    "password": "Seller123!",
-    "role": 1
-}
-
-### 1.3 Customer Kayit
-POST {{baseUrl}}/api/auth/register
-Content-Type: {{contentType}}
-
-{
-    "name": "Test Customer",
-    "email": "customer@test.com",
-    "username": "customer",
-    "password": "Customer123!",
-    "role": 0
-}
+### 1.2 / 1.3 Demo hesaplar seed ile gelir (Admin, Seller, Customer): kayit gerekmez
 
 ### 1.4 Admin Login
 # @name loginAdmin
@@ -58,7 +39,7 @@ Content-Type: {{contentType}}
 
 {
     "emailOrUsername": "admin@test.com",
-    "password": "Admin123!"
+    "password": "Demo123!"
 }
 
 ### 1.5 Seller Login
@@ -67,8 +48,8 @@ POST {{baseUrl}}/api/auth/login
 Content-Type: {{contentType}}
 
 {
-    "emailOrUsername": "seller@test.com",
-    "password": "Seller123!"
+    "emailOrUsername": "zeynep@test.com",
+    "password": "Demo123!"
 }
 
 ### 1.6 Customer Login
@@ -77,14 +58,17 @@ POST {{baseUrl}}/api/auth/login
 Content-Type: {{contentType}}
 
 {
-    "emailOrUsername": "customer@test.com",
-    "password": "Customer123!"
+    "emailOrUsername": "ahmet@test.com",
+    "password": "Demo123!"
 }
 
 ###  Token degiskenleri (login response'undan otomatik alinir)
 @adminToken = {{loginAdmin.response.body.$.token}}
 @sellerToken = {{loginSeller.response.body.$.token}}
 @customerToken = {{loginCustomer.response.body.$.token}}
+
+### 1.6b Ilan Arama (Public)
+GET {{baseUrl}}/api/listings/search?search=kulaklık&sortBy=price
 
 ### 1.7 Mevcut Kullanici Bilgisi
 GET {{baseUrl}}/api/auth/me
@@ -103,7 +87,7 @@ POST {{baseUrl}}/api/auth/forgot-password
 Content-Type: {{contentType}}
 
 {
-    "email": "customer@test.com"
+    "email": "ahmet@test.com"
 }
 
 ### ============================================
@@ -125,13 +109,13 @@ Authorization: Bearer {{customerToken}}
     "phone": "+905551234567"
 }
 
-### 2.3 Sifre Degistir
+### 2.3 Sifre Degistir (dikkat: demo hesabin sifresini degistirir; sonra Demo123! ile geri al)
 POST {{baseUrl}}/api/profile/change-password
 Content-Type: {{contentType}}
 Authorization: Bearer {{customerToken}}
 
 {
-    "currentPassword": "Customer123!",
+    "currentPassword": "Demo123!",
     "newPassword": "NewCustomer456!",
     "confirmPassword": "NewCustomer456!"
 }

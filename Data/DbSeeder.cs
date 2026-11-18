@@ -14,11 +14,11 @@ public static class DbSeeder
             await db.Database.MigrateAsync();
     }
 
-    public static async Task SeedAsync(ApplicationDbContext db)
+    public static async Task SeedAsync(ApplicationDbContext db, bool includeDevAdmin = false)
     {
         await MigrateAsync(db);
 
-        await SeedUsersAsync(db);
+        await SeedUsersAsync(db, includeDevAdmin);
         await SeedCategoriesAsync(db);
         await SeedProductsAsync(db);
         await SeedListingsAsync(db);
@@ -29,7 +29,7 @@ public static class DbSeeder
 
     // ------------------------------------------------------------------ users
     // Key: Email.
-    private static async Task SeedUsersAsync(ApplicationDbContext db)
+    private static async Task SeedUsersAsync(ApplicationDbContext db, bool includeDevAdmin)
     {
         var demoPasswordHash = BCrypt.Net.BCrypt.HashPassword(DemoPassword);
 
@@ -41,6 +41,10 @@ public static class DbSeeder
             new Users { Name = "Elif Şahin",    Email = "elif@test.com",   Password = demoPasswordHash, Username = "elifs",   Role = UserRole.Customer, EmailVerified = true },
             new Users { Name = "Can Arslan",    Email = "can@test.com",    Password = demoPasswordHash, Username = "canars",  Role = UserRole.Customer, EmailVerified = true }
         };
+
+        // Known-password admin: Development only (caller decides).
+        if (includeDevAdmin)
+            usersToSeed.Add(new Users { Name = "Demo Admin", Email = "admin@test.com", Password = demoPasswordHash, Username = "demoadmin", Role = UserRole.Admin, EmailVerified = true });
 
         foreach (var u in usersToSeed)
         {

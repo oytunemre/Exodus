@@ -21,6 +21,29 @@ public class DbSeederTests
     }
 
     [Fact]
+    public async Task Seed_WithDevAdmin_CreatesOneAdmin()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase("DbSeederTests_" + Guid.NewGuid().ToString("N"))
+            .Options;
+        await using var db = new ApplicationDbContext(options);
+
+        await DbSeeder.SeedAsync(db, includeDevAdmin: true);
+        await DbSeeder.SeedAsync(db, includeDevAdmin: true);
+
+        var admins = await db.Users.Where(u => u.Role == UserRole.Admin).ToListAsync();
+        admins.Should().ContainSingle().Which.Email.Should().Be("admin@test.com");
+    }
+
+    [Fact]
+    public async Task Seed_WithoutDevAdmin_CreatesNoAdmin()
+    {
+        await using var db = await SeededDbAsync();
+
+        (await db.Users.CountAsync(u => u.Role == UserRole.Admin)).Should().Be(0);
+    }
+
+    [Fact]
     public async Task Seed_ListingsBelongOnlyToSellers()
     {
         await using var db = await SeededDbAsync();
