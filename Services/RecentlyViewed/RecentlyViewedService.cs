@@ -1,5 +1,6 @@
 using Exodus.Data;
 using Exodus.Models.Entities;
+using Exodus.Services.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace Exodus.Services.RecentlyViewedProducts;
@@ -15,6 +16,10 @@ public class RecentlyViewedService : IRecentlyViewedService
 
     public async Task TrackViewAsync(int userId, int productId, CancellationToken ct = default)
     {
+        var productExists = await _db.Products.AnyAsync(p => p.Id == productId, ct);
+        if (!productExists)
+            throw new NotFoundException("Urun bulunamadi");
+
         var existing = await _db.Set<RecentlyViewed>()
             .FirstOrDefaultAsync(rv => rv.UserId == userId && rv.ProductId == productId, ct);
 
@@ -49,6 +54,8 @@ public class RecentlyViewedService : IRecentlyViewedService
 
     public async Task<List<RecentlyViewedDto>> GetRecentlyViewedAsync(int userId, int count = 20, CancellationToken ct = default)
     {
+        count = Math.Clamp(count, 1, 50);
+
         var items = await _db.Set<RecentlyViewed>()
             .Include(rv => rv.Product)
                 .ThenInclude(p => p.Images)

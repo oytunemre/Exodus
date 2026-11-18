@@ -29,3 +29,8 @@ public sealed class UnauthorizedException : ApiException
 {
     public UnauthorizedException(string message) : base(401, message) { }
 }
+
+public sealed class ForbiddenException : ApiException
+{
+    public ForbiddenException(string message) : base(403, message) { }
+}

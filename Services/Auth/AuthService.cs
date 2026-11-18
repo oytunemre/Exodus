@@ -70,7 +70,8 @@ namespace Exodus.Services.Auth
                 Email = dto.Email,
                 Username = dto.Username,
                 Password = hashedPassword,
-                Role = dto.Role,
+                // Privileged roles are granted by an administrator, never by self-registration
+                Role = Models.Enums.UserRole.Customer,
                 EmailVerified = false,
                 EmailVerificationToken = emailVerificationToken,
                 EmailVerificationTokenExpiresAt = DateTime.UtcNow.AddHours(24)
@@ -113,7 +114,7 @@ namespace Exodus.Services.Auth
                     u.Username.ToLower() == dto.EmailOrUsername.ToLower());
 
             if (user == null)
-                throw new NotFoundException("Invalid credentials");
+                throw new UnauthorizedException("Invalid credentials");
 
             // Check if account is locked
             if (user.LockoutEndTime.HasValue && user.LockoutEndTime > DateTime.UtcNow)
@@ -123,7 +124,7 @@ namespace Exodus.Services.Auth
             }
 
             // Verify password
-            var isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.Password);
+            var isPasswordValid = VerifyPassword(dto.Password, user.Password);
 
             if (!isPasswordValid)
             {
@@ -142,7 +143,7 @@ namespace Exodus.Services.Auth
                 }
 
                 await _context.SaveChangesAsync();
-                throw new NotFoundException("Invalid credentials");
+                throw new UnauthorizedException("Invalid credentials");
             }
 
             // Check if email is verified (skip in Development for automation testing)
@@ -201,7 +202,7 @@ namespace Exodus.Services.Auth
                     u.Username.ToLower() == dto.EmailOrUsername.ToLower());
 
             if (user == null)
-                throw new NotFoundException("Invalid credentials");
+                throw new UnauthorizedException("Invalid credentials");
 
             // Check if account is locked
             if (user.LockoutEndTime.HasValue && user.LockoutEndTime > DateTime.UtcNow)
@@ -211,7 +212,7 @@ namespace Exodus.Services.Auth
             }
 
             // Verify password
-            var isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.Password);
+            var isPasswordValid = VerifyPassword(dto.Password, user.Password);
 
             if (!isPasswordValid)
             {
@@ -226,7 +227,7 @@ namespace Exodus.Services.Auth
                 }
 
                 await _context.SaveChangesAsync();
-                throw new NotFoundException("Invalid credentials");
+                throw new UnauthorizedException("Invalid credentials");
             }
 
             // Check if email is verified (skip in Development for automation testing)
@@ -252,6 +253,17 @@ namespace Exodus.Services.Auth
                 }
                 else
                 {
+                    user.FailedLoginAttempts++;
+
+                    if (user.FailedLoginAttempts >= MaxFailedLoginAttempts)
+                    {
+                        user.LockoutEndTime = DateTime.UtcNow.AddMinutes(LockoutDurationMinutes);
+                        await _context.SaveChangesAsync();
+                        await _emailService.SendAccountLockedAsync(user.Email, user.LockoutEndTime.Value);
+                        throw new UnauthorizedException($"Account locked due to {MaxFailedLoginAttempts} failed attempts.");
+                    }
+
+                    await _context.SaveChangesAsync();
                     throw new UnauthorizedException("Invalid 2FA code");
                 }
             }
@@ -280,6 +292,22 @@ namespace Exodus.Services.Auth
                 RefreshToken = refreshToken.Token,
                 RefreshTokenExpiresAt = refreshToken.ExpiresAt
             };
+        }
+
+        private static bool VerifyPassword(string password, string storedHash)
+        {
+            if (string.IsNullOrEmpty(storedHash))
+                return false;
+
+            try
+            {
+                return BCrypt.Net.BCrypt.Verify(password, storedHash);
+            }
+            catch (BCrypt.Net.SaltParseException)
+            {
+                // Stored value is not a valid BCrypt hash (e.g. legacy plaintext data)
+                return false;
+            }
         }
 
         public string GenerateJwtToken(int userId, string username, string email, string role)

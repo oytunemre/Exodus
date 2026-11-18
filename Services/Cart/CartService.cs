@@ -190,6 +190,7 @@ public class CartService : ICartService
     private Task<Cart?> LoadCartAsync(int cartId)
     {
         return _db.Carts
+            .AsNoTracking()
             .Include(c => c.Items)
                 .ThenInclude(i => i.Listing)
                     .ThenInclude(l => l.Product)

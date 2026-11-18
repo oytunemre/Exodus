@@ -1,5 +1,7 @@
+using System.Runtime.CompilerServices;
 using System.Threading.RateLimiting;
 using Exodus.Data;
+using Exodus.Models.Enums;
 using Exodus.Services.Email;
 using Exodus.Services.PaymentGateway;
 using Microsoft.AspNetCore.Hosting;
@@ -14,6 +16,35 @@ namespace Exodus.Tests.E2E;
 
 public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
+    private static readonly ConditionalWeakTable<HttpClient, CustomWebApplicationFactory> ClientOwners = new();
+
+    protected override void ConfigureClient(HttpClient client)
+    {
+        base.ConfigureClient(client);
+        ClientOwners.AddOrUpdate(client, this);
+    }
+
+    public static CustomWebApplicationFactory ForClient(HttpClient client) =>
+        ClientOwners.TryGetValue(client, out var factory)
+            ? factory
+            : throw new InvalidOperationException("HttpClient was not created by CustomWebApplicationFactory.");
+
+    /// <summary>
+    /// Grants a privileged role directly in the DB. The API never grants roles on self-registration,
+    /// so tests that need an Admin/Seller account must elevate the user this way.
+    /// </summary>
+    public async Task SetUserRoleAsync(int userId, UserRole role)
+    {
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var user = await db.Users.FindAsync(userId);
+        if (user != null)
+        {
+            user.Role = role;
+            await db.SaveChangesAsync();
+        }
+    }
+
     /// <summary>
     /// Verifies a user's email directly in the DB (bypassing the email verification flow).
     /// Required for tests that call the login endpoint, since login requires EmailVerified = true.

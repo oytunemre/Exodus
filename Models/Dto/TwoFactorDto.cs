@@ -12,7 +12,7 @@ namespace Exodus.Models.Dto
     public class TwoFactorVerifyDto
     {
         [Required]
-        [StringLength(6, MinimumLength = 6)]
+        [StringLength(8, MinimumLength = 6)]
         public required string Code { get; set; }
     }
 

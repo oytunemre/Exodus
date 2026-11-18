@@ -31,6 +31,12 @@ namespace Exodus.Models.Entities
 
         public bool IsActive { get; set; } = true;
 
+        /// <summary>
+        /// Concurrency token guarding stock updates against lost updates / oversell.
+        /// Mapped on relational providers only.
+        /// </summary>
+        public byte[]? RowVersion { get; set; }
+
         // Computed property (not stored in DB)
         [NotMapped]
         public bool IsLowStock => TrackInventory && StockQuantity > 0 && StockQuantity <= LowStockThreshold;

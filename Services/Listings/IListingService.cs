@@ -7,8 +7,8 @@ public interface IListingService
     Task<List<ListingResponseDto>> GetAllAsync();
     Task<ListingResponseDto> GetByIdAsync(int id);
 
-    Task<ListingResponseDto> CreateAsync(AddListingDto dto);   // <-- CreateListingDto değil
-    Task<ListingResponseDto> UpdateAsync(int id, UpdateListingDto dto);
+    Task<ListingResponseDto> CreateAsync(AddListingDto dto, int callerId, bool isAdmin);
+    Task<ListingResponseDto> UpdateAsync(int id, UpdateListingDto dto, int callerId, bool isAdmin);
 
-    Task SoftDeleteAsync(int id);
+    Task SoftDeleteAsync(int id, int callerId, bool isAdmin);
 }

@@ -26,10 +26,11 @@ public class CampaignService : ICampaignService
         // Validate campaign type requirements
         ValidateCampaignTypeRequirements(dto);
 
-        // Check coupon code uniqueness
-        if (!string.IsNullOrEmpty(dto.CouponCode))
+        // Check coupon code uniqueness (codes are stored uppercase)
+        var normalizedCouponCode = string.IsNullOrWhiteSpace(dto.CouponCode) ? null : dto.CouponCode.Trim().ToUpperInvariant();
+        if (normalizedCouponCode != null)
         {
-            var exists = await _db.Campaigns.AnyAsync(c => c.CouponCode == dto.CouponCode, ct);
+            var exists = await _db.Campaigns.AnyAsync(c => c.CouponCode == normalizedCouponCode, ct);
             if (exists)
                 throw new BadRequestException("Coupon code already exists");
         }
@@ -52,7 +53,7 @@ public class CampaignService : ICampaignService
             MaxDiscountAmount = dto.MaxDiscountAmount,
             BuyQuantity = dto.BuyQuantity,
             GetQuantity = dto.GetQuantity,
-            CouponCode = dto.CouponCode?.ToUpper(),
+            CouponCode = normalizedCouponCode,
             RequiresCouponCode = dto.RequiresCouponCode,
             Scope = dto.Scope,
             Priority = dto.Priority,
@@ -127,7 +128,17 @@ public class CampaignService : ICampaignService
         if (dto.MaxDiscountAmount.HasValue) campaign.MaxDiscountAmount = dto.MaxDiscountAmount;
         if (dto.BuyQuantity.HasValue) campaign.BuyQuantity = dto.BuyQuantity;
         if (dto.GetQuantity.HasValue) campaign.GetQuantity = dto.GetQuantity;
-        if (dto.CouponCode != null) campaign.CouponCode = dto.CouponCode.ToUpper();
+        if (dto.CouponCode != null)
+        {
+            var newCouponCode = string.IsNullOrWhiteSpace(dto.CouponCode) ? null : dto.CouponCode.Trim().ToUpperInvariant();
+            if (newCouponCode != null && newCouponCode != campaign.CouponCode)
+            {
+                var couponExists = await _db.Campaigns.AnyAsync(c => c.CouponCode == newCouponCode && c.Id != campaignId, ct);
+                if (couponExists)
+                    throw new BadRequestException("Coupon code already exists");
+            }
+            campaign.CouponCode = newCouponCode;
+        }
         if (dto.RequiresCouponCode.HasValue) campaign.RequiresCouponCode = dto.RequiresCouponCode.Value;
         if (dto.Priority.HasValue) campaign.Priority = dto.Priority.Value;
         if (dto.IsStackable.HasValue) campaign.IsStackable = dto.IsStackable.Value;
@@ -184,13 +195,14 @@ public class CampaignService : ICampaignService
         // Find applicable campaign
         Campaign? campaign = null;
 
-        if (!string.IsNullOrEmpty(couponCode))
+        if (!string.IsNullOrWhiteSpace(couponCode))
         {
+            var normalizedCoupon = couponCode.Trim().ToUpperInvariant();
             campaign = await _db.Campaigns
                 .Include(c => c.CampaignProducts)
                 .Include(c => c.CampaignCategories)
                 .FirstOrDefaultAsync(c =>
-                    c.CouponCode == couponCode.ToUpper() &&
+                    c.CouponCode == normalizedCoupon &&
                     c.IsActive &&
                     c.StartDate <= DateTime.UtcNow &&
                     c.EndDate >= DateTime.UtcNow, ct);
@@ -275,33 +287,71 @@ public class CampaignService : ICampaignService
 
     public async Task<CampaignApplicationResult> ApplyToOrderAsync(int userId, int orderId, int campaignId, CancellationToken ct = default)
     {
-        var campaign = await _db.Campaigns.FindAsync(new object[] { campaignId }, ct);
+        var campaign = await _db.Campaigns
+            .Include(c => c.CampaignProducts)
+            .Include(c => c.CampaignCategories)
+            .FirstOrDefaultAsync(c => c.Id == campaignId, ct);
         if (campaign == null)
             throw new NotFoundException($"Campaign not found. Id={campaignId}");
 
-        var order = await _db.Orders.FindAsync(new object[] { orderId }, ct);
+        var order = await _db.Orders
+            .Include(o => o.SellerOrders)
+                .ThenInclude(so => so.Items)
+            .FirstOrDefaultAsync(o => o.Id == orderId, ct);
         if (order == null)
             throw new NotFoundException($"Order not found. Id={orderId}");
 
-        // Record usage
+        if (order.BuyerId != userId)
+            throw new ForbiddenException("Bu siparise kampanya uygulama yetkiniz yok.");
+
+        var alreadyApplied = await _db.CampaignUsages.AnyAsync(u => u.OrderId == orderId && u.CampaignId == campaignId, ct);
+        if (alreadyApplied)
+            throw new BadRequestException("Bu kampanya siparise zaten uygulanmis.");
+
+        if (!await CanUseCampaignAsync(campaign, userId, ct))
+            throw new BadRequestException("Kampanya kullanim limitine ulasildi");
+
+        var items = order.SellerOrders
+            .SelectMany(so => so.Items.Select(i => new CartItemForCampaign
+            {
+                ListingId = i.ListingId,
+                ProductId = i.ProductId,
+                SellerId = so.SellerId,
+                UnitPrice = i.UnitPrice,
+                Quantity = i.Quantity
+            }))
+            .ToList();
+
+        var applicableItems = GetApplicableItems(campaign, items);
+        var discount = CalculateCampaignDiscount(campaign, applicableItems).TotalDiscount;
+        discount = Math.Min(discount, order.TotalAmount);
+
         var usage = new CampaignUsage
         {
             CampaignId = campaignId,
             UserId = userId,
             OrderId = orderId,
-            DiscountApplied = 0, // Will be updated
+            DiscountApplied = discount,
             UsedAt = DateTime.UtcNow
         };
 
         _db.CampaignUsages.Add(usage);
         campaign.CurrentUsageCount++;
+
+        order.DiscountAmount += discount;
+        order.TotalAmount -= discount;
+
         await _db.SaveChangesAsync(ct);
 
         return new CampaignApplicationResult
         {
             Success = true,
             CampaignId = campaign.Id,
-            CampaignName = campaign.Name
+            CampaignName = campaign.Name,
+            CampaignType = campaign.Type,
+            DiscountAmount = discount,
+            OriginalTotal = order.TotalAmount + discount,
+            FinalTotal = order.TotalAmount
         };
     }
 
@@ -335,10 +385,11 @@ public class CampaignService : ICampaignService
 
     public async Task<CampaignDto?> ValidateCouponCodeAsync(string couponCode, int userId, CancellationToken ct = default)
     {
+        var normalizedCoupon = couponCode?.Trim().ToUpperInvariant();
         var campaign = await _db.Campaigns
             .Include(c => c.Seller)
             .FirstOrDefaultAsync(c =>
-                c.CouponCode == couponCode.ToUpper() &&
+                c.CouponCode == normalizedCoupon &&
                 c.IsActive &&
                 c.StartDate <= DateTime.UtcNow &&
                 c.EndDate >= DateTime.UtcNow, ct);
@@ -507,8 +558,8 @@ public class CampaignService : ICampaignService
 
     private bool IsCampaignApplicable(Campaign campaign, List<CartItemForCampaign> items, int userId)
     {
-        // Filter items by seller
-        var sellerItems = items.Where(i => i.SellerId == campaign.SellerId).ToList();
+        // Platform-wide campaigns (no seller) cover every item
+        var sellerItems = FilterBySeller(campaign, items);
         if (!sellerItems.Any()) return false;
 
         // Check scope
@@ -553,9 +604,14 @@ public class CampaignService : ICampaignService
         return true;
     }
 
+    private static List<CartItemForCampaign> FilterBySeller(Campaign campaign, List<CartItemForCampaign> items) =>
+        campaign.SellerId.HasValue
+            ? items.Where(i => i.SellerId == campaign.SellerId.Value).ToList()
+            : items.ToList();
+
     private List<CartItemForCampaign> GetApplicableItems(Campaign campaign, List<CartItemForCampaign> items)
     {
-        var sellerItems = items.Where(i => i.SellerId == campaign.SellerId).ToList();
+        var sellerItems = FilterBySeller(campaign, items);
 
         switch (campaign.Scope)
         {

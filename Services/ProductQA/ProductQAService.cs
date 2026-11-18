@@ -120,7 +120,7 @@ public class ProductQAService : IProductQAService
             ?? throw new NotFoundException("Cevap bulunamadi");
 
         if (answer.Question.AskedByUserId != userId)
-            throw new UnauthorizedAccessException("Sadece soruyu soran cevabi kabul edebilir");
+            throw new ForbiddenException("Sadece soruyu soran cevabi kabul edebilir");
 
         answer.IsAccepted = true;
         await _db.SaveChangesAsync(ct);

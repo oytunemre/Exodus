@@ -1330,6 +1330,11 @@ namespace Exodus.Migrations
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
                     b.Property<string>("SKU")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
