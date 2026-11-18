@@ -135,6 +135,10 @@ public class PaymentService : IPaymentService
         var intent = await GetIntentAsync(paymentIntentId, ct);
         EnsureCanTransitionTo(intent, PaymentStatus.Captured);
 
+        var order = await _db.Orders.FindAsync(new object[] { intent.OrderId }, ct);
+        if (order != null)
+            EnsureOrderNotCancelled(order);
+
         intent.Status = PaymentStatus.Captured;
         intent.CapturedAt = DateTime.UtcNow;
         intent.FailureReason = null;
@@ -152,7 +156,6 @@ public class PaymentService : IPaymentService
         await UpdateOrderPaymentStatusAsync(intent.OrderId, true, ct);
 
         // Send notification
-        var order = await _db.Orders.FindAsync(new object[] { intent.OrderId }, ct);
         if (order != null)
         {
             await _notificationService.SendPaymentUpdateAsync(
@@ -281,6 +284,10 @@ public class PaymentService : IPaymentService
         // Simulate 3D Secure result
         if (authenticationResult.Equals("success", StringComparison.OrdinalIgnoreCase))
         {
+            var order = await _db.Orders.FindAsync(new object[] { intent.OrderId }, ct);
+            if (order != null)
+                EnsureOrderNotCancelled(order);
+
             intent.Status = PaymentStatus.Authorized;
             intent.AuthorizedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync(ct);
@@ -438,16 +445,35 @@ public class PaymentService : IPaymentService
         if (order == null) return;
 
         if (success)
-        {
-            order.Status = OrderStatus.Processing;
-            order.PaidAt = DateTime.UtcNow;
-        }
+            ApplyPaymentSuccess(order);
         else
-        {
-            order.Status = OrderStatus.Failed;
-        }
+            ApplyPaymentFailure(order);
 
         await _db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
+    /// Records a successful payment on the order. Only a Pending order moves (to Processing); an order
+    /// the sellers already advanced keeps its status, so a payment never moves an order backwards.
+    /// </summary>
+    private static void ApplyPaymentSuccess(Order order)
+    {
+        order.PaidAt ??= DateTime.UtcNow;
+        if (order.Status == OrderStatus.Pending)
+            order.Status = OrderStatus.Processing;
+    }
+
+    /// <summary>Records a failed payment on the order: only a Pending order becomes Failed.</summary>
+    private static void ApplyPaymentFailure(Order order)
+    {
+        if (order.Status == OrderStatus.Pending)
+            order.Status = OrderStatus.Failed;
+    }
+
+    private static void EnsureOrderNotCancelled(Order order)
+    {
+        if (order.Status == OrderStatus.Cancelled)
+            throw new BadRequestException("Order is cancelled; its payment cannot be captured.");
     }
 
     private static PaymentIntentResponseDto Map(PaymentIntent x) => new()
@@ -526,9 +552,13 @@ public class PaymentService : IPaymentService
             throw new NotFoundException($"Order not found. OrderId={dto.OrderId}");
 
         EnsureOrderAccess(order, callerId, isAdmin);
+        EnsureOrderNotCancelled(order);
 
         // Create or get existing payment intent
         var intent = await _db.PaymentIntents.FirstOrDefaultAsync(p => p.OrderId == dto.OrderId, ct);
+        if (intent is { Status: PaymentStatus.Captured or PaymentStatus.PartiallyRefunded or PaymentStatus.Refunded })
+            throw new BadRequestException($"Payment is already {intent.Status} for this order.");
+
         if (intent is null)
         {
             intent = new PaymentIntent
@@ -560,8 +590,7 @@ public class PaymentService : IPaymentService
             intent.CardLast4 = result.CardLast4;
             intent.CardBrand = result.CardBrand;
 
-            order.Status = OrderStatus.Processing;
-            order.PaidAt = DateTime.UtcNow;
+            ApplyPaymentSuccess(order);
 
             await _db.SaveChangesAsync(ct);
             await AddEventAsync(intent.Id, PaymentStatus.Captured, "payment.captured.gateway",
@@ -697,8 +726,7 @@ public class PaymentService : IPaymentService
                 var order = await _db.Orders.FindAsync(new object[] { intent.OrderId }, ct);
                 if (order != null)
                 {
-                    order.Status = OrderStatus.Processing;
-                    order.PaidAt = DateTime.UtcNow;
+                    ApplyPaymentSuccess(order);
 
                     await _notificationService.SendPaymentUpdateAsync(
                         order.BuyerId,
