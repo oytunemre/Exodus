@@ -239,4 +239,31 @@ public class DbSeederTests
 
         after.Should().Equal(before);
     }
+
+    [Fact]
+    public async Task Seed_Again_WithDuplicateNamesEmailsAndSlugs_DoesNotThrow()
+    {
+        await using var db = await SeededDbAsync();
+        var listingCount = await db.Listings.IgnoreQueryFilters().CountAsync();
+        var orderCount = await db.Orders.IgnoreQueryFilters().CountAsync();
+        var elektronik = await db.Categories.SingleAsync(c => c.Slug == "elektronik");
+
+        // ProductService allows duplicate product names.
+        db.Products.Add(new Product { ProductName = "AirPods Pro 2", ProductDescription = "Duplicate name", CategoryId = elektronik.Id });
+        // The unique slug/email indexes are filtered on IsDeleted = 0, so soft-deleted rows may repeat a seeded key.
+        db.Categories.Add(new Category { Name = "Eski Elektronik", Slug = "elektronik", IsDeleted = true, DeletedDate = DateTime.UtcNow });
+        db.Users.Add(new Users { Name = "Old Ahmet", Email = "ahmet@test.com", Password = "x", Username = "oldahmet", Role = UserRole.Customer, IsDeleted = true, DeletedDate = DateTime.UtcNow });
+        db.Users.Add(new Users { Name = "Old Zeynep", Email = "zeynep@test.com", Password = "x", Username = "oldzeynep", Role = UserRole.Seller, IsDeleted = true, DeletedDate = DateTime.UtcNow });
+        await db.SaveChangesAsync();
+
+        var reseed = () => DbSeeder.SeedAsync(db);
+
+        await reseed.Should().NotThrowAsync();
+        (await db.Listings.IgnoreQueryFilters().CountAsync()).Should().Be(listingCount);
+        (await db.Orders.IgnoreQueryFilters().CountAsync()).Should().Be(orderCount);
+        var seededAirPods = await db.Products.IgnoreQueryFilters().Include(p => p.Barcodes)
+            .Where(p => p.ProductName == "AirPods Pro 2").OrderBy(p => p.Id).ToListAsync();
+        seededAirPods[0].Barcodes.Select(b => b.Barcode).Should().Contain("APPLE-APP2");
+        seededAirPods[1].Barcodes.Should().BeEmpty("re-seeding must not copy seeded barcodes onto the duplicate");
+    }
 }

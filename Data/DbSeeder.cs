@@ -14,6 +14,13 @@ public static class DbSeeder
             await db.Database.MigrateAsync();
     }
 
+    /// <summary>
+    /// Lookup keys are not unique in the database (product names may repeat; the unique email/slug
+    /// indexes ignore soft-deleted rows), so keep one row per key: the one with the lowest Id.
+    /// </summary>
+    private static Dictionary<string, T> LowestIdPerKey<T>(IEnumerable<T> rows, Func<T, string> key, Func<T, int> id) =>
+        rows.GroupBy(key).ToDictionary(g => g.Key, g => g.MinBy(id)!);
+
     public static async Task SeedAsync(ApplicationDbContext db, bool includeDevAdmin = false)
     {
         await MigrateAsync(db);
@@ -109,16 +116,22 @@ public static class DbSeeder
 
     private static async Task SeedProductsAsync(ApplicationDbContext db)
     {
-        var categoryIds = await db.Categories.IgnoreQueryFilters()
-            .ToDictionaryAsync(c => c.Slug, c => c.Id);
+        var slugs = ProductSpecs.Select(p => p.CategorySlug).Distinct().ToList();
+        var categories = LowestIdPerKey(
+            await db.Categories.IgnoreQueryFilters()
+                .Where(c => slugs.Contains(c.Slug))
+                .Select(c => new { c.Id, c.Slug })
+                .ToListAsync(),
+            c => c.Slug, c => c.Id);
 
         foreach (var spec in ProductSpecs)
         {
-            var categoryId = categoryIds[spec.CategorySlug];
+            var categoryId = categories[spec.CategorySlug].Id;
 
             var product = await db.Products
                 .IgnoreQueryFilters()
                 .Include(p => p.Barcodes)
+                .OrderBy(p => p.Id)
                 .FirstOrDefaultAsync(p => p.ProductName == spec.Name);
 
             if (product is null)
@@ -198,16 +211,27 @@ public static class DbSeeder
 
     private static async Task SeedListingsAsync(ApplicationDbContext db)
     {
-        var sellers = await db.Users.IgnoreQueryFilters()
-            .Where(u => u.Role == UserRole.Seller)
-            .ToDictionaryAsync(u => u.Email, u => u.Id);
-        var products = await db.Products.IgnoreQueryFilters()
-            .ToDictionaryAsync(p => p.ProductName, p => p.Id);
+        var sellerEmails = ListingSpecs.Select(l => l.SellerEmail).Distinct().ToList();
+        var productNames = ListingSpecs.Select(l => l.ProductName).Distinct().ToList();
+        var sellers = LowestIdPerKey(
+            await db.Users.IgnoreQueryFilters()
+                .Where(u => u.Role == UserRole.Seller && sellerEmails.Contains(u.Email))
+                .Select(u => new { u.Id, u.Email })
+                .ToListAsync(),
+            u => u.Email, u => u.Id);
+        var products = LowestIdPerKey(
+            await db.Products.IgnoreQueryFilters()
+                .Where(p => productNames.Contains(p.ProductName))
+                .Select(p => new { p.Id, p.ProductName })
+                .ToListAsync(),
+            p => p.ProductName, p => p.Id);
 
         foreach (var l in ListingSpecs)
         {
-            if (!sellers.TryGetValue(l.SellerEmail, out var sellerId)) continue;
-            if (!products.TryGetValue(l.ProductName, out var productId)) continue;
+            if (!sellers.TryGetValue(l.SellerEmail, out var seller)) continue;
+            if (!products.TryGetValue(l.ProductName, out var product)) continue;
+            var sellerId = seller.Id;
+            var productId = product.Id;
 
             var exists = await db.Listings.IgnoreQueryFilters()
                 .AnyAsync(x => x.SellerId == sellerId && x.ProductId == productId);
@@ -259,11 +283,18 @@ public static class DbSeeder
 
     private static async Task SeedAddressesAsync(ApplicationDbContext db)
     {
-        var userIds = await db.Users.IgnoreQueryFilters().ToDictionaryAsync(u => u.Email, u => u.Id);
+        var emails = AddressSpecs.Select(a => a.Email).Distinct().ToList();
+        var users = LowestIdPerKey(
+            await db.Users.IgnoreQueryFilters()
+                .Where(u => emails.Contains(u.Email))
+                .Select(u => new { u.Id, u.Email })
+                .ToListAsync(),
+            u => u.Email, u => u.Id);
 
         foreach (var a in AddressSpecs)
         {
-            if (!userIds.TryGetValue(a.Email, out var userId)) continue;
+            if (!users.TryGetValue(a.Email, out var user)) continue;
+            var userId = user.Id;
 
             var exists = await db.Addresses.IgnoreQueryFilters()
                 .AnyAsync(x => x.UserId == userId && x.Title == a.Title);
@@ -326,7 +357,10 @@ public static class DbSeeder
 
     private static async Task SeedOrdersAsync(ApplicationDbContext db)
     {
-        var users = await db.Users.IgnoreQueryFilters().ToDictionaryAsync(u => u.Email, u => u);
+        var buyerEmails = OrderSpecs.Select(o => o.BuyerEmail).Distinct().ToList();
+        var users = LowestIdPerKey(
+            await db.Users.IgnoreQueryFilters().Where(u => buyerEmails.Contains(u.Email)).ToListAsync(),
+            u => u.Email, u => u.Id);
         var listings = await db.Listings.IgnoreQueryFilters()
             .Include(l => l.Product).Include(l => l.Seller)
             .ToListAsync();
