@@ -277,6 +277,78 @@ public class ShipmentOwnershipTests : IClassFixture<CustomWebApplicationFactory>
         (await GetOrderAsync(sc.Customer, sc.OrderId)).Status.Should().Be(OrderStatus.Confirmed);
     }
 
+    [Theory]
+    [InlineData(OrderStatus.Shipped)]
+    [InlineData(OrderStatus.Delivered)]
+    [InlineData(OrderStatus.Completed)]
+    public async Task SellerStatusEndpoint_ShippedOrDelivered_ReturnsBadRequest(OrderStatus status)
+    {
+        var sc = await CreateScenarioAsync();
+
+        var response = await ClientFor(sc.SellerA).PatchAsJsonAsync($"/api/seller/orders/{sc.SellerOrderA}/status",
+            new { status = (int)status }, TestHelper.JsonOptions);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var detail = await GetOrderAsync(sc.Customer, sc.OrderId);
+        detail.SellerOrders.Single(x => x.Id == sc.SellerOrderA).Status
+            .Should().NotBe(OrderStatus.Shipped).And.NotBe(OrderStatus.Delivered);
+    }
+
+    [Fact]
+    public async Task SellerStatusEndpoint_Confirmed_ReturnsOk()
+    {
+        var sc = await CreateScenarioAsync();
+
+        var response = await ClientFor(sc.SellerA).PatchAsJsonAsync($"/api/seller/orders/{sc.SellerOrderA}/status",
+            new { status = (int)OrderStatus.Confirmed }, TestHelper.JsonOptions);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task ShipOrder_AfterShipAndDeliver_SellerOrderStaysDelivered()
+    {
+        var sc = await CreateScenarioAsync();
+        var seller = ClientFor(sc.SellerA);
+        await seller.PatchAsJsonAsync($"/api/shipments/seller-orders/{sc.SellerOrderA}/ship", Tracking, TestHelper.JsonOptions);
+        await seller.PatchAsync($"/api/shipments/seller-orders/{sc.SellerOrderA}/deliver", null);
+
+        var response = await seller.PatchAsJsonAsync($"/api/shipments/seller-orders/{sc.SellerOrderA}/ship", Tracking, TestHelper.JsonOptions);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var detail = await GetOrderAsync(sc.Customer, sc.OrderId);
+        detail.SellerOrders.Single(x => x.Id == sc.SellerOrderA).Status.Should().Be(OrderStatus.Delivered);
+    }
+
+    [Fact]
+    public async Task DeliverAfterCustomerCancel_ReturnsBadRequest_AndSellerOrderStaysCancelled()
+    {
+        var sc = await CreateScenarioAsync();
+        (await ClientFor(sc.SellerA).PatchAsJsonAsync($"/api/shipments/seller-orders/{sc.SellerOrderA}/ship", Tracking, TestHelper.JsonOptions))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+        (await ClientFor(sc.Customer).PostAsJsonAsync($"/api/order/{sc.OrderId}/cancel",
+            new CancelOrderDto { Reason = CancellationReason.CustomerRequest }, TestHelper.JsonOptions))
+            .StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var response = await ClientFor(sc.SellerA).PatchAsync($"/api/shipments/seller-orders/{sc.SellerOrderA}/deliver", null);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var detail = await GetOrderAsync(sc.Customer, sc.OrderId);
+        detail.SellerOrders.Single(x => x.Id == sc.SellerOrderA).Status.Should().Be(OrderStatus.Cancelled);
+    }
+
+    [Fact]
+    public async Task ShipAfterCustomerCancel_ReturnsBadRequest()
+    {
+        var sc = await CreateScenarioAsync();
+        await ClientFor(sc.Customer).PostAsJsonAsync($"/api/order/{sc.OrderId}/cancel",
+            new CancelOrderDto { Reason = CancellationReason.CustomerRequest }, TestHelper.JsonOptions);
+
+        var response = await ClientFor(sc.SellerA).PatchAsJsonAsync($"/api/shipments/seller-orders/{sc.SellerOrderA}/ship", Tracking, TestHelper.JsonOptions);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
     [Fact]
     public async Task CancelledOrder_SellerConfirm_ReturnsBadRequest_AndStaysCancelled()
     {

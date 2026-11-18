@@ -45,6 +45,10 @@ namespace Exodus.Controllers.Seller
         [HttpPatch("{sellerOrderId:int}/status")]
         public async Task<ActionResult> UpdateStatus(int sellerOrderId, [FromBody] UpdateSellerOrderStatusDto dto)
         {
+            if (dto.Status is OrderStatus.Shipped or OrderStatus.Delivered or OrderStatus.Completed)
+                throw new BadRequestException(
+                    "Use POST /api/seller/orders/{id}/ship to ship and PATCH /api/shipments/seller-orders/{id}/deliver to deliver.");
+
             var sellerId = GetCurrentUserId();
             await _orderService.UpdateSellerOrderStatusAsync(sellerId, sellerOrderId, dto.Status);
             return Ok(new { Message = "Order status updated successfully" });

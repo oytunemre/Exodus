@@ -59,8 +59,8 @@ public class ShipmentService : IShipmentService
         if (!isAdmin && sellerOrder.SellerId != callerId)
             throw new ForbiddenException("You do not have access to this seller order.");
 
-        if (sellerOrder.Status == SellerOrderStatus.Cancelled)
-            throw new BadRequestException("Cancelled seller order cannot be shipped.");
+        if (sellerOrder.Status is SellerOrderStatus.Cancelled or SellerOrderStatus.Delivered)
+            throw new BadRequestException($"Seller order is {sellerOrder.Status} and cannot be shipped.");
 
         sellerOrder.Shipment ??= new Shipment
         {
@@ -119,6 +119,9 @@ public class ShipmentService : IShipmentService
 
         if (sellerOrder.Shipment is null)
             throw new BadRequestException("Shipment yok. Önce ship yap.");
+
+        if (sellerOrder.Status == SellerOrderStatus.Cancelled)
+            throw new BadRequestException("Cancelled seller order cannot be delivered.");
 
         var shipment = sellerOrder.Shipment;
 
