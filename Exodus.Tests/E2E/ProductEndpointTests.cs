@@ -127,55 +127,107 @@ public class ProductEndpointTests : IClassFixture<CustomWebApplicationFactory>
         result!.ProductName.Should().Be("Get By Id Product");
     }
 
-    [Fact]
-    public async Task UpdateProduct_AsSeller_ReturnsOk()
+    // Products are a shared catalog: several sellers list the same product. Editing or deleting a
+    // catalog entry is therefore an Admin action; sellers manage only their own listings.
+
+    private async Task<int> CreateProductAsSellerAsync(string suffix)
     {
         var client = _factory.CreateClient();
-        await TestHelper.RegisterAndLoginAsSellerAsync(client, "produpd");
-
-        var createDto = new AddProductDto
+        await TestHelper.RegisterAndLoginAsSellerAsync(client, suffix);
+        var dto = new AddProductDto
         {
-            ProductName = "Original Name",
-            ProductDescription = "Original description",
+            ProductName = "Catalog Product " + suffix,
+            ProductDescription = "Shared catalog entry",
             Barcodes = new List<string> { Guid.NewGuid().ToString("N") }
         };
+        var response = await client.PostAsJsonAsync("/api/product", dto, TestHelper.JsonOptions);
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        var created = await response.Content.ReadFromJsonAsync<ProductResponseDto>(TestHelper.JsonOptions);
+        return created!.Id;
+    }
 
-        var createResponse = await client.PostAsJsonAsync("/api/product", createDto, TestHelper.JsonOptions);
-        var created = await createResponse.Content.ReadFromJsonAsync<ProductResponseDto>(TestHelper.JsonOptions);
+    private static ProductUpdateDto RenameTo(string name) => new()
+    {
+        ProductName = name,
+        ProductDescription = "Updated description",
+        Barcodes = new List<string> { Guid.NewGuid().ToString("N") }
+    };
 
-        var updateDto = new ProductUpdateDto
-        {
-            ProductName = "Updated Name",
-            ProductDescription = "Updated description",
-            Barcodes = new List<string> { "1111111111111" }
-        };
-
-        var response = await client.PutAsJsonAsync($"/api/product/{created!.Id}", updateDto, TestHelper.JsonOptions);
-
+    private async Task<string> GetProductNameAsync(int id)
+    {
+        var response = await _factory.CreateClient().GetAsync($"/api/product/{id}");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<ProductResponseDto>(TestHelper.JsonOptions);
-        result!.ProductName.Should().Be("Updated Name");
+        var product = await response.Content.ReadFromJsonAsync<ProductResponseDto>(TestHelper.JsonOptions);
+        return product!.ProductName;
     }
 
     [Fact]
-    public async Task DeleteProduct_AsSeller_ReturnsNoContent()
+    public async Task UpdateProduct_AsAnotherSeller_ReturnsForbidden_AndProductIsUnchanged()
+    {
+        var id = await CreateProductAsSellerAsync("produpdowner");
+        var rival = _factory.CreateClient();
+        await TestHelper.RegisterAndLoginAsSellerAsync(rival, "produpdrival");
+
+        var response = await rival.PutAsJsonAsync($"/api/product/{id}", RenameTo("Hijacked"), TestHelper.JsonOptions);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await GetProductNameAsync(id)).Should().Be("Catalog Product produpdowner");
+    }
+
+    [Fact]
+    public async Task UpdateProduct_AsCreatingSeller_ReturnsForbidden()
     {
         var client = _factory.CreateClient();
-        await TestHelper.RegisterAndLoginAsSellerAsync(client, "proddel");
-
-        var createDto = new AddProductDto
+        await TestHelper.RegisterAndLoginAsSellerAsync(client, "produpdself");
+        var dto = new AddProductDto
         {
-            ProductName = "To Be Deleted",
-            ProductDescription = "Will be deleted",
+            ProductName = "Own Product",
+            ProductDescription = "Created by this seller",
             Barcodes = new List<string> { Guid.NewGuid().ToString("N") }
         };
+        var created = await (await client.PostAsJsonAsync("/api/product", dto, TestHelper.JsonOptions))
+            .Content.ReadFromJsonAsync<ProductResponseDto>(TestHelper.JsonOptions);
 
-        var createResponse = await client.PostAsJsonAsync("/api/product", createDto, TestHelper.JsonOptions);
-        var created = await createResponse.Content.ReadFromJsonAsync<ProductResponseDto>(TestHelper.JsonOptions);
+        var response = await client.PutAsJsonAsync($"/api/product/{created!.Id}", RenameTo("Renamed"), TestHelper.JsonOptions);
 
-        var response = await client.DeleteAsync($"/api/product/{created!.Id}");
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task UpdateProduct_AsAdmin_ReturnsOk()
+    {
+        var id = await CreateProductAsSellerAsync("produpdadmin");
+        var admin = await TestHelper.CreateAdminClientAsync(_factory);
+
+        var response = await admin.PutAsJsonAsync($"/api/product/{id}", RenameTo("Updated Name"), TestHelper.JsonOptions);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await GetProductNameAsync(id)).Should().Be("Updated Name");
+    }
+
+    [Fact]
+    public async Task DeleteProduct_AsAnotherSeller_ReturnsForbidden_AndProductStillExists()
+    {
+        var id = await CreateProductAsSellerAsync("proddelowner");
+        var rival = _factory.CreateClient();
+        await TestHelper.RegisterAndLoginAsSellerAsync(rival, "proddelrival");
+
+        var response = await rival.DeleteAsync($"/api/product/{id}");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        (await GetProductNameAsync(id)).Should().Be("Catalog Product proddelowner");
+    }
+
+    [Fact]
+    public async Task DeleteProduct_AsAdmin_ReturnsNoContent()
+    {
+        var id = await CreateProductAsSellerAsync("proddeladmin");
+        var admin = await TestHelper.CreateAdminClientAsync(_factory);
+
+        var response = await admin.DeleteAsync($"/api/product/{id}");
 
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        (await _factory.CreateClient().GetAsync($"/api/product/{id}")).StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
     [Fact]

@@ -294,7 +294,7 @@ GET {{baseUrl}}/api/product/1
 ### 4.5 Urun Guncelle
 PUT {{baseUrl}}/api/product/1
 Content-Type: {{contentType}}
-Authorization: Bearer {{sellerToken}}
+Authorization: Bearer {{adminToken}}
 
 {
     "productName": "iPhone 15 Pro - Guncellendi",

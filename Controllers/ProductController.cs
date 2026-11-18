@@ -34,13 +34,15 @@ public class ProductController : ControllerBase
         return CreatedAtAction(nameof(GetProductById), new { id = created.Id }, created);
     }
 
+    // Products are a shared catalog listed by many sellers, so editing or deleting an entry is an
+    // Admin action. Sellers create products and manage only their own listings.
     [HttpPut("{id:int}")]
-    [Authorize(Roles = "Admin,Seller")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateProduct(int id, [FromBody] ProductUpdateDto dto)
         => Ok(await _service.UpdateAsync(id, dto));
 
     [HttpDelete("{id:int}")]
-    [Authorize(Roles = "Admin,Seller")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteProduct(int id)
     {
         await _service.SoftDeleteAsync(id);

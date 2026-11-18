@@ -226,8 +226,8 @@ A standalone address API is also available under `/api/address`.
 | GET | `/api/product` | List / search products | - |
 | GET | `/api/product/{id}` | Get product by ID | - |
 | POST | `/api/product` | Create product | Seller/Admin |
-| PUT | `/api/product/{id}` | Update product | Seller/Admin |
-| DELETE | `/api/product/{id}` | Delete product | Seller/Admin |
+| PUT | `/api/product/{id}` | Update product (shared catalog) | Admin |
+| DELETE | `/api/product/{id}` | Delete product (shared catalog) | Admin |
 
 ### Categories
 | Method | Endpoint | Description | Auth |
