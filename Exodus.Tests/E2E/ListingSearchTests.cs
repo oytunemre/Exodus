@@ -1,8 +1,10 @@
+using System.Globalization;
 using System.Net;
 using System.Text.Json;
 using Exodus.Data;
 using Exodus.Models.Entities;
 using Exodus.Models.Enums;
+using Exodus.Services.Listings;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -205,5 +207,23 @@ public class ListingSearchTests : IClassFixture<CustomWebApplicationFactory>
         foreach (var name in new[] { "id", "productId", "productName", "productDescription", "categoryId",
                      "categoryName", "price", "stockQuantity", "stockStatus", "condition", "sellerId", "sellerName", "isActive" })
             item.TryGetProperty(name, out _).Should().BeTrue($"item should expose '{name}'");
+    }
+
+    [Fact]
+    public void NormalizeSearchTerm_UnderTurkishCulture_IsCultureInvariant()
+    {
+        // SQL LOWER() yields "ips" for "IPS"; a tr-TR host must not turn the term into "ıps".
+        var original = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = new CultureInfo("tr-TR");
+
+            ListingFilters.NormalizeSearchTerm("  IPS ").Should().Be("ips");
+            ListingFilters.NormalizeSearchTerm("Kulaklık").Should().Be("kulaklık");
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = original;
+        }
     }
 }

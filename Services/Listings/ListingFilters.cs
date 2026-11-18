@@ -12,7 +12,7 @@ public static class ListingFilters
     {
         if (!string.IsNullOrWhiteSpace(f.Search))
         {
-            var term = f.Search.Trim().ToLower();
+            var term = NormalizeSearchTerm(f.Search);
             q = q.Where(l =>
                 l.Product.ProductName.ToLower().Contains(term) ||
                 l.Product.ProductDescription.ToLower().Contains(term) ||
@@ -52,7 +52,15 @@ public static class ListingFilters
     }
 
     /// <summary>
-    /// Sort keys: price, createdAt (default), name (alias: product), stock, seller. Ties break on Id for stable paging.
+    /// Trims and lower-cases a search term independently of the host culture, to match the SQL
+    /// <c>LOWER()</c> applied to the columns (under tr-TR, <c>"IPS".ToLower()</c> would be "ıps").
+    /// </summary>
+    public static string NormalizeSearchTerm(string term) => term.Trim().ToLowerInvariant();
+
+    /// <summary>
+    /// Sort keys: price, createdAt, name (alias: product), stock, seller; an empty or unknown key sorts by createdAt.
+    /// Callers pick the default: the public search uses price ascending (<see cref="ListingSearchDto"/>), the admin
+    /// list createdAt. Ties break on Id for stable paging.
     /// </summary>
     public static IQueryable<Listing> Sort(this IQueryable<Listing> q, string? sortBy, bool desc)
     {
