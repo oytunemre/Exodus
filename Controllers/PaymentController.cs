@@ -4,6 +4,8 @@ using Exodus.Services.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Text;
+using System.Text.Json;
 
 namespace Exodus.Controllers;
 
@@ -163,15 +165,41 @@ public class PaymentController : ControllerBase
     }
 
     /// <summary>
-    /// Webhook endpoint for payment provider callbacks
+    /// Webhook endpoint for payment provider callbacks. Body: <see cref="ProcessWebhookDto"/> as JSON.
+    /// The X-Webhook-Signature header must be the payment gateway's signature of the raw request body;
+    /// a missing gateway or an invalid signature returns 401 and changes nothing.
     /// </summary>
     [HttpPost("webhook/{provider}")]
     [AllowAnonymous]
-    public async Task<ActionResult> Webhook(string provider, [FromBody] ProcessWebhookDto dto, CancellationToken ct)
+    public async Task<ActionResult> Webhook(string provider, CancellationToken ct)
     {
+        // The signature covers the exact body the provider sent, so verify it before parsing anything.
+        string rawBody;
+        using (var reader = new StreamReader(Request.Body, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, leaveOpen: true))
+            rawBody = await reader.ReadToEndAsync(ct);
+
         var signature = Request.Headers["X-Webhook-Signature"].FirstOrDefault();
+        if (!_paymentService.IsWebhookSignatureValid(rawBody, signature))
+            throw new UnauthorizedException("Invalid or missing webhook signature.");
+
+        var dto = ParseWebhookBody(rawBody);
         await _paymentService.ProcessWebhookAsync(provider, dto.Payload, signature, ct);
         return Ok(new { received = true });
+    }
+
+    private static ProcessWebhookDto ParseWebhookBody(string rawBody)
+    {
+        try
+        {
+            var dto = JsonSerializer.Deserialize<ProcessWebhookDto>(rawBody, JsonSerializerOptions.Web);
+            if (dto is not null && !string.IsNullOrWhiteSpace(dto.Payload))
+                return dto;
+        }
+        catch (JsonException)
+        {
+        }
+
+        throw new BadRequestException("Webhook body must be a JSON object with a non-empty 'payload'.");
     }
 
     // =====================================================

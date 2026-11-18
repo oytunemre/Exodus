@@ -309,10 +309,13 @@ public class PaymentService : IPaymentService
         return Map(intent);
     }
 
+    public bool IsWebhookSignatureValid(string rawBody, string? signature) =>
+        _paymentGateway != null && _paymentGateway.ValidateWebhookSignature(rawBody, signature ?? string.Empty);
+
     public async Task ProcessWebhookAsync(string provider, string payload, string? signature = null, CancellationToken ct = default)
     {
-        // In a real implementation, verify the signature
-        // For now, just parse and process the webhook
+        // The signature is verified by the caller (PaymentController.Webhook) over the raw request body
+        // through IsWebhookSignatureValid before this runs.
 
         var webhookEvent = JsonSerializer.Deserialize<WebhookEvent>(payload,
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });

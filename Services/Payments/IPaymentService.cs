@@ -24,6 +24,8 @@ public interface IPaymentService
     Task<PaymentIntentResponseDto> Confirm3DSecureAsync(int paymentIntentId, string authenticationResult, int callerId, bool isAdmin, CancellationToken ct = default);
 
     // Webhook
+    /// <summary>True only when a payment gateway is registered and it accepts <paramref name="signature"/> for <paramref name="rawBody"/>.</summary>
+    bool IsWebhookSignatureValid(string rawBody, string? signature);
     Task ProcessWebhookAsync(string provider, string payload, string? signature = null, CancellationToken ct = default);
 
     // Admin/Manual

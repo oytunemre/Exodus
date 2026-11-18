@@ -215,5 +215,5 @@ public class FakePaymentGateway : IPaymentGateway
         });
     }
 
-    public bool ValidateWebhookSignature(string payload, string signature) => true;
+    public virtual bool ValidateWebhookSignature(string payload, string signature) => true;
 }
