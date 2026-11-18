@@ -265,11 +265,11 @@ A standalone address API is also available under `/api/address`.
 | GET | `/api/order` | Get my orders | Yes |
 | GET | `/api/order/{id}` | Get order by ID | Yes |
 | GET | `/api/order/number/{orderNumber}` | Get order by number | Yes |
-| POST | `/api/order/{id}/cancel` | Cancel order | Yes |
+| POST | `/api/order/{id}/cancel` | Cancel order (refused once anything has shipped; request a refund instead) | Yes |
 | POST | `/api/order/{id}/refund` | Request refund | Yes |
 
 ### Payments
-Customer-facing endpoints verify that the caller owns the order (Admin bypasses). State transitions are Admin-only; the simulators exist only in the Development environment (404 elsewhere).
+Customer-facing endpoints verify that the caller owns the order (Admin bypasses). State transitions are Admin-only; the simulators are not available outside Development.
 
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
@@ -291,7 +291,7 @@ Customer-facing endpoints verify that the caller owns the order (Admin bypasses)
 | POST | `/api/payment/3ds-callback` | 3D Secure browser callback from iyzico | - |
 | GET | `/api/payment/gateway/bin/{binNumber}` | BIN check | Yes |
 | GET | `/api/payment/gateway/installments` | Get installment options | Yes |
-| POST | `/api/payment/webhook/{provider}` | Provider webhook | - |
+| POST | `/api/payment/webhook/{provider}` | Provider webhook (`X-Webhook-Signature` required) | - |
 
 ### Seller
 | Method | Endpoint | Description | Auth |
@@ -306,7 +306,7 @@ Customer-facing endpoints verify that the caller owns the order (Admin bypasses)
 | GET | `/api/seller/orders` | Get my seller orders | Seller (or Admin) |
 | POST | `/api/seller/orders/{id}/confirm` | Confirm order | Seller (or Admin) |
 | POST | `/api/seller/orders/{id}/ship` | Ship order (carrier + trackingNumber required, creates the Shipment) | Seller (or Admin) |
-| PATCH | `/api/seller/orders/{id}/status` | Update status (Shipped/Delivered/Completed rejected; use ship / deliver) | Seller (or Admin) |
+| PATCH | `/api/seller/orders/{id}/status` | Update status (forward-only; Shipped/Delivered/Completed rejected; use ship / deliver) | Seller (or Admin) |
 
 Seller campaigns are under `/api/seller/campaigns`.
 
@@ -419,9 +419,12 @@ All admin endpoints are under `/api/admin/*` and require the Admin role.
 
 Behavior hardened on this branch (each covered by integration tests):
 
-- **Payment ownership**: every customer-facing payment endpoint checks that the caller owns the order (Admin bypasses). `authorize`, `capture`, `refund`, `mark-received`, `simulate-success`, `simulate-fail` and `3ds/confirm` are Admin-only, and the simulators plus `3ds/confirm` only exist in Development (404 elsewhere). Real 3DS completes through the anonymous `gateway/3ds/complete` callback.
+- **Payment ownership**: every customer-facing payment endpoint checks that the caller owns the order (Admin bypasses). `authorize`, `capture`, `refund`, `mark-received`, `simulate-success`, `simulate-fail` and `3ds/confirm` are Admin-only, and the simulators plus `3ds/confirm` are not available outside Development. Real 3DS completes through the anonymous `gateway/3ds/complete` callback.
 - **Seller ownership in shipping**: `/api/shipments/seller-orders/{id}...` enforces that the seller owns the seller order (Admin bypasses). The legacy `SellerController` (`/api/seller/{sellerId}/orders`, `PATCH /api/seller/orders/{id}/ship|deliver`) was removed. Shipping goes through `POST /api/seller/orders/{id}/ship` (carrier + trackingNumber required) and delivery through `PATCH /api/shipments/seller-orders/{id}/deliver`.
-- **Order status integrity**: `PATCH /api/seller/orders/{id}/status` rejects Shipped/Delivered/Completed; Cancelled and Delivered seller orders are terminal; the parent order status is derived from its seller orders forward-only (a paid order never regresses to Pending; cancelled, failed, refunded and completed orders are left untouched).
+- **Order status integrity**: `PATCH /api/seller/orders/{id}/status` rejects Shipped/Delivered/Completed and is forward-only (Placed → Confirmed → Packed → Shipped → Delivered; repeating the current status is a no-op; Cancelled only before the seller order ships); Cancelled and Delivered seller orders are terminal; the parent order status is derived from its seller orders forward-only (a paid order never regresses to Pending; cancelled, failed, refunded and completed orders are left untouched).
+- **Customer cancel**: `POST /api/order/{id}/cancel` is refused (400) once any part of the order has shipped or been delivered; the customer requests a refund/return instead, so delivered goods are never restocked or cancelled.
+- **Payment confirmation**: a successful payment (capture, `mark-received`, the simulators, gateway processing, 3DS completion) sets `paidAt` and only moves a Pending order to Processing, so it never moves an order backwards or revives a cancelled one; capture, `mark-received`, the simulators and gateway processing refuse a cancelled order with 400, and gateway processing refuses an intent that is already captured or refunded. A failed payment only fails a Pending order.
+- **Webhook signature**: `POST /api/payment/webhook/{provider}` verifies the `X-Webhook-Signature` header over the raw request body through the configured payment gateway; with no gateway or an invalid signature it returns 401 and changes nothing.
 - **Production safety**: demo data is never seeded in Production, and a real `JwtSettings__SecretKey` is required there.
 
 ## User Roles

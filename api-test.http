@@ -5,7 +5,7 @@
 ### KULLANIM:
 ### 1. Uygulamayi Development ortaminda calistir (dotnet run --launch-profile http);
 ###    demo hesaplar otomatik seed edilir (sifre: Demo123!)
-### 2. 1.4-1.6 login isteklerini calistir (tokenlar otomatik yakalanir)
+### 2. 1.1 kaydini ve 1.4-1.6a login isteklerini calistir (tokenlar otomatik yakalanir)
 ### 3. Diger endpointleri sirayla test et
 ### Not: kayit (register) her zaman Customer olusturur, "role" alani yok sayilir.
 ###      Admin: admin@test.com (sadece Development), Seller: zeynep@test.com / mehmet@test.com,
@@ -62,10 +62,21 @@ Content-Type: {{contentType}}
     "password": "Demo123!"
 }
 
+### 1.6a Yeni Musteri Login (1.1'de kaydolan musteri; Development'ta e-posta dogrulamasi gerekmez)
+# @name loginNewCustomer
+POST {{baseUrl}}/api/auth/login
+Content-Type: {{contentType}}
+
+{
+    "emailOrUsername": "new.customer@test.com",
+    "password": "Customer123!"
+}
+
 ###  Token degiskenleri (login response'undan otomatik alinir)
 @adminToken = {{loginAdmin.response.body.$.token}}
 @sellerToken = {{loginSeller.response.body.$.token}}
 @customerToken = {{loginCustomer.response.body.$.token}}
+@newCustomerToken = {{loginNewCustomer.response.body.$.token}}
 
 ### 1.6b Ilan Arama (Public)
 GET {{baseUrl}}/api/listings/search?search=kulaklık&sortBy=price
@@ -109,13 +120,13 @@ Authorization: Bearer {{customerToken}}
     "phone": "+905551234567"
 }
 
-### 2.3 Sifre Degistir (dikkat: demo hesabin sifresini degistirir; sonra Demo123! ile geri al)
+### 2.3 Sifre Degistir (1.1'de kaydolan musteri; demo hesaplara dokunmaz. Sonrasinda 1.6a icin yeni sifre gecerli)
 POST {{baseUrl}}/api/profile/change-password
 Content-Type: {{contentType}}
-Authorization: Bearer {{customerToken}}
+Authorization: Bearer {{newCustomerToken}}
 
 {
-    "currentPassword": "Demo123!",
+    "currentPassword": "Customer123!",
     "newPassword": "NewCustomer456!",
     "confirmPassword": "NewCustomer456!"
 }
