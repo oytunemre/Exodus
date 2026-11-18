@@ -316,6 +316,11 @@ namespace Exodus.Services.Orders
             if (order.Status != OrderStatus.Pending && order.Status != OrderStatus.Processing)
                 throw new BadRequestException("Bu sipariş iptal edilemez.");
 
+            // A seller order that already shipped or arrived cannot be undone by cancelling.
+            if (order.SellerOrders.Any(so => so.Status is SellerOrderStatus.Shipped or SellerOrderStatus.Delivered))
+                throw new BadRequestException(
+                    "Part of this order has already shipped, so it can no longer be cancelled. Please request a refund/return instead.");
+
             // Restore stock
             foreach (var so in order.SellerOrders)
             {
@@ -529,14 +534,34 @@ namespace Exodus.Services.Orders
 
             var target = MapOrderStatusToSellerStatus(newStatus);
 
-            if (sellerOrder.Status is SellerOrderStatus.Cancelled or SellerOrderStatus.Delivered
-                && target != sellerOrder.Status)
-                throw new BadRequestException($"Seller order is {sellerOrder.Status} and cannot change status.");
+            // Same status is an idempotent no-op (e.g. confirming an already confirmed order).
+            if (target != sellerOrder.Status)
+                EnsureSellerOrderTransition(sellerOrder.Status, target);
 
             sellerOrder.Status = target;
             await _db.SaveChangesAsync();
 
             await RecalculateOrderStatusAsync(sellerOrder.OrderId);
+        }
+
+        /// <summary>
+        /// Seller order status only moves forward (Placed &lt; Confirmed &lt; Packed &lt; Shipped &lt; Delivered);
+        /// Cancelled is reachable only from Placed, Confirmed or Packed; Cancelled and Delivered are terminal.
+        /// </summary>
+        private static void EnsureSellerOrderTransition(SellerOrderStatus current, SellerOrderStatus target)
+        {
+            if (current is SellerOrderStatus.Cancelled or SellerOrderStatus.Delivered)
+                throw new BadRequestException($"Seller order is {current} and cannot change status.");
+
+            if (target == SellerOrderStatus.Cancelled)
+            {
+                if (current is not (SellerOrderStatus.Placed or SellerOrderStatus.Confirmed or SellerOrderStatus.Packed))
+                    throw new BadRequestException($"Seller order is {current} and can no longer be cancelled.");
+                return;
+            }
+
+            if (target < current)
+                throw new BadRequestException($"Seller order is {current} and cannot move back to {target}.");
         }
 
         /// <summary>
@@ -580,8 +605,20 @@ namespace Exodus.Services.Orders
 
             order.Status = derived;
 
-            if (derived == OrderStatus.Cancelled)
-                order.CancelledAt ??= DateTime.UtcNow;
+            var now = DateTime.UtcNow;
+            switch (derived)
+            {
+                case OrderStatus.Shipped:
+                    order.ShippedAt ??= now;
+                    break;
+                case OrderStatus.Delivered:
+                    order.ShippedAt ??= now;
+                    order.DeliveredAt ??= now;
+                    break;
+                case OrderStatus.Cancelled:
+                    order.CancelledAt ??= now;
+                    break;
+            }
 
             _db.OrderEvents.Add(new OrderEvent
             {
