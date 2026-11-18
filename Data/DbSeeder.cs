@@ -1,4 +1,4 @@
-﻿using Exodus.Models.Entities;
+using Exodus.Models.Entities;
 using Exodus.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,9 +18,19 @@ public static class DbSeeder
     {
         await MigrateAsync(db);
 
-        // -------------------------
-        // 1) USERS (>=5)
-        // -------------------------
+        await SeedUsersAsync(db);
+        await SeedCategoriesAsync(db);
+        await SeedProductsAsync(db);
+        await SeedListingsAsync(db);
+        await SeedCartsAsync(db);
+        await SeedAddressesAsync(db);
+        await SeedOrdersAsync(db);
+    }
+
+    // ------------------------------------------------------------------ users
+    // Key: Email.
+    private static async Task SeedUsersAsync(ApplicationDbContext db)
+    {
         var demoPasswordHash = BCrypt.Net.BCrypt.HashPassword(DemoPassword);
 
         var usersToSeed = new List<Users>
@@ -38,25 +48,70 @@ public static class DbSeeder
             if (!exists) db.Users.Add(u);
         }
         await db.SaveChangesAsync();
+    }
 
-        var users = await db.Users.ToListAsync();
-        if (users.Count < 2) return; // güvenlik
+    // ------------------------------------------------------------- categories
+    // Key: Slug.
+    private static readonly (string Name, string Slug, int Order)[] CategorySpecs =
+    {
+        ("Elektronik", "elektronik", 1),
+        ("Ev & Yaşam", "ev-yasam", 2),
+        ("Spor", "spor", 3),
+        ("Kitap", "kitap", 4),
+        ("Moda", "moda", 5)
+    };
 
-
-        // -------------------------
-        // 2) PRODUCTS + BARCODES (>=5)
-        // -------------------------
-        var productSpecs = new[]
+    private static async Task SeedCategoriesAsync(ApplicationDbContext db)
+    {
+        foreach (var (name, slug, order) in CategorySpecs)
         {
-            new { Name = "Logitech MX Master 3S", Desc = "Kablosuz mouse", Barcodes = new[] { "LOGI-MX3S", "LOGI-MX3S-ALT" } },
-            new { Name = "AirPods Pro 2",         Desc = "ANC kulaklık",  Barcodes = new[] { "APPLE-APP2", "APPLE-APP2-ALT" } },
-            new { Name = "Samsung 25W Type-C",    Desc = "Telefon adaptörü", Barcodes = new[] { "SAM-25W-TR", "SAM-25W-EU" } },
-            new { Name = "Anker PowerCore 10000", Desc = "Powerbank", Barcodes = new[] { "ANK-PC10K", "ANK-PC10K-ALT" } },
-            new { Name = "HP 27\" IPS Monitor",   Desc = "Full HD monitör", Barcodes = new[] { "HP-27IPS-FHD", "HP-27IPS-FHD-ALT" } }
-        };
+            var exists = await db.Categories.IgnoreQueryFilters().AnyAsync(c => c.Slug == slug);
+            if (!exists)
+                db.Categories.Add(new Category { Name = name, Slug = slug, DisplayOrder = order, IsActive = true });
+        }
+        await db.SaveChangesAsync();
+    }
 
-        foreach (var spec in productSpecs)
+    // --------------------------------------------------------------- products
+    // Key: ProductName.
+    private sealed record ProductSpec(string Name, string Desc, string Brand, string CategorySlug, string[] Barcodes);
+
+    private static readonly ProductSpec[] ProductSpecs =
+    {
+        // Elektronik
+        new("Logitech MX Master 3S", "Kablosuz mouse", "Logitech", "elektronik", new[] { "LOGI-MX3S", "LOGI-MX3S-ALT" }),
+        new("AirPods Pro 2", "ANC kulaklık", "Apple", "elektronik", new[] { "APPLE-APP2", "APPLE-APP2-ALT" }),
+        new("Samsung 25W Type-C", "Telefon adaptörü", "Samsung", "elektronik", new[] { "SAM-25W-TR", "SAM-25W-EU" }),
+        new("Anker PowerCore 10000", "Powerbank", "Anker", "elektronik", new[] { "ANK-PC10K", "ANK-PC10K-ALT" }),
+        new("HP 27\" IPS Monitor", "Full HD monitör", "HP", "elektronik", new[] { "HP-27IPS-FHD", "HP-27IPS-FHD-ALT" }),
+        new("Sony WH-1000XM5 Kablosuz Kulaklık", "Gürültü engelleyici kablosuz kulak üstü kulaklık", "Sony", "elektronik", new[] { "SONY-WH1000XM5" }),
+        // Ev & Yaşam
+        new("Philips Airfryer XL", "6.2 litre yağsız fritöz", "Philips", "ev-yasam", new[] { "PHI-AFXL" }),
+        new("Karaca Çelik Tencere Seti", "8 parça çelik tencere seti", "Karaca", "ev-yasam", new[] { "KRC-TNC8" }),
+        new("Xiaomi Robot Süpürge S10", "Akıllı robot süpürge", "Xiaomi", "ev-yasam", new[] { "XIA-RS10" }),
+        // Spor
+        new("Decathlon Yoga Matı 8mm", "Kaymaz yoga ve pilates matı", "Decathlon", "spor", new[] { "DEC-YOGA8" }),
+        new("Nike Air Zoom Pegasus Koşu Ayakkabısı", "Günlük koşu ayakkabısı", "Nike", "spor", new[] { "NIKE-PEGASUS" }),
+        new("Adidas Antrenman Spor Çantası", "35 litre spor çanta", "Adidas", "spor", new[] { "ADI-BAG35" }),
+        // Kitap
+        new("Sapiens: Hayvanlardan Tanrılara", "Yuval Noah Harari, insanlık tarihi", "Kolektif Kitap", "kitap", new[] { "9786059550000" }),
+        new("Simyacı", "Paulo Coelho, roman", "Can Yayınları", "kitap", new[] { "9789750726439" }),
+        new("Suç ve Ceza", "Dostoyevski, klasik roman", "İş Bankası Kültür Yayınları", "kitap", new[] { "9786053602080" }),
+        // Moda
+        new("Levi's 501 Erkek Kot Pantolon", "Klasik straight fit kot", "Levi's", "moda", new[] { "LEVIS-501" }),
+        new("Mavi Kadın Triko Kazak", "Yün karışımlı triko", "Mavi", "moda", new[] { "MAVI-TRK" }),
+        new("Lacoste Erkek Polo Tişört", "Pamuklu polo yaka tişört", "Lacoste", "moda", new[] { "LAC-POLO" })
+    };
+
+    private static async Task SeedProductsAsync(ApplicationDbContext db)
+    {
+        var categoryIds = await db.Categories.IgnoreQueryFilters()
+            .ToDictionaryAsync(c => c.Slug, c => c.Id);
+
+        foreach (var spec in ProductSpecs)
         {
+            var categoryId = categoryIds[spec.CategorySlug];
+
             var product = await db.Products
                 .IgnoreQueryFilters()
                 .Include(p => p.Barcodes)
@@ -64,82 +119,118 @@ public static class DbSeeder
 
             if (product is null)
             {
-                product = new Product
+                db.Products.Add(new Product
                 {
                     ProductName = spec.Name,
                     ProductDescription = spec.Desc,
+                    Brand = spec.Brand,
+                    CategoryId = categoryId,
                     Barcodes = spec.Barcodes.Select(b => new ProductBarcode { Barcode = b }).ToList()
-                };
-                db.Products.Add(product);
+                });
+                continue;
             }
-            else
-            {
-                // restore soft delete
-                if (product.IsDeleted)
-                {
-                    product.IsDeleted = false;
-                    product.DeletedDate = null;
-                }
 
-                // eksik barkodları tamamla
-                var existingBarcodes = product.Barcodes.Select(x => x.Barcode).ToHashSet();
-                foreach (var bc in spec.Barcodes)
-                {
-                    if (!existingBarcodes.Contains(bc))
-                        product.Barcodes.Add(new ProductBarcode { Barcode = bc });
-                }
+            if (product.IsDeleted)
+            {
+                product.IsDeleted = false;
+                product.DeletedDate = null;
+            }
+
+            // Fill gaps left by older seeds.
+            product.CategoryId ??= categoryId;
+            if (string.IsNullOrWhiteSpace(product.Brand)) product.Brand = spec.Brand;
+
+            var existingBarcodes = product.Barcodes.Select(x => x.Barcode).ToHashSet();
+            foreach (var bc in spec.Barcodes)
+            {
+                if (!existingBarcodes.Contains(bc))
+                    product.Barcodes.Add(new ProductBarcode { Barcode = bc });
             }
         }
         await db.SaveChangesAsync();
+    }
 
-        var products = await db.Products.ToListAsync();
-        if (products.Count < 3) return;
+    // --------------------------------------------------------------- listings
+    // Key: (SellerId, ProductId). Only users with Role == Seller own listings.
+    private sealed record ListingSpec(
+        string SellerEmail, string ProductName, decimal Price, int Stock, ListingCondition Condition, string Sku, int LowStockThreshold = 5);
 
+    private const string Zeynep = "zeynep@test.com";
+    private const string Mehmet = "mehmet@test.com";
 
-        // -------------------------
-        // 3) LISTINGS (>=5)
-        // -------------------------
-        var listingsPlan = new[]
+    private static readonly ListingSpec[] ListingSpecs =
+    {
+        // Zeynep
+        new(Zeynep, "Logitech MX Master 3S", 3999.90m, 10, ListingCondition.New, "ZYN-LOGI-MX3S"),
+        new(Zeynep, "AirPods Pro 2", 7999.00m, 5, ListingCondition.LikeNew, "ZYN-APP-PRO2"),            // low stock
+        new(Zeynep, "Samsung 25W Type-C", 650.00m, 20, ListingCondition.New, "ZYN-SAM-25W"),
+        new(Zeynep, "Anker PowerCore 10000", 1200.00m, 15, ListingCondition.Used, "ZYN-ANK-PC10K"),
+        new(Zeynep, "Sony WH-1000XM5 Kablosuz Kulaklık", 11499.00m, 8, ListingCondition.New, "ZYN-SONY-XM5"),
+        new(Zeynep, "Philips Airfryer XL", 3499.00m, 12, ListingCondition.New, "ZYN-PHI-AFXL"),
+        new(Zeynep, "Decathlon Yoga Matı 8mm", 450.00m, 30, ListingCondition.New, "ZYN-DEC-YOGA"),
+        new(Zeynep, "Nike Air Zoom Pegasus Koşu Ayakkabısı", 4299.00m, 3, ListingCondition.New, "ZYN-NIKE-PEG"), // low stock
+        new(Zeynep, "Sapiens: Hayvanlardan Tanrılara", 189.90m, 40, ListingCondition.New, "ZYN-KTP-SAPIENS"),
+        new(Zeynep, "Mavi Kadın Triko Kazak", 1299.00m, 18, ListingCondition.New, "ZYN-MAVI-TRK"),
+        new(Zeynep, "Lacoste Erkek Polo Tişört", 2250.00m, 6, ListingCondition.New, "ZYN-LAC-POLO"),
+        // Mehmet
+        new(Mehmet, "Logitech MX Master 3S", 4099.00m, 0, ListingCondition.New, "MHM-LOGI-MX3S"),       // out of stock
+        new(Mehmet, "AirPods Pro 2", 7799.00m, 14, ListingCondition.New, "MHM-APP-PRO2"),
+        new(Mehmet, "Samsung 25W Type-C", 590.00m, 12, ListingCondition.Used, "MHM-SAM-25W"),
+        new(Mehmet, "Anker PowerCore 10000", 1100.00m, 8, ListingCondition.LikeNew, "MHM-ANK-PC10K"),
+        new(Mehmet, "HP 27\" IPS Monitor", 4200.00m, 7, ListingCondition.Refurbished, "MHM-HP-27IPS"),
+        new(Mehmet, "Karaca Çelik Tencere Seti", 2899.00m, 9, ListingCondition.New, "MHM-KRC-TNC8"),
+        new(Mehmet, "Xiaomi Robot Süpürge S10", 8999.00m, 2, ListingCondition.New, "MHM-XIA-RS10"),      // low stock
+        new(Mehmet, "Adidas Antrenman Spor Çantası", 899.00m, 14, ListingCondition.New, "MHM-ADI-BAG35"),
+        new(Mehmet, "Sapiens: Hayvanlardan Tanrılara", 179.90m, 25, ListingCondition.New, "MHM-KTP-SAPIENS"),
+        new(Mehmet, "Simyacı", 129.90m, 25, ListingCondition.New, "MHM-KTP-SIMYACI"),
+        new(Mehmet, "Suç ve Ceza", 149.90m, 30, ListingCondition.New, "MHM-KTP-SUCCEZA"),
+        new(Mehmet, "Levi's 501 Erkek Kot Pantolon", 1899.00m, 20, ListingCondition.New, "MHM-LEVIS-501")
+    };
+
+    private static StockStatus ComputeStockStatus(int stock, int threshold) =>
+        stock <= 0 ? StockStatus.OutOfStock
+        : stock <= threshold ? StockStatus.LowStock
+        : StockStatus.InStock;
+
+    private static async Task SeedListingsAsync(ApplicationDbContext db)
+    {
+        var sellers = await db.Users.IgnoreQueryFilters()
+            .Where(u => u.Role == UserRole.Seller)
+            .ToDictionaryAsync(u => u.Email, u => u.Id);
+        var products = await db.Products.IgnoreQueryFilters()
+            .ToDictionaryAsync(p => p.ProductName, p => p.Id);
+
+        foreach (var l in ListingSpecs)
         {
-            new { SellerIndex = 0, ProductIndex = 0, Price = 3999.90m, Stock = 10, Condition = ListingCondition.New,         IsActive = true },
-            new { SellerIndex = 1, ProductIndex = 1, Price = 7999.00m, Stock = 5,  Condition = ListingCondition.LikeNew,     IsActive = true },
-            new { SellerIndex = 2, ProductIndex = 2, Price = 650.00m,  Stock = 20, Condition = ListingCondition.New,         IsActive = true },
-            new { SellerIndex = 3, ProductIndex = 3, Price = 1200.00m, Stock = 15, Condition = ListingCondition.Used,        IsActive = true },
-            new { SellerIndex = 4, ProductIndex = 4, Price = 4200.00m, Stock = 7,  Condition = ListingCondition.Refurbished, IsActive = true },
-            new { SellerIndex = 0, ProductIndex = 2, Price = 590.00m,  Stock = 12, Condition = ListingCondition.Used,        IsActive = true },
-            new { SellerIndex = 1, ProductIndex = 3, Price = 1100.00m, Stock = 8,  Condition = ListingCondition.LikeNew,     IsActive = true }
-        };
-
-        foreach (var l in listingsPlan)
-        {
-            var sellerId = users[Math.Min(l.SellerIndex, users.Count - 1)].Id;
-            var productId = products[Math.Min(l.ProductIndex, products.Count - 1)].Id;
+            if (!sellers.TryGetValue(l.SellerEmail, out var sellerId)) continue;
+            if (!products.TryGetValue(l.ProductName, out var productId)) continue;
 
             var exists = await db.Listings.IgnoreQueryFilters()
                 .AnyAsync(x => x.SellerId == sellerId && x.ProductId == productId);
+            if (exists) continue;
 
-            if (!exists)
+            db.Listings.Add(new Listing
             {
-                db.Listings.Add(new Listing
-                {
-                    SellerId = sellerId,
-                    ProductId = productId,
-                    Price = l.Price,
-                    StockQuantity = l.Stock,
-                    Condition = l.Condition,
-                    IsActive = l.IsActive
-                });
-            }
+                SellerId = sellerId,
+                ProductId = productId,
+                Price = l.Price,
+                StockQuantity = l.Stock,
+                LowStockThreshold = l.LowStockThreshold,
+                TrackInventory = true,
+                StockStatus = ComputeStockStatus(l.Stock, l.LowStockThreshold),
+                Condition = l.Condition,
+                SKU = l.Sku,
+                IsActive = true
+            });
         }
         await db.SaveChangesAsync();
+    }
 
-        var listings = await db.Listings.ToListAsync();
-        if (listings.Count < 2) return;
-
-
-        // -------------------------
-        // 4) CARTS (>=users)
-        // -------------------------
+    // ------------------------------------------------------------------ carts
+    // Key: UserId. Carts start empty so demo customers never hold items in their own name.
+    private static async Task SeedCartsAsync(ApplicationDbContext db)
+    {
+        var users = await db.Users.ToListAsync();
         foreach (var u in users)
         {
             var hasCart = await db.Carts.IgnoreQueryFilters().AnyAsync(c => c.UserId == u.Id);
@@ -147,118 +238,216 @@ public static class DbSeeder
                 db.Carts.Add(new Cart { UserId = u.Id });
         }
         await db.SaveChangesAsync();
+    }
 
-        var carts = await db.Carts.ToListAsync();
-        if (carts.Count == 0) return;
+    // -------------------------------------------------------------- addresses
+    // Key: (UserId, Title).
+    private sealed record AddressSpec(
+        string Email, string Title, string FullName, string Phone, string City, string District,
+        string Neighborhood, string AddressLine, string PostalCode, bool IsDefault);
 
+    private static readonly AddressSpec[] AddressSpecs =
+    {
+        new("ahmet@test.com", "Ev", "Ahmet Yılmaz", "05321112233", "İstanbul", "Kadıköy", "Caferağa", "Moda Cad. No:12 D:5", "34710", true),
+        new("elif@test.com",  "Ev", "Elif Şahin",  "05334445566", "Ankara",   "Çankaya", "Kızılay",  "Atatürk Bulvarı No:45 D:8", "06420", true),
+        new("can@test.com",   "Ev", "Can Arslan",  "05357778899", "İzmir",    "Bornova", "Kazımdirik", "Ege Üniversitesi Cad. No:3 D:2", "35040", true)
+    };
 
-        // -------------------------
-        // 5) CART ITEMS (>=5)
-        // -------------------------
-        var targetItems = new List<(int CartIndex, int ListingIndex, int Quantity)>
+    private static async Task SeedAddressesAsync(ApplicationDbContext db)
+    {
+        var userIds = await db.Users.IgnoreQueryFilters().ToDictionaryAsync(u => u.Email, u => u.Id);
+
+        foreach (var a in AddressSpecs)
         {
-            (0, 0, 1),
-            (0, 1, 2),
-            (1, 2, 1),
-            (1, 3, 1),
-            (2, 4, 1),
-            (3, 5, 2),
-            (4, 6, 1),
-            (2, 1, 1)
-        };
+            if (!userIds.TryGetValue(a.Email, out var userId)) continue;
 
-        foreach (var (cartIndex, listingIndex, quantity) in targetItems)
-        {
-            if (carts.Count == 0 || listings.Count == 0) break;
-
-            var cart = carts[Math.Min(cartIndex, carts.Count - 1)];
-            var listing = listings[Math.Min(listingIndex, listings.Count - 1)];
-
-            var exists = await db.CartItems.IgnoreQueryFilters()
-                .AnyAsync(ci => ci.CartId == cart.Id && ci.ListingId == listing.Id);
-
+            var exists = await db.Addresses.IgnoreQueryFilters()
+                .AnyAsync(x => x.UserId == userId && x.Title == a.Title);
             if (exists) continue;
 
-            var finalQty = quantity <= 0 ? 1 : quantity;
-
-            db.CartItems.Add(new CartItem
+            db.Addresses.Add(new Address
             {
-                CartId = cart.Id,
-                ListingId = listing.Id,
-                Quantity = finalQty,
-                UnitPrice = listing.Price
+                UserId = userId,
+                Title = a.Title,
+                FullName = a.FullName,
+                Phone = a.Phone,
+                City = a.City,
+                District = a.District,
+                Neighborhood = a.Neighborhood,
+                AddressLine = a.AddressLine,
+                PostalCode = a.PostalCode,
+                IsDefault = a.IsDefault,
+                Type = AddressType.Both
             });
         }
-
-        await db.SaveChangesAsync();
-
-
-        // -------------------------
-        // 6) ORDERS + SELLER ORDERS + ITEMS + SHIPMENT (1 demo order)
-        // -------------------------
-        var hasAnyOrder = await db.Orders.IgnoreQueryFilters().AnyAsync();
-        if (hasAnyOrder) return;
-
-        var buyer = users[0];
-
-        // Order toplamı sellerOrders'tan hesaplanacak
-        var order = new Order
-        {
-            OrderNumber = $"ORD-{DateTime.UtcNow:yyyyMMddHHmmss}",
-            BuyerId = buyer.Id,
-            Status = OrderStatus.Pending,
-            SellerOrders = new List<SellerOrder>() // null patlamasın
-        };
-
-        var orderListings = new[]
-        {
-            new { Listing = listings[0], Qty = 1 },
-            new { Listing = listings[1], Qty = 2 }
-        };
-
-        var groups = orderListings.GroupBy(x => x.Listing.SellerId);
-
-        foreach (var g in groups)
-        {
-            var sellerOrder = new SellerOrder
-            {
-                Order = order, // ilişkiyi kur
-                SellerId = g.Key,
-                Status = SellerOrderStatus.Confirmed,
-                Items = new List<SellerOrderItem>() // null patlamasın
-            };
-
-            foreach (var item in g)
-            {
-                var productName = products.First(p => p.Id == item.Listing.ProductId).ProductName;
-
-                sellerOrder.Items.Add(new SellerOrderItem
-                {
-                    ListingId = item.Listing.Id,
-                    ProductId = item.Listing.ProductId,
-                    ProductName = productName,
-                    UnitPrice = item.Listing.Price,
-                    Quantity = item.Qty,
-                    LineTotal = item.Listing.Price * item.Qty
-                });
-            }
-
-            sellerOrder.SubTotal = sellerOrder.Items.Sum(x => x.LineTotal);
-
-            // Shipment (MVP: Created)
-            sellerOrder.Shipment = new Shipment
-            {
-                Carrier = "Yurtiçi Kargo",
-                TrackingNumber = "SEED-TRK-001",
-                Status = ShipmentStatus.Created
-            };
-
-            order.SellerOrders.Add(sellerOrder);
-        }
-
-        order.TotalAmount = order.SellerOrders.Sum(x => x.SubTotal);
-
-        db.Orders.Add(order);
         await db.SaveChangesAsync();
     }
+
+    // ----------------------------------------------------------------- orders
+    // Key: Order.CustomerNote == "SEED-n". Each order spans both sellers; statuses are
+    // coherent between the parent order, seller orders and shipments.
+    private sealed record OrderLine(string SellerEmail, string ProductName, int Qty);
+
+    private sealed record OrderSpec(
+        int Number, string BuyerEmail, OrderStatus Status, int DaysAgo, string? Carrier, OrderLine[] Lines);
+
+    private static readonly OrderSpec[] OrderSpecs =
+    {
+        new(1, "ahmet@test.com", OrderStatus.Delivered, 9, "Yurtiçi Kargo", new[]
+        {
+            new OrderLine(Zeynep, "Logitech MX Master 3S", 1), new OrderLine(Zeynep, "Sapiens: Hayvanlardan Tanrılara", 2),
+            new OrderLine(Mehmet, "Samsung 25W Type-C", 1), new OrderLine(Mehmet, "Simyacı", 1)
+        }),
+        new(2, "elif@test.com", OrderStatus.Delivered, 7, "Aras Kargo", new[]
+        {
+            new OrderLine(Zeynep, "Sony WH-1000XM5 Kablosuz Kulaklık", 1),
+            new OrderLine(Mehmet, "Karaca Çelik Tencere Seti", 1)
+        }),
+        new(3, "ahmet@test.com", OrderStatus.Shipped, 4, "Yurtiçi Kargo", new[]
+        {
+            new OrderLine(Zeynep, "Decathlon Yoga Matı 8mm", 2),
+            new OrderLine(Mehmet, "Adidas Antrenman Spor Çantası", 1)
+        }),
+        new(4, "elif@test.com", OrderStatus.Confirmed, 2, null, new[]
+        {
+            new OrderLine(Zeynep, "Mavi Kadın Triko Kazak", 1),
+            new OrderLine(Mehmet, "Levi's 501 Erkek Kot Pantolon", 1), new OrderLine(Mehmet, "Anker PowerCore 10000", 1)
+        }),
+        new(5, "ahmet@test.com", OrderStatus.Pending, 1, null, new[]
+        {
+            new OrderLine(Zeynep, "Philips Airfryer XL", 1),
+            new OrderLine(Mehmet, "Suç ve Ceza", 2)
+        })
+    };
+
+    private static async Task SeedOrdersAsync(ApplicationDbContext db)
+    {
+        var users = await db.Users.IgnoreQueryFilters().ToDictionaryAsync(u => u.Email, u => u);
+        var listings = await db.Listings.IgnoreQueryFilters()
+            .Include(l => l.Product).Include(l => l.Seller)
+            .ToListAsync();
+
+        var now = DateTime.UtcNow;
+
+        foreach (var spec in OrderSpecs)
+        {
+            var note = $"SEED-{spec.Number}";
+            if (await db.Orders.IgnoreQueryFilters().AnyAsync(o => o.CustomerNote == note)) continue;
+            if (!users.TryGetValue(spec.BuyerEmail, out var buyer)) continue;
+
+            var address = await db.Addresses.IgnoreQueryFilters()
+                .FirstOrDefaultAsync(a => a.UserId == buyer.Id && a.IsDefault);
+            if (address is null) continue;
+
+            var resolved = spec.Lines
+                .Select(l => (Line: l, Listing: listings.FirstOrDefault(x =>
+                    x.Seller.Email == l.SellerEmail && x.Product.ProductName == l.ProductName)))
+                .ToList();
+            if (resolved.Any(r => r.Listing is null)) continue; // data not fully seeded; skip rather than half-build
+
+            var createdAt = now.AddDays(-spec.DaysAgo);
+            var paidAt = spec.Status == OrderStatus.Pending ? (DateTime?)null : createdAt.AddMinutes(10);
+            var shippedAt = spec.Status is OrderStatus.Shipped or OrderStatus.Delivered ? createdAt.AddDays(1) : (DateTime?)null;
+            var deliveredAt = spec.Status == OrderStatus.Delivered ? createdAt.AddDays(3) : (DateTime?)null;
+
+            var sellerStatus = spec.Status switch
+            {
+                OrderStatus.Delivered => SellerOrderStatus.Delivered,
+                OrderStatus.Shipped => SellerOrderStatus.Shipped,
+                OrderStatus.Confirmed => SellerOrderStatus.Confirmed,
+                _ => SellerOrderStatus.Placed
+            };
+
+            var order = new Order
+            {
+                OrderNumber = $"ORD-{createdAt:yyyyMMdd}-SEED{spec.Number:D4}",
+                BuyerId = buyer.Id,
+                Status = spec.Status,
+                CreatedAt = createdAt,
+                CustomerNote = note,
+                ShippingAddressId = address.Id,
+                ShippingAddressSnapshot = $"{address.FullName}, {address.AddressLine}, {address.Neighborhood}, {address.District}/{address.City}, {address.Phone}",
+                BillingAddressId = address.Id,
+                BillingAddressSnapshot = $"{address.FullName}, {address.AddressLine}, {address.Neighborhood}, {address.District}/{address.City}, {address.Phone}",
+                PaidAt = paidAt,
+                ShippedAt = shippedAt,
+                DeliveredAt = deliveredAt,
+                SellerOrders = new List<SellerOrder>(),
+                OrderEvents = new List<OrderEvent>()
+            };
+
+            foreach (var group in resolved.GroupBy(r => r.Listing!.SellerId))
+            {
+                var sellerOrder = new SellerOrder
+                {
+                    Order = order,
+                    SellerId = group.Key,
+                    Status = sellerStatus,
+                    CreatedAt = createdAt,
+                    Items = new List<SellerOrderItem>()
+                };
+
+                foreach (var (line, listing) in group)
+                {
+                    sellerOrder.Items.Add(new SellerOrderItem
+                    {
+                        ListingId = listing!.Id,
+                        ProductId = listing.ProductId,
+                        ProductName = listing.Product.ProductName,
+                        UnitPrice = listing.Price,
+                        Quantity = line.Qty,
+                        LineTotal = listing.Price * line.Qty,
+                        CreatedAt = createdAt
+                    });
+                }
+                sellerOrder.SubTotal = sellerOrder.Items.Sum(i => i.LineTotal);
+
+                if (shippedAt is not null)
+                {
+                    var delivered = spec.Status == OrderStatus.Delivered;
+                    var shipment = new Shipment
+                    {
+                        Carrier = spec.Carrier ?? "Yurtiçi Kargo",
+                        TrackingNumber = $"SEED-TRK-{spec.Number:D3}-{group.Key}",
+                        Status = delivered ? ShipmentStatus.Delivered : ShipmentStatus.Shipped,
+                        ShippedAt = shippedAt,
+                        DeliveredAt = deliveredAt,
+                        CreatedAt = createdAt
+                    };
+                    db.ShipmentEvents.Add(new ShipmentEvent { Shipment = shipment, Status = ShipmentStatus.Created, CreatedAt = createdAt.AddHours(2), PayloadJson = "{\"by\":\"seed\"}" });
+                    db.ShipmentEvents.Add(new ShipmentEvent { Shipment = shipment, Status = ShipmentStatus.Shipped, CreatedAt = shippedAt.Value, PayloadJson = "{\"by\":\"seed\"}" });
+                    if (delivered)
+                        db.ShipmentEvents.Add(new ShipmentEvent { Shipment = shipment, Status = ShipmentStatus.Delivered, CreatedAt = deliveredAt!.Value, PayloadJson = "{\"by\":\"seed\"}" });
+                    sellerOrder.Shipment = shipment;
+                }
+
+                order.SellerOrders.Add(sellerOrder);
+            }
+
+            order.SubTotal = order.SellerOrders.Sum(s => s.SubTotal);
+            order.TotalAmount = order.SubTotal + order.ShippingCost + order.TaxAmount - order.DiscountAmount;
+
+            AddEvent(order, OrderStatus.Pending, "Order placed", createdAt, buyer.Id, "Customer");
+            if (paidAt is not null)
+                AddEvent(order, OrderStatus.Confirmed, "Order confirmed", paidAt.Value, null, "System");
+            if (shippedAt is not null)
+                AddEvent(order, OrderStatus.Shipped, "Order shipped", shippedAt.Value, null, "Seller");
+            if (deliveredAt is not null)
+                AddEvent(order, OrderStatus.Delivered, "Order delivered", deliveredAt.Value, null, "System");
+
+            db.Orders.Add(order);
+        }
+
+        await db.SaveChangesAsync();
+    }
+
+    private static void AddEvent(Order order, OrderStatus status, string title, DateTime at, int? userId, string userType) =>
+        order.OrderEvents.Add(new OrderEvent
+        {
+            Status = status,
+            Title = title,
+            UserId = userId,
+            UserType = userType,
+            CreatedAt = at
+        });
 }

@@ -1120,7 +1120,9 @@ namespace Exodus.Data
             {
                 if (entry.State == EntityState.Added)
                 {
-                    entry.Entity.CreatedAt = now;
+                    // Respect an explicitly supplied CreatedAt (e.g. back-dated demo seed data).
+                    if (entry.Entity.CreatedAt == default)
+                        entry.Entity.CreatedAt = now;
                     entry.Entity.UpdatedAt = now;
                 }
                 else if (entry.State == EntityState.Modified)
