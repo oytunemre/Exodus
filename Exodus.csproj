@@ -4,6 +4,7 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<DefaultItemExcludes>$(DefaultItemExcludes);Exodus.Tests\**</DefaultItemExcludes>
+		<UserSecretsId>893baa80-c4f8-4471-a748-905e48cb558e</UserSecretsId>
 	</PropertyGroup>
 	<ItemGroup>
 		<Content Remove="C:\Users\nilgo\.nuget\packages\microsoft.codeanalysis.workspaces.msbuild\4.14.0\contentFiles\any\any\BuildHost-net472\cs\System.CommandLine.resources.dll" />

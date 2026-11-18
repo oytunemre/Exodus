@@ -535,14 +535,14 @@ Authorization: Bearer {{customerToken}}
 GET {{baseUrl}}/api/payment/order/1
 Authorization: Bearer {{customerToken}}
 
-### 9.4 Odemeyi Onayla (Authorize)
+### 9.4 Odemeyi Onayla (Authorize) - Admin
 POST {{baseUrl}}/api/payment/intents/1/authorize
-Authorization: Bearer {{customerToken}}
+Authorization: Bearer {{adminToken}}
 
-### 9.5 Odemeyi Yakala (Capture)
+### 9.5 Odemeyi Yakala (Capture) - Admin
 POST {{baseUrl}}/api/payment/intents/1/capture
 Content-Type: {{contentType}}
-Authorization: Bearer {{customerToken}}
+Authorization: Bearer {{adminToken}}
 
 {
     "note": "Odeme basariyla alindi"
@@ -557,10 +557,10 @@ Authorization: Bearer {{customerToken}}
     "reason": "Musteri vazgecti"
 }
 
-### 9.7 Odeme Iadesi
+### 9.7 Odeme Iadesi - Admin
 POST {{baseUrl}}/api/payment/intents/1/refund
 Content-Type: {{contentType}}
-Authorization: Bearer {{customerToken}}
+Authorization: Bearer {{adminToken}}
 
 {
     "amount": 74999.99,
@@ -580,7 +580,7 @@ Authorization: Bearer {{adminToken}}
     "note": "Banka transferi ile odeme alindi"
 }
 
-### 9.10 Odeme Simulasyonu - Basarili (Test)
+### 9.10 Odeme Simulasyonu - Basarili (Admin, sadece Development)
 POST {{baseUrl}}/api/payment/intents/1/simulate-success
 Content-Type: {{contentType}}
 Authorization: Bearer {{adminToken}}
@@ -589,7 +589,7 @@ Authorization: Bearer {{adminToken}}
     "reason": "Test basarili odeme"
 }
 
-### 9.11 Odeme Simulasyonu - Basarisiz (Test)
+### 9.11 Odeme Simulasyonu - Basarisiz (Admin, sadece Development)
 POST {{baseUrl}}/api/payment/intents/1/simulate-fail
 Content-Type: {{contentType}}
 Authorization: Bearer {{adminToken}}
@@ -629,13 +629,15 @@ Authorization: Bearer {{sellerToken}}
 }
 
 ### 10.4 Satici Siparis Durumu Guncelle
-### status enum: 0=Placed, 1=Confirmed, 2=Packed, 3=Shipped, 4=Delivered, 5=Cancelled
+### status (OrderStatus enum): 1=Processing, 2=Confirmed, 6=Cancelled (3=Shipped, 4=Delivered, 5=Completed are rejected)
+### Shipped/Delivered/Completed are rejected here: use 10.3 (ship, requires carrier + trackingNumber)
+### and PATCH /api/shipments/seller-orders/{id}/deliver (11.x). Cancelled/Delivered are terminal.
 PATCH {{baseUrl}}/api/seller/orders/1/status
 Content-Type: {{contentType}}
 Authorization: Bearer {{sellerToken}}
 
 {
-    "status": 3
+    "status": 2
 }
 
 ### ============================================
@@ -803,27 +805,6 @@ Authorization: Bearer {{customerToken}}
 
 ### 15.6 Okunan Tum Bildirimleri Sil
 DELETE {{baseUrl}}/api/notification/read
-Authorization: Bearer {{customerToken}}
-
-### ============================================
-### 16. WISHLIST - Favoriler
-### ============================================
-
-### 16.1 Favorilere Ekle
-POST {{baseUrl}}/api/wishlist
-Content-Type: {{contentType}}
-Authorization: Bearer {{customerToken}}
-
-{
-    "productId": 1
-}
-
-### 16.2 Favori Listesini Getir
-GET {{baseUrl}}/api/wishlist
-Authorization: Bearer {{customerToken}}
-
-### 16.3 Favorilerden Kaldir
-DELETE {{baseUrl}}/api/wishlist/1
 Authorization: Bearer {{customerToken}}
 
 ### ============================================
@@ -1435,7 +1416,7 @@ GET {{baseUrl}}/health/ready
 ### 7.1 → Sepete Ekle
 ### 8.1 → Checkout
 ### 9.1 → Odeme Olustur
-### 9.10 → Odeme Simule Et (Basarili)
+### 9.10 → Odeme Simule Et (Basarili, Admin Token, Development)
 ###
 ### ADIM 5 - KARGO (Seller Token):
 ### 10.2 → Siparisi Onayla

@@ -238,8 +238,8 @@ public class JsonValidationTests
         isSandbox.ValueKind.Should().BeOneOf(new[] { JsonValueKind.True, JsonValueKind.False },
             "IsSandbox boolean olmali");
 
-        iyzico.TryGetProperty("CallbackUrl", out var callback).Should().BeTrue("CallbackUrl tanimli olmali");
-        callback.GetString().Should().Contain("/api/payments/", "CallbackUrl payments endpoint icermeli");
+        iyzico.TryGetProperty("ThreeDSCallbackUrl", out var callback).Should().BeTrue("ThreeDSCallbackUrl tanimli olmali");
+        callback.GetString().Should().Contain("/api/payment/", "ThreeDSCallbackUrl payment endpoint icermeli");
     }
 
     #endregion
