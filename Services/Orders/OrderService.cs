@@ -527,18 +527,24 @@ namespace Exodus.Services.Orders
             if (sellerOrder == null)
                 throw new NotFoundException("Satıcı siparişi bulunamadı.");
 
-            sellerOrder.Status = MapOrderStatusToSellerStatus(newStatus);
+            var target = MapOrderStatusToSellerStatus(newStatus);
 
-            await SyncOrderStatusWithSellerOrdersAsync(sellerOrder.OrderId);
+            if (sellerOrder.Status is SellerOrderStatus.Cancelled or SellerOrderStatus.Delivered
+                && target != sellerOrder.Status)
+                throw new BadRequestException($"Seller order is {sellerOrder.Status} and cannot change status.");
 
+            sellerOrder.Status = target;
             await _db.SaveChangesAsync();
+
+            await RecalculateOrderStatusAsync(sellerOrder.OrderId);
         }
 
         /// <summary>
-        /// Derives the parent order status from its seller orders: the order only moves forward
-        /// once every seller order reached that stage.
+        /// Derives the parent order status from its seller orders. The order only moves forward
+        /// (Pending &lt; Processing &lt; Confirmed &lt; Shipped &lt; Delivered), never regresses, and
+        /// terminal orders are left untouched.
         /// </summary>
-        private async Task SyncOrderStatusWithSellerOrdersAsync(int orderId)
+        public async Task RecalculateOrderStatusAsync(int orderId)
         {
             var order = await _db.Orders
                 .Include(o => o.SellerOrders)
@@ -547,7 +553,8 @@ namespace Exodus.Services.Orders
             if (order == null)
                 return;
 
-            if (order.Status is OrderStatus.Refunded or OrderStatus.PartialRefund or OrderStatus.Completed)
+            if (order.Status is OrderStatus.Cancelled or OrderStatus.Failed or OrderStatus.Refunded
+                or OrderStatus.PartialRefund or OrderStatus.Completed)
                 return;
 
             var statuses = order.SellerOrders.Select(so => so.Status).ToList();
@@ -556,12 +563,20 @@ namespace Exodus.Services.Orders
 
             var active = statuses.Where(s => s != SellerOrderStatus.Cancelled).ToList();
 
-            var derived = active.Count == 0
-                ? OrderStatus.Cancelled
-                : MapSellerStatusToOrderStatus(active.Min());
-
-            if (order.Status == derived)
-                return;
+            OrderStatus derived;
+            if (active.Count == 0)
+            {
+                if (order.Status is OrderStatus.Shipped or OrderStatus.Delivered)
+                    return;
+                derived = OrderStatus.Cancelled;
+            }
+            else
+            {
+                derived = MapSellerStatusToOrderStatus(active.Min());
+                // Only move forward; Pending(0) < Processing(1) < Confirmed(2) < Shipped(3) < Delivered(4)
+                if ((int)derived <= (int)order.Status)
+                    return;
+            }
 
             order.Status = derived;
 
@@ -576,6 +591,8 @@ namespace Exodus.Services.Orders
                 Description = "Sipariş durumu satıcı siparişlerine göre güncellendi.",
                 UserType = "System"
             });
+
+            await _db.SaveChangesAsync();
         }
 
         public async Task AddOrderEventAsync(int orderId, OrderStatus status, string title, string? description = null, int? userId = null, string? userType = null)

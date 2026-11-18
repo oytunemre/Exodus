@@ -3,6 +3,7 @@ using Exodus.Services.Shipments;
 using Exodus.Services.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Exodus.Controllers;
 
@@ -24,7 +25,7 @@ public class ShipmentController : ControllerBase
     {
         try
         {
-            return Ok(await _shipmentService.GetBySellerOrderIdAsync(sellerOrderId, ct));
+            return Ok(await _shipmentService.GetBySellerOrderIdAsync(sellerOrderId, GetCurrentUserId(), IsAdmin(), ct));
         }
         catch (NotFoundException ex)
         {
@@ -38,7 +39,7 @@ public class ShipmentController : ControllerBase
     {
         try
         {
-            return Ok(await _shipmentService.ShipAsync(sellerOrderId, dto, ct));
+            return Ok(await _shipmentService.ShipAsync(sellerOrderId, dto, GetCurrentUserId(), IsAdmin(), ct));
         }
         catch (BadRequestException ex)
         {
@@ -56,7 +57,7 @@ public class ShipmentController : ControllerBase
     {
         try
         {
-            return Ok(await _shipmentService.DeliverAsync(sellerOrderId, ct));
+            return Ok(await _shipmentService.DeliverAsync(sellerOrderId, GetCurrentUserId(), IsAdmin(), ct));
         }
         catch (BadRequestException ex)
         {
@@ -74,11 +75,21 @@ public class ShipmentController : ControllerBase
     {
         try
         {
-            return Ok(await _shipmentService.GetTimelineBySellerOrderIdAsync(sellerOrderId, ct));
+            return Ok(await _shipmentService.GetTimelineBySellerOrderIdAsync(sellerOrderId, GetCurrentUserId(), IsAdmin(), ct));
         }
         catch (NotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
         }
     }
+
+    private int GetCurrentUserId()
+    {
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
+        if (string.IsNullOrEmpty(claim) || !int.TryParse(claim, out var userId))
+            throw new UnauthorizedException("Invalid user token");
+        return userId;
+    }
+
+    private bool IsAdmin() => User.IsInRole("Admin");
 }

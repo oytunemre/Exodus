@@ -3,6 +3,7 @@ using Exodus.Models.Dto.Shipment;
 using Exodus.Models.Entities;
 using Exodus.Models.Enums;
 using Exodus.Services.Common;
+using Exodus.Services.Orders;
 using Microsoft.EntityFrameworkCore;
 
 namespace Exodus.Services.Shipments;
@@ -11,13 +12,32 @@ public class ShipmentService : IShipmentService
 {
     private readonly ApplicationDbContext _db;
 
-    public ShipmentService(ApplicationDbContext db)
+    private readonly IOrderService _orderService;
+
+    public ShipmentService(ApplicationDbContext db, IOrderService orderService)
     {
         _db = db;
+        _orderService = orderService;
     }
 
-    public async Task<ShipmentDto> GetBySellerOrderIdAsync(int sellerOrderId, CancellationToken ct = default)
+    private async Task EnsureOwnershipAsync(int sellerOrderId, int callerId, bool isAdmin, CancellationToken ct)
     {
+        var sellerId = await _db.SellerOrders
+            .Where(x => x.Id == sellerOrderId)
+            .Select(x => (int?)x.SellerId)
+            .FirstOrDefaultAsync(ct);
+
+        if (sellerId is null)
+            throw new NotFoundException("SellerOrder not found.");
+
+        if (!isAdmin && sellerId != callerId)
+            throw new ForbiddenException("You do not have access to this seller order.");
+    }
+
+    public async Task<ShipmentDto> GetBySellerOrderIdAsync(int sellerOrderId, int callerId, bool isAdmin, CancellationToken ct = default)
+    {
+        await EnsureOwnershipAsync(sellerOrderId, callerId, isAdmin, ct);
+
         var shipment = await _db.Shipments
             .FirstOrDefaultAsync(x => x.SellerOrderId == sellerOrderId, ct);
 
@@ -27,7 +47,7 @@ public class ShipmentService : IShipmentService
         return Map(shipment);
     }
 
-    public async Task<ShipmentDto> ShipAsync(int sellerOrderId, ShipSellerOrderDto dto, CancellationToken ct = default)
+    public async Task<ShipmentDto> ShipAsync(int sellerOrderId, ShipSellerOrderDto dto, int callerId, bool isAdmin, CancellationToken ct = default)
     {
         var sellerOrder = await _db.SellerOrders
             .Include(x => x.Shipment)
@@ -35,6 +55,12 @@ public class ShipmentService : IShipmentService
 
         if (sellerOrder is null)
             throw new NotFoundException("SellerOrder not found.");
+
+        if (!isAdmin && sellerOrder.SellerId != callerId)
+            throw new ForbiddenException("You do not have access to this seller order.");
+
+        if (sellerOrder.Status == SellerOrderStatus.Cancelled)
+            throw new BadRequestException("Cancelled seller order cannot be shipped.");
 
         sellerOrder.Shipment ??= new Shipment
         {
@@ -67,6 +93,7 @@ public class ShipmentService : IShipmentService
         sellerOrder.Status = SellerOrderStatus.Shipped;
 
         await _db.SaveChangesAsync(ct);
+        await _orderService.RecalculateOrderStatusAsync(sellerOrder.OrderId);
 
         await AppendEventAsync(
             shipmentId: shipment.Id,
@@ -78,7 +105,7 @@ public class ShipmentService : IShipmentService
         return Map(shipment);
     }
 
-    public async Task<ShipmentDto> DeliverAsync(int sellerOrderId, CancellationToken ct = default)
+    public async Task<ShipmentDto> DeliverAsync(int sellerOrderId, int callerId, bool isAdmin, CancellationToken ct = default)
     {
         var sellerOrder = await _db.SellerOrders
             .Include(x => x.Shipment)
@@ -86,6 +113,9 @@ public class ShipmentService : IShipmentService
 
         if (sellerOrder is null)
             throw new NotFoundException("SellerOrder not found.");
+
+        if (!isAdmin && sellerOrder.SellerId != callerId)
+            throw new ForbiddenException("You do not have access to this seller order.");
 
         if (sellerOrder.Shipment is null)
             throw new BadRequestException("Shipment yok. Önce ship yap.");
@@ -101,6 +131,7 @@ public class ShipmentService : IShipmentService
         sellerOrder.Status = SellerOrderStatus.Delivered;
 
         await _db.SaveChangesAsync(ct);
+        await _orderService.RecalculateOrderStatusAsync(sellerOrder.OrderId);
 
         await AppendEventAsync(
             shipmentId: shipment.Id,
@@ -112,8 +143,10 @@ public class ShipmentService : IShipmentService
         return Map(shipment);
     }
 
-    public async Task<List<ShipmentEventDto>> GetTimelineBySellerOrderIdAsync(int sellerOrderId, CancellationToken ct = default)
+    public async Task<List<ShipmentEventDto>> GetTimelineBySellerOrderIdAsync(int sellerOrderId, int callerId, bool isAdmin, CancellationToken ct = default)
     {
+        await EnsureOwnershipAsync(sellerOrderId, callerId, isAdmin, ct);
+
         var shipment = await _db.Shipments
             .FirstOrDefaultAsync(x => x.SellerOrderId == sellerOrderId, ct);
 

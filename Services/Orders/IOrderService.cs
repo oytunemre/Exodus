@@ -26,6 +26,8 @@ namespace Exodus.Services.Orders
         Task<List<SellerOrderDto>> GetSellerOrdersAsync(int sellerId, OrderStatus? status = null, int page = 1, int pageSize = 20);
         Task UpdateSellerOrderStatusAsync(int sellerId, int sellerOrderId, OrderStatus newStatus);
 
+        Task RecalculateOrderStatusAsync(int orderId);
+
         // Helpers
         Task AddOrderEventAsync(int orderId, OrderStatus status, string title, string? description = null, int? userId = null, string? userType = null);
         string GenerateOrderNumber();
