@@ -53,3 +53,4 @@ Thumbs.db
 # Secrets
 appsettings.Local.json
 secrets.json
+run_log.txt
