@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using Exodus.Models.Dto;
 using Exodus.Models.Dto.ListingDto;
 using Exodus.Services.Common;
 using Exodus.Services.Listings;
@@ -35,6 +36,15 @@ public class ListingController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> GetAll()
         => Ok(await _service.GetAllAsync());
+
+    /// <summary>
+    /// Public paged search over active listings (filters: search, categoryId, productId, price range,
+    /// condition, sellerId, inStock, stockStatus; sort: price, createdAt, name, stock, seller).
+    /// </summary>
+    [HttpGet("search")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Search([FromQuery] ListingSearchDto query, CancellationToken ct)
+        => Ok(await _service.SearchAsync(query, ct));
 
     [HttpGet("{id:int}")]
     [AllowAnonymous]

@@ -1,6 +1,8 @@
 using Exodus.Data;
+using Exodus.Models.Dto;
 using Exodus.Models.Enums;
 using Exodus.Services.Common;
+using Exodus.Services.Listings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -46,46 +48,24 @@ public class AdminListingController : ControllerBase
             .Include(l => l.Seller)
             .AsQueryable();
 
-        // Filters
-        if (sellerId.HasValue)
-            query = query.Where(l => l.SellerId == sellerId.Value);
-
-        if (productId.HasValue)
-            query = query.Where(l => l.ProductId == productId.Value);
-
-        if (categoryId.HasValue)
-            query = query.Where(l => l.Product.CategoryId == categoryId.Value);
+        // Filters (shared with the public listing search)
+        query = query.Apply(new ListingSearchDto
+        {
+            SellerId = sellerId,
+            ProductId = productId,
+            CategoryId = categoryId,
+            Condition = condition,
+            StockStatus = stockStatus,
+            MinPrice = minPrice,
+            MaxPrice = maxPrice,
+            Search = search
+        });
 
         if (isActive.HasValue)
             query = query.Where(l => l.IsActive == isActive.Value);
 
-        if (condition.HasValue)
-            query = query.Where(l => l.Condition == condition.Value);
-
-        if (stockStatus.HasValue)
-            query = query.Where(l => l.StockStatus == stockStatus.Value);
-
-        if (minPrice.HasValue)
-            query = query.Where(l => l.Price >= minPrice.Value);
-
-        if (maxPrice.HasValue)
-            query = query.Where(l => l.Price <= maxPrice.Value);
-
-        if (!string.IsNullOrEmpty(search))
-            query = query.Where(l =>
-                (l.Product != null && l.Product.ProductName.Contains(search)) ||
-                (l.SKU != null && l.SKU.Contains(search)) ||
-                (l.Seller != null && l.Seller.Name.Contains(search)));
-
-        // Sorting
-        query = sortBy?.ToLower() switch
-        {
-            "price" => sortDesc ? query.OrderByDescending(l => l.Price) : query.OrderBy(l => l.Price),
-            "stock" => sortDesc ? query.OrderByDescending(l => l.StockQuantity) : query.OrderBy(l => l.StockQuantity),
-            "seller" => sortDesc ? query.OrderByDescending(l => l.Seller.Name) : query.OrderBy(l => l.Seller.Name),
-            "product" => sortDesc ? query.OrderByDescending(l => l.Product.ProductName) : query.OrderBy(l => l.Product.ProductName),
-            _ => sortDesc ? query.OrderByDescending(l => l.CreatedAt) : query.OrderBy(l => l.CreatedAt)
-        };
+        // Sorting (keys: price, stock, seller, product/name, default createdAt)
+        query = query.Sort(sortBy, sortDesc);
 
         var totalCount = await query.CountAsync();
 

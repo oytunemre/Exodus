@@ -1,4 +1,5 @@
 ﻿using Exodus.Data;
+using Exodus.Models.Dto;
 using Exodus.Models.Dto.ListingDto;
 using Exodus.Models.Entities;
 using Exodus.Services.Common;
@@ -27,6 +28,77 @@ public class ListingService : IListingService
         if (listing is null) throw new NotFoundException("Listing not found.");
         return Map(listing);
     }
+
+    public async Task<ListingSearchResultDto> SearchAsync(ListingSearchDto query, CancellationToken ct = default)
+    {
+        if (query.MinPrice.HasValue && query.MaxPrice.HasValue && query.MinPrice > query.MaxPrice)
+            throw new BadRequestException("MinPrice cannot be greater than MaxPrice.");
+
+        var page = query.Page < 1 ? 1 : query.Page;
+        var pageSize = query.PageSize < 1
+            ? PaginationNormalizationFilter.DefaultPageSize
+            : Math.Min(query.PageSize, PaginationNormalizationFilter.MaxPageSize);
+
+        var filtered = _db.Listings
+            .AsNoTracking()
+            .Where(l => l.IsActive)
+            .Apply(query);
+
+        var totalCount = await filtered.CountAsync(ct);
+
+        var rows = await filtered
+            .Sort(query.SortBy, string.Equals(query.SortOrder, "desc", StringComparison.OrdinalIgnoreCase))
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(l => new
+            {
+                l.Id,
+                l.ProductId,
+                l.Product.ProductName,
+                l.Product.ProductDescription,
+                l.Product.CategoryId,
+                CategoryName = l.Product.Category != null ? l.Product.Category.Name : null,
+                PrimaryImageUrl = l.Product.Images.OrderBy(i => i.DisplayOrder).Select(i => i.Url).FirstOrDefault(),
+                l.Price,
+                l.StockQuantity,
+                l.StockStatus,
+                l.Condition,
+                l.SellerId,
+                SellerName = l.Seller.Name,
+                l.IsActive,
+                l.CreatedAt
+            })
+            .ToListAsync(ct);
+
+        return new ListingSearchResultDto
+        {
+            Items = rows.Select(r => new ListingListItemDto
+            {
+                Id = r.Id,
+                ProductId = r.ProductId,
+                ProductName = r.ProductName,
+                ProductDescription = Truncate(r.ProductDescription, 200),
+                CategoryId = r.CategoryId,
+                CategoryName = r.CategoryName,
+                PrimaryImageUrl = r.PrimaryImageUrl,
+                Price = r.Price,
+                StockQuantity = r.StockQuantity,
+                StockStatus = r.StockStatus,
+                Condition = r.Condition,
+                SellerId = r.SellerId,
+                SellerName = r.SellerName,
+                IsActive = r.IsActive,
+                CreatedAt = r.CreatedAt
+            }).ToList(),
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize,
+            TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+        };
+    }
+
+    private static string? Truncate(string? value, int max)
+        => value is null || value.Length <= max ? value : value[..max] + "…";
 
     public async Task<ListingResponseDto> CreateAsync(AddListingDto dto, int callerId, bool isAdmin)
     {
