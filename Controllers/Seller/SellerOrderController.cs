@@ -29,7 +29,7 @@ namespace Exodus.Controllers.Seller
         /// Get seller's orders
         /// </summary>
         [HttpGet]
-        public async Task<ActionResult<List<SellerOrderDto>>> GetOrders(
+        public async Task<ActionResult<List<SellerOrderListItemDto>>> GetOrders(
             [FromQuery] OrderStatus? status = null,
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 20)
@@ -37,6 +37,16 @@ namespace Exodus.Controllers.Seller
             var sellerId = GetCurrentUserId();
             var orders = await _orderService.GetSellerOrdersAsync(sellerId, status, page, pageSize);
             return Ok(orders);
+        }
+
+        /// <summary>
+        /// Get a single seller order
+        /// </summary>
+        [HttpGet("{sellerOrderId:int}")]
+        public async Task<ActionResult<SellerOrderListItemDto>> GetOrder(int sellerOrderId)
+        {
+            var sellerId = GetCurrentUserId();
+            return Ok(await _orderService.GetSellerOrderAsync(sellerId, sellerOrderId));
         }
 
         /// <summary>

@@ -23,7 +23,8 @@ namespace Exodus.Services.Orders
         Task<RefundResponseDto> ProcessRefundAsync(int refundId, bool approve, int adminUserId, string? note = null);
 
         // Seller Orders
-        Task<List<SellerOrderDto>> GetSellerOrdersAsync(int sellerId, OrderStatus? status = null, int page = 1, int pageSize = 20);
+        Task<List<SellerOrderListItemDto>> GetSellerOrdersAsync(int sellerId, OrderStatus? status = null, int page = 1, int pageSize = 20);
+        Task<SellerOrderListItemDto> GetSellerOrderAsync(int sellerId, int sellerOrderId);
         Task UpdateSellerOrderStatusAsync(int sellerId, int sellerOrderId, OrderStatus newStatus);
 
         Task RecalculateOrderStatusAsync(int orderId);

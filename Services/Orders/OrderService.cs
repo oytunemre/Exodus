@@ -482,7 +482,7 @@ namespace Exodus.Services.Orders
             };
         }
 
-        public async Task<List<SellerOrderDto>> GetSellerOrdersAsync(int sellerId, OrderStatus? status = null, int page = 1, int pageSize = 20)
+        public async Task<List<SellerOrderListItemDto>> GetSellerOrdersAsync(int sellerId, OrderStatus? status = null, int page = 1, int pageSize = 20)
         {
             var query = _db.SellerOrders
                 .Where(so => so.SellerId == sellerId)
@@ -504,24 +504,54 @@ namespace Exodus.Services.Orders
                 .Take(pageSize)
                 .ToListAsync();
 
-            return sellerOrders.Select(so => new SellerOrderDto
-            {
-                Id = so.Id,
-                SellerId = so.SellerId,
-                SellerName = so.Seller?.Name ?? "Unknown Seller",
-                Status = MapSellerStatusToOrderStatus(so.Status),
-                Total = so.SubTotal,
-                Items = so.Items.Select(i => new OrderItemDto
-                {
-                    Id = i.Id,
-                    ProductId = i.ProductId,
-                    ProductName = i.ProductName,
-                    Quantity = i.Quantity,
-                    UnitPrice = i.UnitPrice,
-                    TotalPrice = i.LineTotal
-                }).ToList()
-            }).ToList();
+            return sellerOrders.Select(MapToSellerOrderListItem).ToList();
         }
+
+        public async Task<SellerOrderListItemDto> GetSellerOrderAsync(int sellerId, int sellerOrderId)
+        {
+            var sellerOrder = await _db.SellerOrders
+                .Include(so => so.Order)
+                .Include(so => so.Items)
+                .Include(so => so.Shipment)
+                .Include(so => so.Seller)
+                .FirstOrDefaultAsync(so => so.Id == sellerOrderId && so.SellerId == sellerId);
+
+            if (sellerOrder == null)
+                throw new NotFoundException("Satıcı siparişi bulunamadı.");
+
+            return MapToSellerOrderListItem(sellerOrder);
+        }
+
+        private static SellerOrderListItemDto MapToSellerOrderListItem(SellerOrder so) => new()
+        {
+            Id = so.Id,
+            OrderId = so.OrderId,
+            OrderNumber = so.Order.OrderNumber,
+            CreatedAt = so.CreatedAt,
+            SellerId = so.SellerId,
+            SellerName = so.Seller?.Name ?? "Unknown Seller",
+            Status = MapSellerStatusToOrderStatus(so.Status),
+            Total = so.SubTotal,
+            Items = so.Items.Select(i => new SellerOrderLineDto
+            {
+                Id = i.Id,
+                ListingId = i.ListingId,
+                ProductId = i.ProductId,
+                ProductName = i.ProductName,
+                Quantity = i.Quantity,
+                UnitPrice = i.UnitPrice,
+                TotalPrice = i.LineTotal
+            }).ToList(),
+            // Checkout creates a placeholder shipment; only expose it once it has actually shipped.
+            Shipment = so.Shipment?.ShippedAt == null ? null : new SellerOrderShipmentDto
+            {
+                Id = so.Shipment.Id,
+                Carrier = so.Shipment.Carrier,
+                TrackingNumber = so.Shipment.TrackingNumber,
+                ShippedAt = so.Shipment.ShippedAt,
+                DeliveredAt = so.Shipment.DeliveredAt
+            }
+        };
 
         public async Task UpdateSellerOrderStatusAsync(int sellerId, int sellerOrderId, OrderStatus newStatus)
         {
