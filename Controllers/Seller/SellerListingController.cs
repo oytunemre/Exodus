@@ -1,11 +1,13 @@
 using Exodus.Data;
 using Exodus.Models.Dto;
+using Exodus.Models.Dto.SellerDto;
 using Exodus.Models.Entities;
 using Exodus.Models.Enums;
 using Exodus.Services.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 using System.Security.Claims;
 
 namespace Exodus.Controllers.Seller
@@ -63,25 +65,7 @@ namespace Exodus.Controllers.Seller
             var listings = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(l => new
-                {
-                    l.Id,
-                    l.ProductId,
-                    ProductName = l.Product.ProductName,
-                    PrimaryImage = l.Product.Images
-                        .Where(i => i.IsPrimary)
-                        .Select(i => i.Url)
-                        .FirstOrDefault() ?? l.Product.Images.Select(i => i.Url).FirstOrDefault(),
-                    l.Price,
-                    l.StockQuantity,
-                    l.StockStatus,
-                    l.LowStockThreshold,
-                    l.SKU,
-                    l.Condition,
-                    l.IsActive,
-                    l.CreatedAt,
-                    l.UpdatedAt
-                })
+                .Select(ListingItemProjection)
                 .ToListAsync();
 
             return Ok(new
@@ -101,6 +85,7 @@ namespace Exodus.Controllers.Seller
         public async Task<ActionResult> CreateListing([FromBody] SellerCreateListingDto dto)
         {
             var sellerId = GetCurrentUserId();
+            ValidateListingValues(dto.Price, dto.StockQuantity, dto.LowStockThreshold);
 
             // Verify product exists
             var productExists = await _context.Products.AnyAsync(p => p.Id == dto.ProductId);
@@ -131,7 +116,12 @@ namespace Exodus.Controllers.Seller
             _context.Listings.Add(listing);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetMyListings), new { Id = listing.Id });
+            var created = await _context.Listings
+                .Where(l => l.Id == listing.Id)
+                .Select(ListingItemProjection)
+                .FirstAsync();
+
+            return CreatedAtAction(nameof(GetMyListings), new { Id = listing.Id }, created);
         }
 
         /// <summary>
@@ -141,6 +131,7 @@ namespace Exodus.Controllers.Seller
         public async Task<ActionResult> UpdateListing(int id, [FromBody] SellerUpdateListingDto dto)
         {
             var sellerId = GetCurrentUserId();
+            ValidateListingValues(dto.Price, dto.StockQuantity, dto.LowStockThreshold);
             var listing = await _context.Listings
                 .FirstOrDefaultAsync(l => l.Id == id && l.SellerId == sellerId);
 
@@ -182,6 +173,7 @@ namespace Exodus.Controllers.Seller
         public async Task<ActionResult> UpdateStock(int id, [FromBody] SellerUpdateStockDto dto)
         {
             var sellerId = GetCurrentUserId();
+            ValidateListingValues(null, dto.StockQuantity, null);
             var listing = await _context.Listings
                 .FirstOrDefaultAsync(l => l.Id == id && l.SellerId == sellerId);
 
@@ -264,6 +256,36 @@ namespace Exodus.Controllers.Seller
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        private static readonly Expression<Func<Listing, SellerListingItemDto>> ListingItemProjection = l => new SellerListingItemDto
+        {
+            Id = l.Id,
+            ProductId = l.ProductId,
+            ProductName = l.Product.ProductName,
+            PrimaryImage = l.Product.Images
+                .Where(i => i.IsPrimary)
+                .Select(i => i.Url)
+                .FirstOrDefault() ?? l.Product.Images.Select(i => i.Url).FirstOrDefault(),
+            Price = l.Price,
+            StockQuantity = l.StockQuantity,
+            StockStatus = l.StockStatus,
+            LowStockThreshold = l.LowStockThreshold,
+            SKU = l.SKU,
+            Condition = l.Condition,
+            IsActive = l.IsActive,
+            CreatedAt = l.CreatedAt,
+            UpdatedAt = l.UpdatedAt
+        };
+
+        private static void ValidateListingValues(decimal? price, int? stockQuantity, int? lowStockThreshold)
+        {
+            if (price.HasValue && price.Value <= 0)
+                throw new BadRequestException("Price must be greater than 0.");
+            if (stockQuantity.HasValue && stockQuantity.Value < 0)
+                throw new BadRequestException("Stock quantity cannot be negative.");
+            if (lowStockThreshold.HasValue && lowStockThreshold.Value < 0)
+                throw new BadRequestException("Low stock threshold cannot be negative.");
         }
 
         private void UpdateStockStatus(Listing listing)

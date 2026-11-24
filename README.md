@@ -297,7 +297,7 @@ Customer-facing endpoints verify that the caller owns the order (Admin bypasses)
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
 | GET | `/api/seller/listings` | Get my listings | Seller (or Admin) |
-| POST | `/api/seller/listings` | Create listing | Seller (or Admin) |
+| POST | `/api/seller/listings` | Create listing (returns the created listing) | Seller (or Admin) |
 | PUT | `/api/seller/listings/{id}` | Update listing | Seller (or Admin) |
 | DELETE | `/api/seller/listings/{id}` | Delete listing | Seller (or Admin) |
 | PATCH | `/api/seller/listings/{id}/stock` | Update stock | Seller (or Admin) |
