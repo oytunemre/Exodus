@@ -304,6 +304,7 @@ Customer-facing endpoints verify that the caller owns the order (Admin bypasses)
 | GET | `/api/seller/listings/low-stock` | Low stock items | Seller (or Admin) |
 | GET | `/api/seller/listings/out-of-stock` | Out-of-stock items | Seller (or Admin) |
 | GET | `/api/seller/orders` | Get my seller orders | Seller (or Admin) |
+| GET | `/api/seller/orders/{id}` | Get one of my seller orders (404 if not yours) | Seller (or Admin) |
 | POST | `/api/seller/orders/{id}/confirm` | Confirm order | Seller (or Admin) |
 | POST | `/api/seller/orders/{id}/ship` | Ship order (carrier + trackingNumber required, creates the Shipment) | Seller (or Admin) |
 | PATCH | `/api/seller/orders/{id}/status` | Update status (forward-only; Shipped/Delivered/Completed rejected; use ship / deliver) | Seller (or Admin) |
